@@ -11,7 +11,6 @@ import { createPublicClient, http } from 'viem';
 import { useAccount } from 'wagmi';
 import ConnectButton from './components/ConnectButton';
 import { useEffect, useState } from 'react';
-import { ethers } from 'ethers';
 
 const config = createConfig({
   autoConnect: true,
@@ -74,7 +73,14 @@ function Profile() {
   const { data: ensName } = useEnsName({ address });
   const [nfts, setNfts] = useState<NFT[]>([]);
   const { data: balance } = useBalance({ address });
-  const { signTypedData } = useSignTypedData();
+  const { data: signedMessage, signTypedData } = useSignTypedData();
+
+  if (signedMessage) {
+    fetch('http://localhost:3000/order/create', {
+      body: JSON.stringify({ tokenId: 1 }),
+      method: 'POST',
+    });
+  }
 
   useEffect(() => {
     if (!address) {
@@ -89,7 +95,7 @@ function Profile() {
 
   const listNfts = nfts.map((nft) => (
     <img
-      onClick={() =>
+      onClick={() => {
         signTypedData({
           domain: { chainId: 1, name: 'Seaport' },
           message: orderComponents(contract, Number(nft.tokenId)),
@@ -124,8 +130,10 @@ function Profile() {
               { name: 'recipient', type: 'address' },
             ],
           },
-        })
-      }
+        });
+        const signature = signedMessage;
+        console.log({ signature });
+      }}
       src={nft.thumbnail}
       key={nft.tokenId}
       alt={nft.tokenId}
