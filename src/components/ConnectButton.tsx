@@ -3,7 +3,7 @@ import { InjectedConnector } from 'wagmi/connectors/injected';
 
 function ConnectButton() {
   const { connect, isLoading } = useConnect({
-    chainId: 1,
+    chainId: 11155111,
     connector: new InjectedConnector(),
   });
 
