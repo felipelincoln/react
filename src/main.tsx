@@ -1,27 +1,26 @@
+import './css/index.css';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App.tsx';
-import './index.css';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import Collection from './pages/Collection.tsx';
+import App from './Mvp';
+import HomePage from './pages/Home';
+import NotFoundPage from './pages/NotFound';
+import CollectionPage, { loader as collectionLoader } from './pages/Collection';
 
 const router = createBrowserRouter([
   {
     path: '/',
-    element: <App />, // TODO: old app, replace with a landing page
-    errorElement: (
-      <main>
-        <h1>404</h1>
-        <h1>Not Found</h1>
-      </main>
-    ),
+    element: <HomePage />,
+    errorElement: <NotFoundPage />,
   },
   {
     path: '/collection/:collectionName',
-    element: <Collection />,
-    loader: ({ params }) => {
-      return { collectionName: params.collectionName };
-    },
+    element: <CollectionPage />,
+    loader: collectionLoader,
+  },
+  {
+    path: '/mvp',
+    element: <App />,
   },
 ]);
 

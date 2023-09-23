@@ -1,6 +1,14 @@
-import { useLoaderData } from 'react-router-dom';
+import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
 
-export default function Collection() {
-  const { collectionName } = useLoaderData();
+interface CollectionLoaderData {
+  collectionName: string;
+}
+
+export function loader({ params }: LoaderFunctionArgs): CollectionLoaderData {
+  return { collectionName: params.collectionName! };
+}
+
+export default function CollectionPage() {
+  const { collectionName } = useLoaderData() as CollectionLoaderData;
   return <h1>Collection {collectionName} </h1>;
 }
