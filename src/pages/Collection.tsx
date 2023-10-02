@@ -11,7 +11,7 @@ export function loader({ params }: LoaderFunctionArgs): CollectionLoaderData {
 export default function CollectionPage() {
   const { collectionName } = useLoaderData() as CollectionLoaderData;
   return (
-    <div className="bg-white dark:bg-black text-black dark:text-white">
+    <div>
       <h1>Collection {collectionName} </h1>
     </div>
   );

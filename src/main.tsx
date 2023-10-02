@@ -7,6 +7,15 @@ import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
 import CollectionPage, { loader as collectionLoader } from './pages/Collection';
 
+if (!['dark', 'light'].includes(localStorage.theme)) {
+  const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
+    ? 'dark'
+    : 'light';
+
+  localStorage.setItem('theme', preferedColor);
+}
+document.documentElement.classList.add(localStorage.theme);
+
 const router = createBrowserRouter([
   {
     path: '/',
@@ -23,15 +32,6 @@ const router = createBrowserRouter([
     element: <App />,
   },
 ]);
-
-if (
-  localStorage.theme === 'dark' ||
-  (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)
-) {
-  document.documentElement.classList.add('dark');
-} else {
-  document.documentElement.classList.remove('dark');
-}
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
