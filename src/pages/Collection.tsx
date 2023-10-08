@@ -109,7 +109,7 @@ interface TokensOwnedByAddressArgs {
 }
 
 function tokensOwnedByAddress(_args: TokensOwnedByAddressArgs): string[] {
-  return ['2'];
+  return ['2', '3'];
 }
 
 /* --- */
@@ -131,19 +131,17 @@ export default function CollectionPage() {
   const myItems = searchParams.get('myItems') == '1';
 
   let tokenIds = myItems ? userTokenIds : ids;
-  const orders = ordersByTokenId({ tokenIds });
+  const orderList = ordersByTokenId({ tokenIds });
   if (!myItems) {
-    tokenIds = orders.map((order) => order.tokenId);
+    tokenIds = orderList.map((order) => order.tokenId);
   }
 
-  const ordersMap = Object.fromEntries(orders.map((order) => [order.tokenId, order]));
+  const ordersMap: {[tokenId: string]: Order | undefined} = Object.fromEntries(orderList.map((order) => [order.tokenId, order]));
 
-  const collectionItems = orders.map((order) => {
-    return (
-      <div className="w-2/5 shrink-0" key={order.tokenId}>
-        <img src={thumbnails[order.tokenId]} />
-        <div className="text-center">{order.tokenId}</div>
-        <div className="flex justify-between">
+  const collectionItems = tokenIds.map((tokenId) => {
+    const order = ordersMap[tokenId];
+    const orderElement = order && (
+      <div className="flex justify-between">
           <div className="flex flex-col justify-end">
             {order.fulfillmentCriteria.coin.amount != '0' && (
               <div>{formatEther(BigInt(order.fulfillmentCriteria.coin.amount))} ETH</div>
@@ -154,6 +152,12 @@ export default function CollectionPage() {
             <button className="bg-gray-800 p-3">Fulfill</button>
           </div>
         </div>
+    );
+    return (
+      <div className="w-2/5 shrink-0" key={tokenId}>
+        <img src={thumbnails[tokenId]} />
+        <div className="text-center">{tokenId}</div>
+        { orderElement || <button className='bg-gray-800 p-3 w-full'>create order</button>}
       </div>
     );
   });
@@ -187,7 +191,7 @@ export default function CollectionPage() {
       </div>
       <div className="flex justify-between">
         <div>
-          <div>{orders.length} Results</div>
+          <div>{tokenIds.length} Results</div>
         </div>
         <div>Attributes (0)</div>
       </div>
