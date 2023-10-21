@@ -1,10 +1,4 @@
-import {
-  LoaderFunctionArgs,
-  Navigate,
-  useLoaderData,
-  useNavigate,
-  useSearchParams,
-} from 'react-router-dom';
+import { LoaderFunctionArgs, useLoaderData, useNavigate, useSearchParams } from 'react-router-dom';
 import { formatEther } from 'viem';
 
 const thumbnails: { [tokenId: string]: string } = {
@@ -39,11 +33,6 @@ interface Order {
   };
   endTime: string;
   signature?: string;
-  metadata?: OrderMetadata;
-}
-
-interface OrderMetadata {
-  userCanFulfill: boolean;
 }
 
 interface OrdersByTokenIdArgs {
@@ -216,62 +205,94 @@ export function loader({ params }: LoaderFunctionArgs): CollectionLoaderData {
   return { collectionName: params.collectionName! };
 }
 
+interface Item {
+  id: string;
+  order?: Order;
+}
+
+interface GetItemsArgs {
+  tokenIds?: string[];
+  includeDormantOrders?: boolean;
+  includeNotListed?: boolean;
+}
+
+function getItems(args: GetItemsArgs): Item[] {
+  const tokenIds = args.tokenIds || ids;
+  const orders = ordersByTokenId({ tokenIds, includeDormantOrders: args.includeDormantOrders });
+
+  orders.sort(({ fulfillmentCriteria: a }, { fulfillmentCriteria: b }) => {
+    const aCoinAmount = BigInt(a.coin.amount);
+    const bCoinAmount = BigInt(b.coin.amount);
+    let coinOrder;
+
+    if (aCoinAmount > bCoinAmount) {
+      coinOrder = 1;
+    } else if (aCoinAmount < bCoinAmount) {
+      coinOrder = -1;
+    } else {
+      coinOrder = 0;
+    }
+
+    const aTokenAmount = BigInt(a.token.amount);
+    const bTokenAmount = BigInt(b.token.amount);
+    let tokenOrder;
+
+    if (aTokenAmount > bTokenAmount) {
+      tokenOrder = 1;
+    } else if (aTokenAmount < bTokenAmount) {
+      tokenOrder = -1;
+    } else {
+      tokenOrder = 0;
+    }
+
+    return coinOrder + 10 * tokenOrder;
+  });
+
+  const listedItems = orders.map((order) => {
+    return { id: order.tokenId, order };
+  });
+
+  if (args.includeNotListed) {
+    const unlistedItems = tokenIds
+      .filter((tokenId) => !orders.find((order) => order.tokenId == tokenId))
+      .map((tokenId) => {
+        return { id: tokenId };
+      });
+
+    return [...listedItems, ...unlistedItems];
+  }
+
+  return listedItems;
+}
+
 export default function CollectionPage() {
   const navigate = useNavigate();
   const [searchParams, _] = useSearchParams();
-  // const { collectionName } = useLoaderData() as CollectionLoaderData;
+  const { collectionName } = useLoaderData() as CollectionLoaderData;
+  console.log({ collectionName });
 
   const userTokenIds = tokensOwnedByAddress({ address: '0x' });
   const myItems = searchParams.get('myItems') == '1';
 
-  let tokenIds = myItems ? userTokenIds : ids;
-  const orderList = ordersByTokenId({ tokenIds, includeDormantOrders: myItems }).map((order) => {
-    const userCanFulfill = !!userTokenIds.find((id) =>
-      order.fulfillmentCriteria.token.identifier.includes(id),
-    );
+  let items;
 
-    return { ...order, metadata: { userCanFulfill } } as Order;
-  });
-
-  if (!myItems) {
-    tokenIds = orderList
-      .sort(({ fulfillmentCriteria: a }, { fulfillmentCriteria: b }) => {
-        const aCoinAmount = BigInt(a.coin.amount);
-        const bCoinAmount = BigInt(b.coin.amount);
-        let coinOrder;
-
-        if (aCoinAmount > bCoinAmount) {
-          coinOrder = 1;
-        } else if (aCoinAmount < bCoinAmount) {
-          coinOrder = -1;
-        } else {
-          coinOrder = 0;
-        }
-
-        const aTokenAmount = BigInt(a.token.amount);
-        const bTokenAmount = BigInt(b.token.amount);
-        let tokenOrder;
-
-        if (aTokenAmount > bTokenAmount) {
-          tokenOrder = 1;
-        } else if (aTokenAmount < bTokenAmount) {
-          tokenOrder = -1;
-        } else {
-          tokenOrder = 0;
-        }
-
-        return coinOrder + 10 * tokenOrder;
-      })
-      .map((order) => order.tokenId);
+  if (myItems) {
+    items = getItems({
+      tokenIds: userTokenIds,
+      includeDormantOrders: true,
+      includeNotListed: true,
+    });
+  } else {
+    items = getItems({ includeDormantOrders: false, includeNotListed: false });
   }
 
-  const ordersMap: { [tokenId: string]: Order | undefined } = Object.fromEntries(
-    orderList.map((order) => [order.tokenId, order]),
-  );
+  const itemElements = items.map((item) => {
+    const order = item.order;
+    const ownedByUser = userTokenIds.includes(item.id);
+    const userCanFulfill = !!userTokenIds.find((id) =>
+      order?.fulfillmentCriteria.token.identifier.includes(id),
+    );
 
-  const collectionItems = tokenIds.map((tokenId) => {
-    const ownedByUser = userTokenIds.includes(tokenId);
-    const order = ordersMap[tokenId];
     const orderDetailsElement = order && (
       <div className="flex justify-between">
         <div className="flex flex-col justify-end">
@@ -290,7 +311,7 @@ export default function CollectionPage() {
                 <button className="bg-pink-700 p-3">Publish</button>
               )}
             </>
-          ) : order.metadata?.userCanFulfill ? (
+          ) : userCanFulfill ? (
             <button className="bg-pink-700 p-3">Fulfill</button>
           ) : (
             <button className="bg-gray-800 p-3">View</button>
@@ -299,9 +320,9 @@ export default function CollectionPage() {
       </div>
     );
     return (
-      <div className="w-2/5 shrink-0" key={tokenId}>
-        <img src={thumbnails[tokenId]} />
-        <div className="text-center">{tokenId}</div>
+      <div className="w-2/5 shrink-0" key={item.id}>
+        <img src={thumbnails[item.id]} />
+        <div className="text-center">{item.id}</div>
         {orderDetailsElement || <button className="bg-pink-700 p-3 w-full">Create Order</button>}
       </div>
     );
@@ -331,16 +352,16 @@ export default function CollectionPage() {
         </div>
         <div className="flex space-x-1" onClick={() => navigate(`?myItems=${+!myItems}`)}>
           <div>My Items</div>
-          <input checked={myItems} type="checkbox" />
+          <input checked={myItems} onChange={() => {}} type="checkbox" />
         </div>
       </div>
       <div className="flex justify-between">
         <div>
-          <div>{tokenIds.length} Results</div>
+          <div>{items.length} Results</div>
         </div>
         <div>Attributes (0)</div>
       </div>
-      <div className="flex flex-wrap justify-between">{collectionItems}</div>
+      <div className="flex flex-wrap justify-between">{itemElements}</div>
     </div>
   );
 }
