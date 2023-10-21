@@ -4,7 +4,10 @@ import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import App from './Mvp';
 import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
-import CollectionPage, { loader as collectionLoader } from './pages/Collection';
+import CollectionItemsPage, { loader as collectionItemLoader } from './pages/Collection/Items';
+import CollectionActivityPage, {
+  loader as collectionActivityLoader,
+} from './pages/Collection/Activity';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -22,9 +25,14 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
-    path: '/collection/:collectionName',
-    element: <CollectionPage />,
-    loader: collectionLoader,
+    path: '/collection/:collectionName/items',
+    element: <CollectionItemsPage />,
+    loader: collectionItemLoader,
+  },
+  {
+    path: '/collection/:collectionName/activity',
+    element: <CollectionActivityPage />,
+    loader: collectionActivityLoader,
   },
   {
     path: '/mvp',

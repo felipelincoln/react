@@ -41,7 +41,7 @@ interface OrdersByTokenIdArgs {
 }
 
 function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
-  let orders = [
+  let orders: Order[] = [
     {
       id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
       tokenId: '2',
@@ -265,11 +265,10 @@ function getItems(args: GetItemsArgs): Item[] {
   return listedItems;
 }
 
-export default function CollectionPage() {
+export default function CollectionItemsPage() {
   const navigate = useNavigate();
   const [searchParams, _] = useSearchParams();
   const { collectionName } = useLoaderData() as CollectionLoaderData;
-  console.log({ collectionName });
 
   const userTokenIds = tokensOwnedByAddress({ address: '0x' });
   const myItems = searchParams.get('myItems') == '1';
@@ -347,8 +346,14 @@ export default function CollectionPage() {
       </div>
       <div className="flex justify-between">
         <div className="flex space-x-10">
-          <div>Items</div>
-          <div>Activity</div>
+          <div onClick={() => navigate(`/collection/${collectionName}/items?myItems=${+myItems}`)}>
+            Items
+          </div>
+          <div
+            onClick={() => navigate(`/collection/${collectionName}/activity?myItems=${+myItems}`)}
+          >
+            Activity
+          </div>
         </div>
         <div className="flex space-x-1" onClick={() => navigate(`?myItems=${+!myItems}`)}>
           <div>My Items</div>
