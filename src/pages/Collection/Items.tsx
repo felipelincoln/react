@@ -195,6 +195,118 @@ function tokensOwnedByAddress(_args: TokensOwnedByAddressArgs): string[] {
   return ['1', '2', '3'];
 }
 
+interface Event {
+  id: string;
+  etype: string;
+  tokenId: string;
+  offerer: string;
+  fulfiller: string;
+  fulfillment: {
+    coin: {
+      amount: string;
+    };
+    token: {
+      amount: string;
+      identifier: string[];
+    };
+  };
+  txn_hash: string;
+  block_hash: string;
+  block_height: number;
+  created_at: number;
+}
+
+interface Notification {
+  id: string;
+  eventId: string;
+  address: string;
+}
+
+interface EventsByAddressArgs {
+  address?: string;
+}
+
+function eventsByAddress(args: EventsByAddressArgs): Event[] {
+  let events: Event[] = [
+    {
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      etype: 'trade',
+      tokenId: '1',
+      offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
+      fulfiller: '0xD1688C4BfA1517502172CF0eD50306Ea1813e677',
+      fulfillment: {
+        coin: {
+          amount: '100000000000000',
+        },
+        token: {
+          amount: '1',
+          identifier: ['4'],
+        },
+      },
+      txn_hash: '0x13561845942024d611ee0301ae50e13a995dedc1deb1e0a7a432b0e96f204316',
+      block_hash: '0x02e4cce342721d3ee7e4514cbedc0e0bca4b1ffcff9fe0a9cd2b992732840444',
+      block_height: 18253479,
+      created_at: 1696136343000,
+    },
+    {
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3d',
+      etype: 'trade',
+      tokenId: '2',
+      offerer: '0xD1688C4BfA1517502172CF0eD50306Ea1813e677',
+      fulfiller: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
+      fulfillment: {
+        coin: {
+          amount: '0',
+        },
+        token: {
+          amount: '1',
+          identifier: ['7'],
+        },
+      },
+      txn_hash: '0x13561845942024d611ee0301ae50e13a995dedc1deb1e0a7a432b0e96f204317',
+      block_hash: '0x02e4cce342721d3ee7e4514cbedc0e0bca4b1ffcff9fe0a9cd2b992732840445',
+      block_height: 18253480,
+      created_at: 1697504819000,
+    },
+    {
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3e',
+      etype: 'trade',
+      tokenId: '6',
+      offerer: '0xD1688C4BfA1517502172CF0eD50306Ea1813e677',
+      fulfiller: '0x5cc61632E181903cF2f476c420bF781F6ee53059',
+      fulfillment: {
+        coin: {
+          amount: '1500000000000000',
+        },
+        token: {
+          amount: '2',
+          identifier: ['3', '4'],
+        },
+      },
+      txn_hash: '0x13561845942024d611ee0301ae50e13a995dedc1deb1e0a7a432b0e96f204318',
+      block_hash: '0x02e4cce342721d3ee7e4514cbedc0e0bca4b1ffcff9fe0a9cd2b992732840446',
+      block_height: 18253481,
+      created_at: 1698008819000,
+    },
+  ];
+
+  if (args.address) {
+    events = events.filter(
+      (event) => event.offerer == args.address || event.fulfiller == args.address,
+    );
+  }
+
+  return events;
+}
+
+interface NotificationsCountByAddressArgs {
+  address: string;
+}
+
+function notificationsCountByAddress(args: NotificationsCountByAddressArgs): number {
+  return eventsByAddress({ address: args.address }).length;
+}
+
 /* --- */
 
 interface CollectionLoaderData {
@@ -273,6 +385,17 @@ export default function CollectionItemsPage() {
   const userTokenIds = tokensOwnedByAddress({ address: '0x' });
   const myItems = searchParams.get('myItems') == '1';
 
+  const userAddress = '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D';
+  const notificationsCount = notificationsCountByAddress({ address: userAddress });
+  const notificationButton = (
+    <a
+      href={`/collection/${collectionName}/activity/?myItems=1`}
+      className="bg-green-500 text-xs rounded px-2 cursor-pointer text-black"
+    >
+      {notificationsCount}
+    </a>
+  );
+
   let items;
 
   if (myItems) {
@@ -335,7 +458,9 @@ export default function CollectionItemsPage() {
             <div>Logo</div>
           </div>
           <div className="flex space-x-10">
-            <div>{userTokenIds.length} RACCOOL</div>
+            <div>
+              {userTokenIds.length} RACCOOL {notificationButton}
+            </div>
             <div>0.013546 ETH</div>
             <div>mande.eth</div>
           </div>
@@ -352,7 +477,7 @@ export default function CollectionItemsPage() {
           <div
             onClick={() => navigate(`/collection/${collectionName}/activity?myItems=${+myItems}`)}
           >
-            Activity
+            Activity {notificationButton}
           </div>
         </div>
         <div className="flex space-x-1" onClick={() => navigate(`?myItems=${+!myItems}`)}>
