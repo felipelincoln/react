@@ -43,7 +43,7 @@ interface OrdersByTokenIdArgs {
 function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
   let orders: Order[] = [
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c1',
       tokenId: '2',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -60,7 +60,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       signature: '0x0000000000000000000000000000000000000000',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c2',
       tokenId: '3',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -76,7 +76,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       endTime: '1996123530',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c3',
       tokenId: '5',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -93,7 +93,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       signature: '0x0000000000000000000000000000000000000000',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c4',
       tokenId: '6',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -110,7 +110,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       signature: '0x0000000000000000000000000000000000000000',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c5',
       tokenId: '7',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -126,7 +126,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       endTime: '1996123530',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c6',
       tokenId: '8',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -143,7 +143,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       signature: '0x0000000000000000000000000000000000000000',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c7',
       tokenId: '9',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -160,7 +160,7 @@ function ordersByTokenId(args: OrdersByTokenIdArgs): Order[] {
       signature: '0x0000000000000000000000000000000000000000',
     },
     {
-      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c',
+      id: 'cdb63720-9628-5ef6-bbca-2e5ce6094f3c8',
       tokenId: '10',
       offerer: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
       fulfillmentCriteria: {
@@ -214,12 +214,6 @@ interface Event {
   block_hash: string;
   block_height: number;
   created_at: number;
-}
-
-interface Notification {
-  id: string;
-  eventId: string;
-  address: string;
 }
 
 interface EventsByAddressArgs {
@@ -434,15 +428,25 @@ export default function CollectionItemsPage() {
               )}
             </>
           ) : userCanFulfill ? (
-            <button className="bg-pink-700 p-3">Fulfill</button>
+            <button
+              className="bg-pink-700 p-3"
+              onClick={() => navigate(`/order/fulfill/${order.id}`)}
+            >
+              Fulfill
+            </button>
           ) : (
-            <button className="bg-gray-800 p-3">View</button>
+            <button
+              className="bg-gray-800 p-3"
+              onClick={() => navigate(`/order/fulfill/${order.id}`)}
+            >
+              View
+            </button>
           )}
         </div>
       </div>
     );
     return (
-      <div className="w-2/5 shrink-0" key={item.id}>
+      <div className="w-1/2 shrink-0" key={item.id}>
         <img src={thumbnails[item.id]} />
         <div className="text-center">{item.id}</div>
         {orderDetailsElement || <button className="bg-pink-700 p-3 w-full">Create Order</button>}

@@ -235,7 +235,7 @@ export default function CollectionItemsPage() {
             <p className="text-sm text-gray-300">{shortenAddress(event.offerer)}</p>
             <div className="flex">
               <img width="40px" src={thumbnails[event.tokenId]} />
-              <p>Raccools #{event.tokenId}</p>
+              <p>#{event.tokenId}</p>
             </div>
             <div></div>
           </div>
@@ -251,7 +251,7 @@ export default function CollectionItemsPage() {
               return (
                 <div className="flex">
                   <img width="40px" src={thumbnails[id]} />
-                  <p>Raccools #{id}</p>
+                  <p>#{id}</p>
                 </div>
               );
             })}

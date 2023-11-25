@@ -8,6 +8,7 @@ import CollectionItemsPage, { loader as collectionItemLoader } from './pages/Col
 import CollectionActivityPage, {
   loader as collectionActivityLoader,
 } from './pages/Collection/Activity';
+import OrderFulfillPage, { loader as OrderFulfillLoader } from './pages/Order/fulfill';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -33,6 +34,11 @@ const router = createBrowserRouter([
     path: '/collection/:collectionName/activity',
     element: <CollectionActivityPage />,
     loader: collectionActivityLoader,
+  },
+  {
+    path: '/order/fulfill/:orderId',
+    element: <OrderFulfillPage />,
+    loader: OrderFulfillLoader,
   },
   {
     path: '/mvp',
