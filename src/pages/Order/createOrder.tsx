@@ -153,8 +153,18 @@ export default function CreateOrderPage() {
   const [ethPrice, setEthPrice] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
   const [expireDate, setExpireDate] = useState('');
-  const [acceptedTokens, setAcceptedTokens] = useState([]);
+  const [acceptedTokens, setAcceptedTokens] = useState<string[]>([]);
   const [acceptAnyCheck, setAcceptAnyCheck] = useState(false);
+
+  function updateAcceptedTokenIdsClick(tokenId: string) {
+    let tokenIds = [...acceptedTokens];
+    if (tokenIds.includes(tokenId)) {
+      tokenIds = tokenIds.filter((id) => id != tokenId);
+    } else {
+      tokenIds.push(tokenId);
+    }
+    setAcceptedTokens(tokenIds);
+  }
 
   const userTokenIds = tokensOwnedByAddress({ address: '0x' });
   const userAddress = '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D';
@@ -169,14 +179,22 @@ export default function CreateOrderPage() {
     </a>
   );
 
-  const tokens = Object.entries(thumbnails).map(([tokenId, thumbnail]) => {
-    return (
-      <div className="w-1/3">
-        <img className="w-full" src={thumbnail} />
-        <div className="text-center">Raccools #{tokenId}</div>
-      </div>
-    );
-  });
+  const tokens = acceptAnyCheck
+    ? []
+    : Object.entries(thumbnails).map(([tokenId, thumbnail]) => {
+        const selected = acceptedTokens.includes(tokenId) ? 'border-green-500 border-2' : '';
+
+        return (
+          <div
+            className={'w-1/4 shrink-0 ' + selected}
+            key={tokenId}
+            onClick={() => updateAcceptedTokenIdsClick(tokenId)}
+          >
+            <img className="w-full" src={thumbnail} />
+            <div className="text-center">Raccools #{tokenId}</div>
+          </div>
+        );
+      });
 
   return (
     <div>
@@ -218,7 +236,11 @@ export default function CreateOrderPage() {
           <input className="text-black" type="date" />
           <div>Select accepted tokens</div>
           <label>accept any</label>
-          <input type="checkbox" />
+          <input
+            type="checkbox"
+            checked={acceptAnyCheck}
+            onChange={() => setAcceptAnyCheck(!acceptAnyCheck)}
+          />
 
           <div className="flex flex-wrap">{tokens}</div>
           <div className="fixed bottom-0 flex bg-gray-900">
@@ -230,14 +252,24 @@ export default function CreateOrderPage() {
               <div>You receive</div>
               {<div className="w-full bg-gray-600">{formatEther(BigInt(ethPrice))} ETH</div>}
               <div className="w-full bg-gray-600 mt-1">
-                <div>{tokenPrice} Raccools</div>
+                <div>
+                  {tokenPrice} Raccools ({acceptAnyCheck ? 'any' : acceptedTokens.length})
+                </div>
                 <hr />
                 {[]}
               </div>
               <button className="w-1/3" onClick={() => navigate(`/collection/raccools/items`)}>
                 Cancel
               </button>
-              <button className="w-2/3 bg-green-500 disabled:bg-gray-500">Confirm</button>
+              <button
+                className="w-2/3 bg-green-500 disabled:bg-gray-500"
+                disabled={
+                  (!acceptAnyCheck && acceptedTokens.length < Number(tokenPrice)) ||
+                  tokenPrice == ''
+                }
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
