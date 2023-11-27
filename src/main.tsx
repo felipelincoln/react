@@ -8,7 +8,8 @@ import CollectionItemsPage, { loader as collectionItemLoader } from './pages/Col
 import CollectionActivityPage, {
   loader as collectionActivityLoader,
 } from './pages/Collection/Activity';
-import OrderFulfillPage, { loader as OrderFulfillLoader } from './pages/Order/fulfill';
+import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
+import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -38,7 +39,12 @@ const router = createBrowserRouter([
   {
     path: '/order/fulfill/:orderId',
     element: <OrderFulfillPage />,
-    loader: OrderFulfillLoader,
+    loader: orderFulfillLoader,
+  },
+  {
+    path: '/order/create/:tokenId',
+    element: <CreateOrderPage />,
+    loader: createOrderLoader,
   },
   {
     path: '/mvp',

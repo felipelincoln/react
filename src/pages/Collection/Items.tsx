@@ -449,7 +449,14 @@ export default function CollectionItemsPage() {
       <div className="w-1/2 shrink-0" key={item.id}>
         <img src={thumbnails[item.id]} />
         <div className="text-center">{item.id}</div>
-        {orderDetailsElement || <button className="bg-pink-700 p-3 w-full">Create Order</button>}
+        {orderDetailsElement || (
+          <button
+            onClick={() => navigate(`/order/create/${item.id}`)}
+            className="bg-pink-700 p-3 w-full"
+          >
+            Create Order
+          </button>
+        )}
       </div>
     );
   });
