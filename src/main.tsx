@@ -1,15 +1,13 @@
 import './css/index.css';
 import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import App from './Mvp';
 import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
-import CollectionItemsPage, { loader as collectionItemLoader } from './pages/Collection/Items';
-import CollectionActivityPage, {
-  loader as collectionActivityLoader,
-} from './pages/Collection/Activity';
+import ItemsPage, { loader as itemsLoader } from './pages/Items';
+import ActivityPage, { loader as activityLoader } from './pages/Activity';
 import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
 import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
+import CollectionLayout, { TestPage, collectionLoader } from './pages/CollectionLayout';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -27,28 +25,33 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
+    path: '/c/:collectionName',
+    element: (
+      <CollectionLayout>
+        <TestPage></TestPage>
+      </CollectionLayout>
+    ),
+    loader: collectionLoader,
+  },
+  {
     path: '/collection/:collectionName/items',
-    element: <CollectionItemsPage />,
-    loader: collectionItemLoader,
+    element: <ItemsPage />,
+    loader: itemsLoader,
   },
   {
     path: '/collection/:collectionName/activity',
-    element: <CollectionActivityPage />,
-    loader: collectionActivityLoader,
+    element: <ActivityPage />,
+    loader: activityLoader,
   },
   {
-    path: '/order/fulfill/:orderId',
+    path: '/collection/:collectionName/order/fulfill/:orderId',
     element: <OrderFulfillPage />,
     loader: orderFulfillLoader,
   },
   {
-    path: '/order/create/:tokenId',
+    path: '/collection/:collectionName/order/create/:tokenId',
     element: <CreateOrderPage />,
     loader: createOrderLoader,
-  },
-  {
-    path: '/mvp',
-    element: <App />,
   },
 ]);
 
