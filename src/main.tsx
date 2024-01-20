@@ -7,7 +7,8 @@ import ItemsPage, { loader as itemsLoader } from './pages/Items';
 import ActivityPage, { loader as activityLoader } from './pages/Activity';
 import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
 import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
-import CollectionLayout, { TestPage, collectionLoader } from './pages/CollectionLayout';
+import App, { collectionLoader } from './pages/App';
+import { Navbar } from './pages/components/Navbar';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -27,9 +28,9 @@ const router = createBrowserRouter([
   {
     path: '/c/:collectionName',
     element: (
-      <CollectionLayout>
-        <TestPage></TestPage>
-      </CollectionLayout>
+      <App>
+        <Navbar></Navbar>
+      </App>
     ),
     loader: collectionLoader,
   },
