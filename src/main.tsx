@@ -9,6 +9,8 @@ import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fu
 import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
 import App, { collectionLoader } from './pages/App';
 import { Navbar } from './pages/components/Navbar';
+import { CollectionHeader } from './pages/components/CollectionHeader';
+import { CollectionItems } from './pages/components/CollectionItems';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -26,10 +28,12 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
-    path: '/c/:collectionName',
+    path: '/c/:collectionName/items',
     element: (
       <App>
         <Navbar></Navbar>
+        <CollectionHeader></CollectionHeader>
+        <CollectionItems></CollectionItems>
       </App>
     ),
     loader: collectionLoader,

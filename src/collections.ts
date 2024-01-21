@@ -2,9 +2,9 @@ import raccoolsAbi from './abi/raccools.abi.json';
 import { Abi } from "viem";
 
 export interface CollectionDetails {
+  key: string;
   name: string;
   symbol: string;
-  key: string;
   address: `0x${string}`;
   abi: Abi;
 }

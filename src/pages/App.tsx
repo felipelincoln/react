@@ -5,11 +5,13 @@ import { ReactElement, createContext } from 'react';
 import { WagmiProvider, createConfig, http } from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { injected, metaMask } from 'wagmi/connectors';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 
 const wagmiConfig = createConfig({
   chains: [mainnet, sepolia],
+  connectors: [injected()],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
@@ -25,7 +27,7 @@ export function collectionLoader({ params }: LoaderFunctionArgs) {
   return { collection };
 }
 
-export default function App({ children }: { children: ReactElement }) {
+export default function App({ children }: { children: ReactElement[] }) {
   const { collection } = useLoaderData() as { collection: CollectionDetails | undefined };
 
   if (!collection) {

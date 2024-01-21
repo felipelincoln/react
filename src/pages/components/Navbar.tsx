@@ -2,8 +2,6 @@ import { useContext } from 'react';
 import { CollectionContext } from '../App';
 import ConnectButton from './ConnectButton';
 import { useAccount, useBalance, useEnsName, useReadContract } from 'wagmi';
-import { type UseReadContractReturnType } from 'wagmi';
-import { parseEther, parseGwei } from 'viem';
 
 export function Navbar() {
   const collection = useContext(CollectionContext);
