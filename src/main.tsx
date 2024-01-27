@@ -3,12 +3,11 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
-import ItemsPage, { loader as itemsLoader } from './pages/Items';
-import ActivityPage, { loader as activityLoader } from './pages/Activity';
 import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
-import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
 import App, { collectionLoader } from './pages/App';
 import { CollectionPage } from './pages/CollectionPage';
+import { Navbar } from './pages/components/Navbar';
+import { CreateOrderPage, createOrderLoader } from './pages/CreateOrderPage';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -29,6 +28,7 @@ const router = createBrowserRouter([
     path: '/c/:collectionName',
     element: (
       <App>
+        <Navbar></Navbar>
         <CollectionPage></CollectionPage>
       </App>
     ),
@@ -38,10 +38,11 @@ const router = createBrowserRouter([
     path: '/c/:collectionName/order/create/:tokenId',
     element: (
       <App>
+        <Navbar></Navbar>
         <CreateOrderPage></CreateOrderPage>
       </App>
     ),
-    loader: collectionLoader,
+    loader: createOrderLoader,
   },
   {
     path: '/order/fulfill/:orderId',

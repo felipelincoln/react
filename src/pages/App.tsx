@@ -10,19 +10,11 @@ import { injected } from 'wagmi/connectors';
 type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
+export const UserTokenIdsContext = createContext<string[]>([]);
 
-const wagmiConfig = createConfig({
-  chains: [mainnet, sepolia],
-  connectors: [injected()],
-  transports: {
-    [mainnet.id]: http(),
-    [sepolia.id]: http(),
-  },
-});
-
-const wagmiQueryClient = new QueryClient();
-
-export function collectionLoader({ params }: LoaderFunctionArgs) {
+export function collectionLoader({ params }: LoaderFunctionArgs): {
+  collection: CollectionDetails | undefined;
+} {
   const collectionSlug = params.collectionName!;
   const collection = supportedCollections[collectionSlug];
 
@@ -30,6 +22,27 @@ export function collectionLoader({ params }: LoaderFunctionArgs) {
 }
 
 export default function App({ children }: { children: ReactElement[] | ReactElement }) {
+  const wagmiConfig = createConfig({
+    chains: [mainnet, sepolia],
+    connectors: [injected()],
+    transports: {
+      [mainnet.id]: http(),
+      [sepolia.id]: http(),
+    },
+  });
+
+  const wagmiQueryClient = new QueryClient();
+
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={wagmiQueryClient}>
+        <AppContext>{children}</AppContext>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+function AppContext({ children }: { children: ReactElement[] | ReactElement }) {
   const { address: collectionAddress } = useContext(CollectionContext);
   const { collection } = useLoaderData() as { collection: CollectionDetails | undefined };
   const { address: userAddress, isConnected } = useAccount();
@@ -49,12 +62,9 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
   });
 
   const userTokenIds = result.data.tokens;
-
   return (
     <CollectionContext.Provider value={collection}>
-      <WagmiProvider config={wagmiConfig}>
-        <QueryClientProvider client={wagmiQueryClient}>{children}</QueryClientProvider>
-      </WagmiProvider>
+      <UserTokenIdsContext.Provider value={userTokenIds}>{children}</UserTokenIdsContext.Provider>
     </CollectionContext.Provider>
   );
 }

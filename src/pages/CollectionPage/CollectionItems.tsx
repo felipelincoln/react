@@ -1,21 +1,19 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext } from 'react';
-import { CollectionContext } from '../App';
+import { CollectionContext, UserTokenIdsContext } from '../App';
 import { useAccount } from 'wagmi';
 
-interface CollectionItemsProps {
-  userTokenIds: string[];
-}
-
-export function CollectionItems(props: CollectionItemsProps) {
+export function CollectionItems() {
   const { isConnected } = useAccount();
   const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const showUserItemsTab = searchParams.get('myItems') === '1' && isConnected;
 
-  const userTokenIds = showUserItemsTab ? props.userTokenIds : [];
-  const itemElements = userTokenIds.map((tokenId) => {
+  const tokenIds = showUserItemsTab ? userTokenIds : [];
+  const itemElements = tokenIds.map((tokenId) => {
     return (
       <div className="w-1/2 shrink-0" key={tokenId}>
         <img src={`/${collection.key}/${tokenId}.png`} />
@@ -34,7 +32,7 @@ export function CollectionItems(props: CollectionItemsProps) {
     <div>
       <div className="flex justify-between">
         <div>
-          <div>{userTokenIds.length} Results</div>
+          <div>{tokenIds.length} Results</div>
         </div>
         <div>Attributes (0)</div>
       </div>

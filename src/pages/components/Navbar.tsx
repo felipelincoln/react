@@ -1,14 +1,11 @@
 import { useContext } from 'react';
-import { CollectionContext } from '../App';
+import { CollectionContext, UserTokenIdsContext } from '../App';
 import ConnectButton from './ConnectButton';
 import { useAccount, useBalance, useEnsName } from 'wagmi';
 
-interface NavBarProps {
-  userTokenBalance: number;
-}
-
-export function Navbar(props: NavBarProps) {
+export function Navbar() {
   const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
   const { address, isConnected } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const { data: balance } = useBalance({ address });
@@ -17,12 +14,14 @@ export function Navbar(props: NavBarProps) {
     <div className="bg-gray-700 h-20">
       <div className="flex justify-between">
         <div>
-          <div>{collection.name}</div>
+          <div>
+            <a href={`/c/${collection.key}/`}>{collection.name}</a>
+          </div>
         </div>
         {isConnected ? (
           <div className="flex space-x-10">
             <div>
-              {`${props.userTokenBalance}`} {collection.symbol}
+              {`${userTokenIds.length}`} {collection.symbol}
             </div>
             <div>
               {balance?.formatted} {balance?.symbol}
