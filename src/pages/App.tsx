@@ -1,11 +1,13 @@
 import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
 import { CollectionDetails, defaultCollection, supportedCollections } from '../collections';
 import NotFoundPage from './NotFound';
-import { ReactElement, createContext } from 'react';
-import { WagmiProvider, createConfig, http } from 'wagmi';
+import { ReactElement, createContext, useContext } from 'react';
+import { WagmiProvider, createConfig, http, useAccount } from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
+
+type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 
@@ -28,11 +30,25 @@ export function collectionLoader({ params }: LoaderFunctionArgs) {
 }
 
 export default function App({ children }: { children: ReactElement[] | ReactElement }) {
+  const { address: collectionAddress } = useContext(CollectionContext);
   const { collection } = useLoaderData() as { collection: CollectionDetails | undefined };
+  const { address: userAddress, isConnected } = useAccount();
 
   if (!collection) {
     return <NotFoundPage></NotFoundPage>;
   }
+
+  const { data: result }: UseQueryResultData = useQuery({
+    initialData: { data: { tokens: [] } },
+    queryKey: ['user_token_ids'],
+    queryFn: () =>
+      fetch(`http://localhost:3000/tokens/${collectionAddress}/${userAddress}`).then((res) =>
+        res.json(),
+      ),
+    enabled: isConnected,
+  });
+
+  const userTokenIds = result.data.tokens;
 
   return (
     <CollectionContext.Provider value={collection}>

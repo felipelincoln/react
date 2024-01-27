@@ -21,7 +21,7 @@ export function CollectionItems(props: CollectionItemsProps) {
         <img src={`/${collection.key}/${tokenId}.png`} />
         <div className="text-center">{tokenId}</div>
         <button
-          onClick={() => navigate(`/order/create/${tokenId}`)}
+          onClick={() => navigate(`/c/${collection.key}/order/create/${tokenId}`)}
           className="bg-pink-700 p-3 w-full"
         >
           Create Order

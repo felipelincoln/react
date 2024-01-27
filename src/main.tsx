@@ -35,22 +35,21 @@ const router = createBrowserRouter([
     loader: collectionLoader,
   },
   {
-    path: '/collection/:collectionName/items',
-    element: <ItemsPage />,
-    loader: itemsLoader,
+    path: '/c/:collectionName/order/create/:tokenId',
+    element: (
+      <App>
+        <CreateOrderPage></CreateOrderPage>
+      </App>
+    ),
+    loader: collectionLoader,
   },
   {
-    path: '/collection/:collectionName/activity',
-    element: <ActivityPage />,
-    loader: activityLoader,
-  },
-  {
-    path: '/collection/:collectionName/order/fulfill/:orderId',
+    path: '/order/fulfill/:orderId',
     element: <OrderFulfillPage />,
     loader: orderFulfillLoader,
   },
   {
-    path: '/collection/:collectionName/order/create/:tokenId',
+    path: '/order/create/:tokenId',
     element: <CreateOrderPage />,
     loader: createOrderLoader,
   },
