@@ -8,9 +8,7 @@ import ActivityPage, { loader as activityLoader } from './pages/Activity';
 import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
 import CreateOrderPage, { loader as createOrderLoader } from './pages/Order/createOrder';
 import App, { collectionLoader } from './pages/App';
-import { Navbar } from './pages/components/Navbar';
-import { CollectionHeader } from './pages/components/CollectionHeader';
-import { CollectionItems } from './pages/components/CollectionItems';
+import { CollectionPage } from './pages/CollectionPage';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -31,9 +29,7 @@ const router = createBrowserRouter([
     path: '/c/:collectionName/items',
     element: (
       <App>
-        <Navbar></Navbar>
-        <CollectionHeader></CollectionHeader>
-        <CollectionItems></CollectionItems>
+        <CollectionPage></CollectionPage>
       </App>
     ),
     loader: collectionLoader,

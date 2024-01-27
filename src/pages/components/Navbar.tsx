@@ -1,21 +1,17 @@
 import { useContext } from 'react';
 import { CollectionContext } from '../App';
 import ConnectButton from './ConnectButton';
-import { useAccount, useBalance, useEnsName, useReadContract } from 'wagmi';
+import { useAccount, useBalance, useEnsName } from 'wagmi';
 
-export function Navbar() {
+interface NavBarProps {
+  userTokenBalance: number;
+}
+
+export function Navbar(props: NavBarProps) {
   const collection = useContext(CollectionContext);
   const { address, isConnected } = useAccount();
   const { data: ensName } = useEnsName({ address });
   const { data: balance } = useBalance({ address });
-
-  const { data: tokenBalance } = useReadContract({
-    abi: collection.abi,
-    address: collection.address,
-    functionName: 'balanceOf',
-    args: [address],
-    query: { enabled: isConnected },
-  });
 
   return (
     <div className="bg-gray-700 h-20">
@@ -26,7 +22,7 @@ export function Navbar() {
         {isConnected ? (
           <div className="flex space-x-10">
             <div>
-              {`${tokenBalance}`} {collection.symbol}
+              {`${props.userTokenBalance}`} {collection.symbol}
             </div>
             <div>
               {balance?.formatted} {balance?.symbol}

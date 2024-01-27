@@ -1,32 +1,20 @@
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext } from 'react';
 import { CollectionContext } from '../App';
-import { useQuery } from '@tanstack/react-query';
 import { useAccount } from 'wagmi';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 
-export function CollectionItems() {
+interface CollectionItemsProps {
+  userTokenIds: string[];
+}
+
+export function CollectionItems(props: CollectionItemsProps) {
+  const { isConnected } = useAccount();
   const collection = useContext(CollectionContext);
   const navigate = useNavigate();
-  const { address, isConnected } = useAccount();
   const [searchParams] = useSearchParams();
+  const showUserItemsTab = searchParams.get('myItems') === '1' && isConnected;
 
-  const myItems = searchParams.get('myItems') === '1';
-
-  const { data: result }: { data: { data: { tokens: string[] } } } = useQuery({
-    initialData: { data: { tokens: [] } },
-    queryKey: ['user_token_ids'],
-    queryFn: () => fetch(`http://localhost:3000/tokens/${address}`).then((res) => res.json()),
-    enabled: isConnected && myItems,
-  });
-
-  let userTokenIds: string[] = [];
-
-  if (isConnected && myItems) {
-    userTokenIds = result.data.tokens;
-  } else {
-    userTokenIds = [];
-  }
-
+  const userTokenIds = showUserItemsTab ? props.userTokenIds : [];
   const itemElements = userTokenIds.map((tokenId) => {
     return (
       <div className="w-1/2 shrink-0" key={tokenId}>

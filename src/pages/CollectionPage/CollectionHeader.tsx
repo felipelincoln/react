@@ -1,6 +1,6 @@
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useContext } from 'react';
 import { CollectionContext } from '../App';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export function CollectionHeader() {
   const collection = useContext(CollectionContext);
