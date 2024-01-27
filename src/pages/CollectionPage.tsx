@@ -3,11 +3,16 @@ import { CollectionItems } from './CollectionPage/CollectionItems';
 import { Navbar } from './components/Navbar';
 import { useAccount } from 'wagmi';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { useSearchParams } from 'react-router-dom';
+import { CollectionActivity } from './CollectionPage/CollectionActivity';
 
 type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 
 export function CollectionPage() {
   const { address, isConnected } = useAccount();
+  const [searchParams] = useSearchParams();
+
+  const showActivityTab = searchParams.get('activity') === '1';
 
   const { data: result }: UseQueryResultData = useQuery({
     initialData: { data: { tokens: [] } },
@@ -22,7 +27,8 @@ export function CollectionPage() {
     <>
       <Navbar userTokenBalance={userTokenIds.length}></Navbar>
       <CollectionHeader></CollectionHeader>
-      <CollectionItems userTokenIds={userTokenIds}></CollectionItems>
+      {!showActivityTab && <CollectionItems userTokenIds={userTokenIds}></CollectionItems>}
+      {showActivityTab && <CollectionActivity></CollectionActivity>}
     </>
   );
 }

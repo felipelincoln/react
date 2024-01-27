@@ -26,7 +26,7 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
-    path: '/c/:collectionName/items',
+    path: '/c/:collectionName',
     element: (
       <App>
         <CollectionPage></CollectionPage>
