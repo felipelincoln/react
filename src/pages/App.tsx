@@ -12,9 +12,11 @@ type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<string[]>([]);
 
-export function collectionLoader({ params }: LoaderFunctionArgs): {
+interface collectionLoaderData {
   collection: CollectionDetails | undefined;
-} {
+}
+
+export function collectionLoader({ params }: LoaderFunctionArgs): collectionLoaderData {
   const collectionSlug = params.collectionName!;
   const collection = supportedCollections[collectionSlug];
 
@@ -44,7 +46,7 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 
 function AppContext({ children }: { children: ReactElement[] | ReactElement }) {
   const { address: collectionAddress } = useContext(CollectionContext);
-  const { collection } = useLoaderData() as { collection: CollectionDetails | undefined };
+  const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected } = useAccount();
 
   if (!collection) {
