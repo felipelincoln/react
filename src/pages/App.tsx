@@ -1,5 +1,9 @@
 import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
-import { CollectionDetails, defaultCollection, supportedCollections } from '../collections';
+import {
+  CollectionDetails,
+  defaultCollection,
+  supportedCollections,
+} from '../collection/collections';
 import NotFoundPage from './NotFound';
 import { ReactElement, createContext, useContext } from 'react';
 import { WagmiProvider, createConfig, http, useAccount } from 'wagmi';
@@ -45,7 +49,6 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 }
 
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
-  const { address: collectionAddress } = useContext(CollectionContext);
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected } = useAccount();
 
@@ -57,7 +60,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     initialData: { data: { tokens: [] } },
     queryKey: ['user_token_ids'],
     queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collectionAddress}/${userAddress}`).then((res) =>
+      fetch(`http://localhost:3000/tokens/${collection.key}/${userAddress}`).then((res) =>
         res.json(),
       ),
     enabled: isConnected,

@@ -1,4 +1,5 @@
-import raccoolsAbi from './abi/raccools.abi.json';
+import raccoolsAbi from '../collection/abi/raccools.abi.json';
+import raccoolsAttributes from '../collection/attributes/raccools.json';
 import { Abi } from "viem";
 
 export interface CollectionDetails {
@@ -8,6 +9,7 @@ export interface CollectionDetails {
   address: `0x${string}`;
   abi: Abi;
   mintedTokens: string[];
+  attributes: {[tokenId: string]: string[]};
 }
 
 export const supportedCollections = {
@@ -17,7 +19,8 @@ export const supportedCollections = {
     symbol: 'RACCOOL',
     abi: raccoolsAbi,
     address: '0x1dDB32a082c369834b57473Dd3a5146870ECF8B7',
-    mintedTokens: Array.from({ length: 351 }, (_, index) => String(index + 1)),
+    mintedTokens: Array.from({ length: 6969 }, (_, index) => String(index + 1)),
+    attributes: raccoolsAttributes,
   },
 } as { [slug: string]: CollectionDetails };
 
