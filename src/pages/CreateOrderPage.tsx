@@ -85,7 +85,7 @@ export function CreateOrderPage() {
           />
 
           <div className="flex flex-wrap">{tokens}</div>
-          <div className="fixed bottom-0 flex bg-gray-900">
+          <div className="flex bg-gray-900">
             <div className="w-1/3">
               <img className="w-full" src={`/${collection.key}/${tokenId}.png`} />
               <div className="text-center">Raccools #{tokenId}</div>

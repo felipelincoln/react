@@ -36,15 +36,15 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
   const wagmiQueryClient = new QueryClient();
 
   return (
-    <WagmiProvider config={wagmiConfig}>
+    <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
       <QueryClientProvider client={wagmiQueryClient}>
-        <AppContext>{children}</AppContext>
+        <AppContextProvider>{children}</AppContextProvider>
       </QueryClientProvider>
     </WagmiProvider>
   );
 }
 
-function AppContext({ children }: { children: ReactElement[] | ReactElement }) {
+function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { address: collectionAddress } = useContext(CollectionContext);
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected } = useAccount();
