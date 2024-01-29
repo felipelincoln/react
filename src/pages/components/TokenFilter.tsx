@@ -1,6 +1,7 @@
 import { useContext, useState } from 'react';
 import { CollectionContext } from '../App';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { TokenCard } from './TokenCard';
 
 type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 
@@ -40,20 +41,6 @@ export function TokenFilter(props: TokenFilterProps) {
   const filters = collection.attributes;
   return (
     <div>
-      <div className="flex justify-between">
-        <div>
-          <div className="flex gap-2">
-            <div onClick={() => setSelectedFilters({})}>Clear filters</div>
-            {Object.keys(selectedFilters).map((attributeName) => (
-              <div key={`${attributeName}-${selectedFilters[attributeName]}`}>
-                {selectedFilters[attributeName]}
-              </div>
-            ))}
-          </div>
-          <div>{tokens.length} Results</div>
-        </div>
-        <div>Attributes ({Object.keys(selectedFilters).length})</div>
-      </div>
       <div className="flex">
         {Object.keys(filters).map((filter) => (
           <div key={filter}>
@@ -87,12 +74,40 @@ export function TokenFilter(props: TokenFilterProps) {
           </div>
         ))}
       </div>
+      <div>
+        <div className="flex gap-2">
+          {Object.keys(selectedFilters).length > 0 && (
+            <button
+              onClick={() => {
+                setSelectedFilters({});
+                setTokensPage(0);
+              }}
+              className="bg-red-700"
+            >
+              Clear filters
+            </button>
+          )}
+
+          {Object.keys(selectedFilters).map((attributeName) => (
+            <button
+              key={`${attributeName}-${selectedFilters[attributeName]}`}
+              className="bg-blue-700"
+              onClick={() => {
+                const selectedFiltersCopy = { ...selectedFilters };
+                delete selectedFiltersCopy[attributeName];
+                setTokensPage(0);
+                setSelectedFilters(selectedFiltersCopy);
+              }}
+            >
+              {selectedFilters[attributeName]}
+            </button>
+          ))}
+        </div>
+        <div>{tokens.length} Results</div>
+      </div>
       <div className="flex flex-wrap gap-2 justify-center">
         {tokensPaginated.map((tokenId) => (
-          <div className="w-1/6" key={tokenId}>
-            <img src={`/${collection.key}/${tokenId}.png`} />
-            <div className="text-center">{tokenId}</div>
-          </div>
+          <TokenCard tokenId={tokenId}></TokenCard>
         ))}
       </div>
       <div className="flex justify-center gap-4">
