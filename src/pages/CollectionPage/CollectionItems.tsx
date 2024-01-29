@@ -12,7 +12,7 @@ export function CollectionItems() {
 
   return (
     <div>
-      <TokenFilter selectedTokenIds={showUserItemsTab ? userTokenIds : undefined}></TokenFilter>
+      <TokenFilter tokenIds={showUserItemsTab ? userTokenIds : undefined}></TokenFilter>
     </div>
   );
 }

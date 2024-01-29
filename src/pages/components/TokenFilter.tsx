@@ -1,38 +1,51 @@
 import { useContext, useState } from 'react';
-import { CollectionContext } from '../App';
+import { CollectionContext, UserTokenIdsContext } from '../App';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { TokenCard } from './TokenCard';
+import { SelectableTokenCard } from './SelectableTokenCard';
 
 type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 
 interface TokenFilterProps {
-  selectedTokenIds?: string[];
+  tokenIds?: string[];
+  selectedTokens?: string[];
+  setSelectedTokens?: (tokenIds: string[]) => void;
+  selectToken?: (tokenId: string) => void;
+  hideCollectedTokens?: boolean;
 }
 
 const TOKENS_PER_PAGE = 20;
 
 export function TokenFilter(props: TokenFilterProps) {
   const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
+  const [showSelectedTokens, setShowSelectedTokens] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<{ [attribute: string]: string }>({});
   const [tokensPage, setTokensPage] = useState(0);
+
+  const tokenIds =
+    showSelectedTokens && props.selectedTokens ? props.selectedTokens : props.tokenIds;
+
   const { data: tokensResult }: UseQueryResultData = useQuery({
     initialData: { data: { tokens: [] } },
-    queryKey: [selectedFilters, props?.selectedTokenIds],
+    queryKey: [selectedFilters, tokenIds],
     queryFn: () =>
       fetch(`http://localhost:3000/tokens/${collection.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-          { filters: selectedFilters, tokenIds: props?.selectedTokenIds },
-          null,
-          2,
-        ),
+        body: JSON.stringify({ filters: selectedFilters, tokenIds }, null, 2),
       }).then((res) => res.json()),
   });
 
-  const tokens = tokensResult.data.tokens;
+  const isTokenSelectable = !!props.selectToken;
+  const isAttributeSelectable = !!props.setSelectedTokens;
+
+  let tokens = tokensResult.data.tokens;
+  if (props.hideCollectedTokens) {
+    tokens = tokens.filter((tokenId) => !userTokenIds.includes(tokenId));
+  }
   const tokensPaginated = tokens.slice(
     tokensPage * TOKENS_PER_PAGE,
     (tokensPage + 1) * TOKENS_PER_PAGE,
@@ -103,12 +116,59 @@ export function TokenFilter(props: TokenFilterProps) {
             </button>
           ))}
         </div>
-        <div>{tokens.length} Results</div>
+        <div className="flex gap-2 justify-center">
+          <div>{tokens.length} Results</div>
+          {isAttributeSelectable && !showSelectedTokens && tokens.length > 0 && (
+            <button
+              className="bg-green-700"
+              onClick={() =>
+                props.setSelectedTokens!(
+                  Array.from(new Set([...(props.selectedTokens || []), ...tokens])),
+                )
+              }
+            >
+              Select All ({tokens.length})
+            </button>
+          )}
+          {isAttributeSelectable &&
+            !showSelectedTokens &&
+            (props.selectedTokens || []).length > 0 && (
+              <button
+                className="bg-red-700"
+                onClick={() => {
+                  props.setSelectedTokens!([]);
+                  setShowSelectedTokens(false);
+                }}
+              >
+                Clear selected ({props.selectedTokens?.length})
+              </button>
+            )}
+          {isAttributeSelectable && (
+            <button
+              className="bg-blue-700"
+              onClick={() => setShowSelectedTokens(!showSelectedTokens)}
+            >
+              {!showSelectedTokens ? `Show selected (${props.selectedTokens?.length})` : 'Back'}
+            </button>
+          )}
+        </div>
       </div>
       <div className="flex flex-wrap gap-2 justify-center">
-        {tokensPaginated.map((tokenId) => (
-          <TokenCard tokenId={tokenId}></TokenCard>
-        ))}
+        {tokensPaginated.map((tokenId) =>
+          isTokenSelectable ? (
+            <div key={tokenId} className="w-1/6">
+              <SelectableTokenCard
+                tokenId={tokenId}
+                selectToken={props.selectToken}
+                isSelected={!!props.selectedTokens?.includes(tokenId)}
+              ></SelectableTokenCard>
+            </div>
+          ) : (
+            <div key={tokenId} className="w-1/6">
+              <TokenCard tokenId={tokenId}></TokenCard>
+            </div>
+          ),
+        )}
       </div>
       <div className="flex justify-center gap-4">
         <button

@@ -2,6 +2,7 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom
 import { CollectionContext, UserTokenIdsContext, collectionLoader } from './App';
 import { useContext, useState } from 'react';
 import { formatEther } from 'viem';
+import { TokenFilter } from './components/TokenFilter';
 
 interface CreateOrderLoaderData {
   tokenId: string;
@@ -84,7 +85,13 @@ export function CreateOrderPage() {
             onChange={() => setAcceptAnyCheck(!acceptAnyCheck)}
           />
 
-          <div className="flex flex-wrap">{tokens}</div>
+          <TokenFilter
+            selectedTokens={acceptedTokens}
+            selectToken={updateAcceptedTokenIdsClick}
+            setSelectedTokens={setAcceptedTokens}
+            hideCollectedTokens={true}
+          ></TokenFilter>
+
           <div className="flex bg-gray-900">
             <div className="w-1/3">
               <img className="w-full" src={`/${collection.key}/${tokenId}.png`} />
