@@ -9,7 +9,7 @@ import {
 
 export function useSignOrder() {
   const collection = useContext(CollectionContext);
-  const { signTypedData } = useSignTypedData();
+  const { signTypedData, data } = useSignTypedData();
 
   function signOrder(args: Omit<TypedMessage, 'token'>) {
     return signTypedData({
@@ -18,5 +18,5 @@ export function useSignOrder() {
     });
   }
 
-  return { signOrder };
+  return { data, signOrder };
 }

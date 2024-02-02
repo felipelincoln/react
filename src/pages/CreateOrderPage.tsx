@@ -1,5 +1,5 @@
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
-import { CollectionContext, collectionLoader } from './App';
+import { CollectionContext, UserTokenIdsContext, collectionLoader } from './App';
 import { useContext, useState } from 'react';
 import { formatEther } from 'viem';
 import { TokenFilter } from './components/TokenFilter';
@@ -20,15 +20,18 @@ export function createOrderLoader(loaderArgs: LoaderFunctionArgs): CreateOrderLo
 
 export function CreateOrderPage() {
   const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
   const { tokenId } = useLoaderData() as CreateOrderLoaderData;
   const { address } = useAccount();
-  const { signOrder } = useSignOrder();
+  const { data, signOrder } = useSignOrder();
   const [ethPrice, setEthPrice] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
   const [expireDate, setExpireDate] = useState('');
   const [acceptedTokens, setAcceptedTokens] = useState<string[]>([]);
   const [acceptAnyCheck, setAcceptAnyCheck] = useState(false);
   const navigate = useNavigate();
+
+  console.log({ data });
 
   const signOrderArgs: Omit<TypedMessage, 'token'> = {
     tokenId,
@@ -40,7 +43,9 @@ export function CreateOrderPage() {
       },
       token: {
         amount: tokenPrice,
-        identifier: acceptAnyCheck ? collection.mintedTokens : acceptedTokens,
+        identifier: acceptAnyCheck
+          ? collection.mintedTokens.filter((x) => !userTokenIds.includes(x))
+          : acceptedTokens,
       },
     },
   };

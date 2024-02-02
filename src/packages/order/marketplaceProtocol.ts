@@ -104,7 +104,7 @@ function seaportEIP712Message(args: TypedMessage) {
       },
     ],
     orderType: '0',
-    startTime: '1693445130',
+    startTime: '1700000000',
     endTime: args.endTime,
     zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
     salt: '1000000001',
