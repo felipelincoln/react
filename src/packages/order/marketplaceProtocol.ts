@@ -17,6 +17,8 @@ export interface Order {
   endTime: string;
 }
 
+export type WithSignature<T> = T & { signature: string };
+
 function seaportEIP712Domain() {
   return {
     name: 'Seaport',

@@ -3,8 +3,10 @@ import { CollectionContext, UserTokenIdsContext } from '../App';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { TokenCard } from './TokenCard';
 import { SelectableTokenCard } from './SelectableTokenCard';
+import { Order, WithSignature } from '../../packages/order/marketplaceProtocol';
 
-type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
+type UseQueryTokensResult = UseQueryResult<{ data: { tokens: string[] } }>;
+type UseQueryOrdersResult = UseQueryResult<{ data: { orders: WithSignature<Order>[] } }>;
 
 interface TokenFilterProps {
   tokenIds?: string[];
@@ -26,7 +28,7 @@ export function TokenFilter(props: TokenFilterProps) {
   const tokenIds =
     showSelectedTokens && props.selectedTokens ? props.selectedTokens : props.tokenIds;
 
-  const { data: tokensResult }: UseQueryResultData = useQuery({
+  const { data: tokensResult }: UseQueryTokensResult = useQuery({
     initialData: { data: { tokens: [] } },
     queryKey: [selectedFilters, tokenIds],
     queryFn: () =>
@@ -39,10 +41,28 @@ export function TokenFilter(props: TokenFilterProps) {
       }).then((res) => res.json()),
   });
 
+  const isUserTokens = !!props.tokenIds;
   const isTokenSelectable = !!props.selectToken;
   const isAttributeSelectable = !!props.setSelectedTokens;
 
-  let tokens = tokensResult.data.tokens;
+  const { data: ordersResult }: UseQueryOrdersResult = useQuery({
+    initialData: { data: { orders: [] } },
+    enabled: !isTokenSelectable,
+    queryKey: [tokensResult],
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds, collection: collection.address }, null, 2),
+      }).then((res) => res.json()),
+  });
+
+  const orders = ordersResult.data.orders;
+  const tokensWithOrder = orders.map((order) => order.tokenId);
+
+  let tokens = isTokenSelectable || isUserTokens ? tokensResult.data.tokens : tokensWithOrder;
   if (props.hideCollectedTokens) {
     tokens = tokens.filter((tokenId) => !userTokenIds.includes(tokenId));
   }
