@@ -1,7 +1,7 @@
 import MerkleTree from 'merkletreejs';
 import { keccak256, toHex } from 'viem';
 
-export interface TypedMessage {
+export interface Order {
   token: string;
   tokenId: string;
   offerer: string;
@@ -70,7 +70,7 @@ function merkleTree(data: string[]) {
   return { root, proof };
 }
 
-function seaportEIP712Message(args: TypedMessage) {
+function seaportEIP712Message(args: Order) {
   return {
     offerer: args.offerer,
     zone: '0x0000000000000000000000000000000000000000',
@@ -100,7 +100,7 @@ function seaportEIP712Message(args: TypedMessage) {
         identifierOrCriteria: merkleTree(args.fulfillmentCriteria.token.identifier).root,
         startAmount: args.fulfillmentCriteria.token.amount,
         endAmount: args.fulfillmentCriteria.token.amount,
-        recipient: '0x9F1063848b32D7c28C4144c8Eb81B6597C8f961D',
+        recipient: args.offerer,
       },
     ],
     orderType: '0',
@@ -121,6 +121,6 @@ export function marketplaceProtocolEIP712Default() {
   };
 }
 
-export function marketplaceProtocolEIP712Message(args: TypedMessage) {
+export function marketplaceProtocolEIP712Message(args: Order) {
   return seaportEIP712Message(args);
 }

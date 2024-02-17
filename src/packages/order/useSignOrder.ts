@@ -1,19 +1,16 @@
-import { useContext } from 'react';
 import { useSignTypedData } from 'wagmi';
-import { CollectionContext } from '../../pages/App';
 import {
-  TypedMessage,
+  Order,
   marketplaceProtocolEIP712Default,
   marketplaceProtocolEIP712Message,
 } from './marketplaceProtocol';
 
 export function useSignOrder() {
-  const collection = useContext(CollectionContext);
   const { signTypedData, data } = useSignTypedData();
 
-  function signOrder(args: Omit<TypedMessage, 'token'>) {
+  function signOrder(args: Order) {
     return signTypedData({
-      message: marketplaceProtocolEIP712Message({ ...args, token: collection.address }),
+      message: marketplaceProtocolEIP712Message(args),
       ...marketplaceProtocolEIP712Default(),
     });
   }

@@ -1,11 +1,12 @@
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { CollectionContext, UserTokenIdsContext, collectionLoader } from './App';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { formatEther } from 'viem';
 import { TokenFilter } from './components/TokenFilter';
 import { useSignOrder } from '../packages/order';
 import { useAccount } from 'wagmi';
-import { TypedMessage } from '../packages/order/marketplaceProtocol';
+import { Order } from '../packages/order/marketplaceProtocol';
+import { UseQueryResult, useQuery } from '@tanstack/react-query';
 
 interface CreateOrderLoaderData {
   tokenId: string;
@@ -23,7 +24,7 @@ export function CreateOrderPage() {
   const userTokenIds = useContext(UserTokenIdsContext);
   const { tokenId } = useLoaderData() as CreateOrderLoaderData;
   const { address } = useAccount();
-  const { data, signOrder } = useSignOrder();
+  const { data: signature, signOrder } = useSignOrder();
   const [ethPrice, setEthPrice] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
   const [expireDate, setExpireDate] = useState('');
@@ -31,10 +32,34 @@ export function CreateOrderPage() {
   const [acceptAnyCheck, setAcceptAnyCheck] = useState(false);
   const navigate = useNavigate();
 
-  console.log({ data });
+  const { isSuccess } = useQuery({
+    queryKey: [signature],
+    retry: false,
+    queryFn: async () => {
+      const response = await fetch(`http://localhost:3000/orders/create/`, {
+        method: 'POST',
+        body: JSON.stringify({ order: { ...signOrderArgs, signature } }, null, 2),
+        headers: { 'Content-Type': 'application/json' },
+      });
 
-  const signOrderArgs: Omit<TypedMessage, 'token'> = {
+      if (!response.ok) {
+        return Promise.reject(response.json());
+      }
+
+      return response.json();
+    },
+    enabled: !!signature,
+  });
+
+  useEffect(() => {
+    if (isSuccess) {
+      navigate(`/c/raccools/?myItems=1`);
+    }
+  }, [isSuccess]);
+
+  const signOrderArgs: Order = {
     tokenId,
+    token: collection.address,
     offerer: address!,
     endTime: expireDate,
     fulfillmentCriteria: {
