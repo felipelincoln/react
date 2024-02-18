@@ -50,6 +50,7 @@ export function CollectionHeader() {
           />
         </div>
       </div>
+      <hr />
     </section>
   );
 }

@@ -1,18 +1,23 @@
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { useContext } from 'react';
+import { useContext, useState } from 'react';
 import { CollectionContext, UserTokenIdsContext } from '../App';
 import { useAccount } from 'wagmi';
 import { TokenFilter } from '../components/TokenFilter';
+import { UserItems } from './CollectionItems/UserItems';
 
 export function CollectionItems() {
-  const { isConnected } = useAccount();
   const userTokenIds = useContext(UserTokenIdsContext);
+  const { isConnected } = useAccount();
   const [searchParams] = useSearchParams();
-  const showUserItemsTab = searchParams.get('myItems') === '1' && isConnected;
+  const isMyItems = searchParams.get('myItems') === '1' && isConnected;
+
+  if (isMyItems) {
+    return <UserItems></UserItems>;
+  }
 
   return (
     <div>
-      <TokenFilter tokenIds={showUserItemsTab ? userTokenIds : undefined}></TokenFilter>
+      <TokenFilter tokenIds={isMyItems ? userTokenIds : undefined}></TokenFilter>
     </div>
   );
 }

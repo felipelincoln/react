@@ -5,9 +5,11 @@ import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
 import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
 import App, { collectionLoader } from './pages/App';
-import { CollectionPage } from './pages/CollectionPage';
 import { Navbar } from './pages/components/Navbar';
 import { CreateOrderPage, createOrderLoader } from './pages/CreateOrderPage';
+import { CollectionHeader } from './pages/CollectionPage/CollectionHeader';
+import { CollectionItems } from './pages/CollectionPage/CollectionItems';
+import { CollectionActivity } from './pages/CollectionPage/CollectionActivity';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -29,7 +31,19 @@ const router = createBrowserRouter([
     element: (
       <App>
         <Navbar></Navbar>
-        <CollectionPage></CollectionPage>
+        <CollectionHeader></CollectionHeader>
+        <CollectionItems></CollectionItems>
+      </App>
+    ),
+    loader: collectionLoader,
+  },
+  {
+    path: '/c/:collectionName/activity',
+    element: (
+      <App>
+        <Navbar></Navbar>
+        <CollectionHeader></CollectionHeader>
+        <CollectionActivity></CollectionActivity>
       </App>
     ),
     loader: collectionLoader,
