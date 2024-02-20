@@ -1,17 +1,9 @@
-import { ItemCard } from './ItemCard';
+import { ReactElement } from 'react';
 
 interface ItemsGridProps {
-  tokenIds: string[];
+  children: ReactElement[] | ReactElement;
 }
 
 export function ItemsGrid(props: ItemsGridProps) {
-  return (
-    <div className="flex flex-wrap gap-2 justify-center">
-      {props.tokenIds.map((tokenId) => (
-        <div key={tokenId} className="w-1/6">
-          <ItemCard tokenId={tokenId}></ItemCard>
-        </div>
-      ))}
-    </div>
-  );
+  return <div className="flex flex-wrap gap-2 justify-center">{props.children}</div>;
 }

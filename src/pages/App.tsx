@@ -60,8 +60,9 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     initialData: { data: { tokens: [] } },
     queryKey: ['user_token_ids'],
     queryFn: () =>
-      //fetch(`http://localhost:3000/tokens/${collection.key}/${userAddress}`).then((res) =>
-      fetch(`http://localhost:3000/tokens/${collection.key}/mande.eth`).then((res) => res.json()),
+      fetch(`http://localhost:3000/tokens/${collection.key}/${userAddress}`).then((res) =>
+        res.json(),
+      ),
     enabled: isConnected,
   });
 
