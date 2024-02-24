@@ -1,6 +1,7 @@
 import MerkleTree from 'merkletreejs';
 import { keccak256, toHex } from 'viem';
 import seaportABIJson from './contractAbi/seaport.abi.json';
+import { config } from '../../config';
 
 export interface Order {
   token: string;
@@ -37,7 +38,7 @@ function seaportEIP712Domain() {
   return {
     name: 'Seaport',
     version: '1.5',
-    chainId: 1,
+    chainId: Number(config.ethereumNetwork),
     verifyingContract: '0x00000000000000adc04c56bf30ac9d3c0aaf14dc' as `0x${string}`,
   };
 }
@@ -76,6 +77,30 @@ function seaportEIP712Types() {
 }
 
 function seaportEIP712Message(args: Order) {
+  const ethConsideration = args.fulfillmentCriteria.coin && {
+    itemType: '0',
+    token: '0x0000000000000000000000000000000000000000',
+    identifierOrCriteria: '0',
+    startAmount: args.fulfillmentCriteria.coin.amount,
+    endAmount: args.fulfillmentCriteria.coin.amount,
+    recipient: args.offerer,
+  };
+
+  const tokenConsideration = {
+    itemType: '4',
+    token: args.token,
+    identifierOrCriteria: merkleTree(args.fulfillmentCriteria.token.identifier).root,
+    startAmount: '1',
+    endAmount: '1',
+    recipient: args.offerer,
+  };
+
+  let ethConsiderationList = !!ethConsideration ? [ethConsideration] : [];
+  let tokenConsiderationList = Array.from(
+    { length: Number(args.fulfillmentCriteria.token.amount) },
+    () => tokenConsideration,
+  );
+
   return {
     offerer: args.offerer,
     zone: '0x0000000000000000000000000000000000000000',
@@ -88,26 +113,7 @@ function seaportEIP712Message(args: Order) {
         endAmount: '1',
       },
     ],
-    consideration: [
-      ...[
-        args.fulfillmentCriteria.coin && {
-          itemType: '0',
-          token: '0x0000000000000000000000000000000000000000',
-          identifierOrCriteria: '0',
-          startAmount: args.fulfillmentCriteria.coin.amount,
-          endAmount: args.fulfillmentCriteria.coin.amount,
-          recipient: args.offerer,
-        },
-      ].filter(Boolean),
-      {
-        itemType: '4',
-        token: args.token,
-        identifierOrCriteria: merkleTree(args.fulfillmentCriteria.token.identifier).root,
-        startAmount: args.fulfillmentCriteria.token.amount,
-        endAmount: args.fulfillmentCriteria.token.amount,
-        recipient: args.offerer,
-      },
-    ],
+    consideration: [...ethConsiderationList, ...tokenConsiderationList],
     orderType: '0',
     startTime: '1700000000',
     endTime: args.endTime,
@@ -121,26 +127,9 @@ function seaportEIP712Message(args: Order) {
 function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignature<Order>>) {
   const offer = [['2', order.token, order.tokenId, 1, 1]]; // itemType, token, identifierOrCriteria, startAmount, endAmount
 
-  const consideration = [
-    [
-      '4', // itemType
-      order.token,
-      merkleTree(order.fulfillmentCriteria.token.identifier).root,
-      order.fulfillmentCriteria.token.amount,
-      order.fulfillmentCriteria.token.amount,
-      order.offerer,
-    ],
-    ...[
-      order.fulfillmentCriteria.coin && [
-        '0', // itemType
-        '0x0000000000000000000000000000000000000000', // token
-        '0', // identifierOrCriteria
-        order.fulfillmentCriteria.coin.amount,
-        order.fulfillmentCriteria.coin.amount,
-        order.offerer,
-      ],
-    ].filter(Boolean),
-  ];
+  const fulfillAdvancedOrderMessage = seaportEIP712Message(order);
+  //const offer = fulfillAdvancedOrderMessage.offer.map((obj) => Object.values(obj));;
+  const consideration = fulfillAdvancedOrderMessage.consideration.map((obj) => Object.values(obj));
 
   const orderParameters = [
     order.offerer,
@@ -158,18 +147,19 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
 
   const advancedOrder = [orderParameters, 1, 1, order.signature, '0x'];
 
-  const criteriaResolvers = order.selectedTokenIds.map((tokenId, itemIndex) => {
-    let a = merkleTree(order.fulfillmentCriteria.token.identifier);
-    console.log({ root: a.root, proof: a.proof(tokenId) });
+  const hasEthConsideration = !!order.fulfillmentCriteria.coin;
 
+  const criteriaResolvers = order.selectedTokenIds.map((tokenId, itemIndex) => {
     return [
       0, // order index
       1, // side (offer | consideration)
-      itemIndex,
+      itemIndex + Number(hasEthConsideration), // item index
       tokenId,
       merkleTree(order.fulfillmentCriteria.token.identifier).proof(tokenId),
     ];
   });
+
+  console.log({ consideration, criteriaResolvers });
 
   return [
     advancedOrder,

@@ -164,7 +164,7 @@ export function BuyOrderPage() {
           </button>
           <button
             onClick={() => {
-              fulfillOrder(fulfillOrderArgs);
+              fulfillOrder(fulfillOrderArgs, BigInt(order.fulfillmentCriteria.coin?.amount || ''));
             }}
             className="w-2/3 bg-green-500 disabled:bg-gray-500"
             disabled={!isUserBalanceEnough || !isSelectedTokensEnough}
