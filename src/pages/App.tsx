@@ -16,7 +16,7 @@ type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<string[]>([]);
 
-interface collectionLoaderData {
+export interface collectionLoaderData {
   collection: CollectionDetails | undefined;
 }
 

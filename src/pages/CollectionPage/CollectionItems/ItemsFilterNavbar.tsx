@@ -32,7 +32,7 @@ export function ItemsFilterNavbar(props: ItemsFilterNavbarProps) {
   });
 
   const tokenIds = isAttributeSelected ? filteredTokenIds?.data.tokens : props.tokenIds;
-  useEffect(() => props.setFilteredTokenIds(tokenIds), [tokenIds]);
+  useEffect(() => props.setFilteredTokenIds(tokenIds), [tokenIds.join('-')]);
 
   return (
     <div>

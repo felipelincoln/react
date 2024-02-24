@@ -7,7 +7,7 @@ interface ItemsPaginationNavbarProps {
   setPage: (page: number) => void;
 }
 
-const TOKENS_PER_PAGE = 2;
+const TOKENS_PER_PAGE = 10;
 
 export function ItemsPaginationNavbar(props: ItemsPaginationNavbarProps) {
   const tokensHasNextPage = props.tokenIds.length > (props.page + 1) * TOKENS_PER_PAGE;
