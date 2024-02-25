@@ -38,12 +38,16 @@ export function BuyOrderPage() {
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
   const navigate = useNavigate();
-  const { fulfillOrder } = useFulfillOrder();
+  const { isFulfillConfirmed, fulfillOrder } = useFulfillOrder();
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [sortedTokenIds, setSortedTokenIds] = useState<string[]>([]);
   const [selectedTokens, setSelectedTokens] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (isFulfillConfirmed) navigate(`/c/${collection.key}?myItems=1`);
+  }, [isFulfillConfirmed]);
 
   useEffect(() => {
     const filteredTokenIdsCopy = [...filteredTokenIds];
@@ -150,8 +154,12 @@ export function BuyOrderPage() {
               {order.fulfillmentCriteria.token.amount} {collection.symbol}
               <div className="flex gap-1">
                 {selectedTokens.map((tokenId) => (
-                  <div key={tokenId} className="w-12">
-                    <TokenCard tokenId={tokenId}></TokenCard>
+                  <div
+                    key={tokenId}
+                    className="w-12 cursor-pointer"
+                    onClick={() => handleSelectToken(tokenId)}
+                  >
+                    <ItemCard tokenId={tokenId}></ItemCard>
                   </div>
                 ))}
               </div>

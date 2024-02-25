@@ -1,4 +1,4 @@
-import { useWriteContract } from 'wagmi';
+import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import {
   Order,
   WithSelectedTokenIds,
@@ -11,13 +11,15 @@ import { useCheckCollectionAllowance } from './useCheckCollectionAllowance';
 import { useEffect, useState } from 'react';
 
 export function useFulfillOrder() {
-  const { data, writeContract } = useWriteContract();
+  const { data: hash, writeContract } = useWriteContract();
+  const { isSuccess: isFulfillConfirmed } = useWaitForTransactionReceipt({ hash });
   const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<WithSelectedTokenIds<WithSignature<Order>>>();
+  const [sendWriteContract, setSendWriteContract] = useState(false);
 
   useEffect(() => {
-    if (!!args && isApprovedForAll) {
-      setArgs(undefined);
+    if (!!args && isApprovedForAll && sendWriteContract) {
+      setSendWriteContract(false);
       writeContract(
         {
           abi: marketplaceProtocolABI(),
@@ -29,12 +31,13 @@ export function useFulfillOrder() {
         { onError: (error) => console.error(error) },
       );
     }
-  }, [!!args, isApprovedForAll]);
+  }, [!!args, isApprovedForAll, sendWriteContract]);
 
   function fulfillOrder(args: WithSelectedTokenIds<WithSignature<Order>>) {
+    setSendWriteContract(true);
     setArgs(args);
     setApprovalForAll();
   }
 
-  return { data, fulfillOrder };
+  return { isFulfillConfirmed, fulfillOrder };
 }

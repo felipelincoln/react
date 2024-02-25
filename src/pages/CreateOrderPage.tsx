@@ -32,7 +32,7 @@ export function CreateOrderPage() {
   const userTokenIds = useContext(UserTokenIdsContext);
   const { tokenId } = useLoaderData() as CreateOrderLoaderData;
   const { address } = useAccount();
-  const { data: signature, signOrder } = useSignOrder();
+  const { signature, orderHash, signOrder } = useSignOrder();
   const [ethPrice, setEthPrice] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
   const [expireDate, setExpireDate] = useState('');
@@ -42,6 +42,8 @@ export function CreateOrderPage() {
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
   const navigate = useNavigate();
+
+  console.log({ orderHash, signature });
 
   const allTokenIds = collection.mintedTokens.filter((x) => !userTokenIds.includes(x));
 
@@ -62,12 +64,12 @@ export function CreateOrderPage() {
   };
 
   const { isSuccess } = useQuery({
-    queryKey: [signature],
+    queryKey: [signature, orderHash],
     retry: false,
     queryFn: async () => {
       const response = await fetch(`http://localhost:3000/orders/create/`, {
         method: 'POST',
-        body: JSON.stringify({ order: { ...signOrderArgs, signature } }, null, 2),
+        body: JSON.stringify({ order: { ...signOrderArgs, signature, orderHash } }, null, 2),
         headers: { 'Content-Type': 'application/json' },
       });
 
@@ -77,7 +79,7 @@ export function CreateOrderPage() {
 
       return response.json();
     },
-    enabled: !!signature,
+    enabled: !!signature && !!orderHash,
   });
 
   useEffect(() => {
