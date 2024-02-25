@@ -163,9 +163,7 @@ export function BuyOrderPage() {
             Cancel
           </button>
           <button
-            onClick={() => {
-              fulfillOrder(fulfillOrderArgs, BigInt(order.fulfillmentCriteria.coin?.amount || ''));
-            }}
+            onClick={() => fulfillOrder(fulfillOrderArgs)}
             className="w-2/3 bg-green-500 disabled:bg-gray-500"
             disabled={!isUserBalanceEnough || !isSelectedTokensEnough}
           >
