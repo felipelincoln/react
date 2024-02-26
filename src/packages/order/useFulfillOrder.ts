@@ -12,7 +12,7 @@ import { useEffect, useState } from 'react';
 
 export function useFulfillOrder() {
   const { data: hash, writeContract } = useWriteContract();
-  const { isSuccess: isFulfillConfirmed } = useWaitForTransactionReceipt({ hash });
+  const { isSuccess: isFulfillConfirmed, isFetching } = useWaitForTransactionReceipt({ hash }); // TODO: not working
   const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<WithSelectedTokenIds<WithSignature<Order>>>();
   const [sendWriteContract, setSendWriteContract] = useState(false);

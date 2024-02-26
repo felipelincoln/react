@@ -69,16 +69,6 @@ const router = createBrowserRouter([
     ),
     loader: buyOrderLoader,
   },
-  {
-    path: '/order/fulfill/:orderId',
-    element: <OrderFulfillPage />,
-    loader: orderFulfillLoader,
-  },
-  {
-    path: '/order/create/:tokenId',
-    element: <CreateOrderPage />,
-    loader: createOrderLoader,
-  },
 ]);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);
