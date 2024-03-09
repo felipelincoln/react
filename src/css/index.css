@@ -9,4 +9,10 @@
   html.light > body {
     @apply bg-white text-black;
   }
+  button, a {
+    @apply !outline-none !ring-offset-0 focus-visible:ring-zinc-200 focus-visible:ring-2;
+  }
+  input[type="checkbox"] {
+    @apply !ring-offset-0 focus-visible:ring-zinc-200 focus-visible:ring-2 focus:ring-0;
+  }
 }

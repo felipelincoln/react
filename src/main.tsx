@@ -3,7 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import HomePage from './pages/Home';
 import NotFoundPage from './pages/NotFound';
-import OrderFulfillPage, { loader as orderFulfillLoader } from './pages/Order/fulfill';
 import App, { collectionLoader } from './pages/App';
 import { Navbar } from './pages/components/Navbar';
 import { CreateOrderPage, createOrderLoader } from './pages/CreateOrderPage';
@@ -11,6 +10,7 @@ import { CollectionHeader } from './pages/CollectionPage/CollectionHeader';
 import { CollectionItems } from './pages/CollectionPage/CollectionItems';
 import { CollectionActivity } from './pages/CollectionPage/CollectionActivity';
 import { BuyOrderPage, buyOrderLoader } from './pages/BuyOrderPage';
+import { Components } from './pages/Components';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -67,6 +67,11 @@ const router = createBrowserRouter([
         <BuyOrderPage></BuyOrderPage>
       </App>
     ),
+    loader: buyOrderLoader,
+  },
+  {
+    path: '/components',
+    element: <Components></Components>,
     loader: buyOrderLoader,
   },
 ]);
