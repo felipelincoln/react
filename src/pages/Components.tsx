@@ -174,15 +174,16 @@ function IconNFT({ src }: { src: string }) {
 }
 
 function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
+  let id = crypto.randomUUID();
   return (
     <div className="flex items-center text-zinc-400 hover:text-zinc-200">
       <input
-        name={label}
-        type="checkbox"
+        id={id}
         checked={!!checked}
-        className="w-4 h-4 rounded cursor-pointer border-none bg-zinc-800  checked:!bg-cyan-400"
+        type="checkbox"
+        className="appearance-none w-4 h-4 rounded cursor-pointer border-none bg-zinc-800  checked:!bg-cyan-400"
       />
-      <label htmlFor={label} className="pl-2 text-sm cursor-pointer text-nowrap">
+      <label htmlFor={id} className="pl-2 text-sm cursor-pointer text-nowrap test">
         {label}
       </label>
     </div>
