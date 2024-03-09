@@ -2,7 +2,7 @@ import { ReactElement } from 'react';
 
 export function Components() {
   return (
-    <div className="p-20 bg-zinc-950 flex flex-row gap-6">
+    <div className="p-20 bg-zinc-950 flex flex-row gap-6 flex-wrap">
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Button>Button</Button>
         <Button disabled>Button:Disabled</Button>
@@ -27,6 +27,13 @@ export function Components() {
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Checkbox label="Checkbox" />
         <Checkbox label="Checkbox:Checked" checked />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <Tootltip
+          text={
+            'Lorem ipsum dolor sit amet. Consectetur adipiscing elito asokdo kasodk oaskdo kaoskdo askd kaoskd oaksod kasodk oaksd'
+          }
+        />
       </div>
     </div>
   );
@@ -177,15 +184,44 @@ function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
   let id = crypto.randomUUID();
   return (
     <div className="flex items-center text-zinc-400 hover:text-zinc-200">
-      <input
-        id={id}
-        checked={!!checked}
-        type="checkbox"
-        className="appearance-none w-4 h-4 rounded cursor-pointer border-none bg-zinc-800  checked:!bg-cyan-400"
-      />
-      <label htmlFor={id} className="pl-2 text-sm cursor-pointer text-nowrap test">
+      <input id={id} checked={!!checked} type="checkbox" className="hidden" />
+      <label htmlFor={id} tabIndex={0} className="text-sm cursor-pointer text-nowrap checkbox">
         {label}
       </label>
+    </div>
+  );
+}
+
+function Tootltip({ text }: { text: string }) {
+  return (
+    <div data-tooltip={text} className="tooltip">
+      <svg
+        className="h-4 w-4 text-zinc-400 hover:text-zinc-200"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+        fill="none"
+      >
+        <path
+          d="M2.5 12C2.5 7.52166 2.5 5.28249 3.89124 3.89124C5.28249 2.5 7.52166 2.5 12 2.5C16.4783 2.5 18.7175 2.5 20.1088 3.89124C21.5 5.28249 21.5 7.52166 21.5 12C21.5 16.4783 21.5 18.7175 20.1088 20.1088C18.7175 21.5 16.4783 21.5 12 21.5C7.52166 21.5 5.28249 21.5 3.89124 20.1088C2.5 18.7175 2.5 16.4783 2.5 12Z"
+          stroke="currentColor"
+          stroke-width="2"
+        />
+        <path
+          d="M12.2422 17V12C12.2422 11.5286 12.2422 11.2929 12.0957 11.1464C11.9493 11 11.7136 11 11.2422 11"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+        <path
+          d="M11.992 8H12.001"
+          stroke="currentColor"
+          stroke-width="2"
+          stroke-linecap="round"
+          stroke-linejoin="round"
+        />
+      </svg>
+      <div className="tooltip"></div>
     </div>
   );
 }
