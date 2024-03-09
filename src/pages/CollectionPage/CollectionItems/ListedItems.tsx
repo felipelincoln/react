@@ -49,7 +49,7 @@ export function ListedItems() {
         ))}
       </ItemsGrid>
       <ItemsPaginationNavbar
-        tokenIds={filteredTokenIds}
+        items={filteredTokenIds}
         setPaginatedItems={setPaginatedTokenIds}
         page={tokensPage}
         setPage={setTokensPage}

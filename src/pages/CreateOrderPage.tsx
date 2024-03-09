@@ -15,6 +15,8 @@ import { ItemsFilterNavbar } from './CollectionPage/CollectionItems/ItemsFilterN
 import { ItemsPaginationNavbar } from './CollectionPage/CollectionItems/ItemsPaginationNavbar';
 import { ItemsGrid } from './CollectionPage/CollectionItems/ItemsGrid';
 import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
+import NotFoundPage from './NotFound';
+import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
 
 interface CreateOrderLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -31,7 +33,7 @@ export function CreateOrderPage() {
   const collection = useContext(CollectionContext);
   const userTokenIds = useContext(UserTokenIdsContext);
   const { tokenId } = useLoaderData() as CreateOrderLoaderData;
-  const { address } = useAccount();
+  const { address, isConnecting, isConnected } = useAccount();
   const { signature, orderHash, signOrder } = useSignOrder();
   const [ethPrice, setEthPrice] = useState('');
   const [tokenPrice, setTokenPrice] = useState('');
@@ -43,14 +45,11 @@ export function CreateOrderPage() {
   const [tokensPage, setTokensPage] = useState(0);
   const navigate = useNavigate();
 
-  console.log({ orderHash, signature });
-
   const allTokenIds = collection.mintedTokens.filter((x) => !userTokenIds.includes(x));
-
-  const signOrderArgs: Order = {
+  const newOrder: Order = {
     tokenId,
     token: collection.address,
-    offerer: address!,
+    offerer: address || '',
     endTime: expireDate,
     fulfillmentCriteria: {
       coin: (Number(ethPrice) > 0 || undefined) && {
@@ -63,30 +62,29 @@ export function CreateOrderPage() {
     },
   };
 
-  const { isSuccess } = useQuery({
+  const { isSuccess, error, isFetching } = useQuery({
     queryKey: [signature, orderHash],
     retry: false,
     queryFn: async () => {
       const response = await fetch(`http://localhost:3000/orders/create/`, {
         method: 'POST',
-        body: JSON.stringify({ order: { ...signOrderArgs, signature, orderHash } }, null, 2),
+        body: JSON.stringify({ order: { ...newOrder, signature, orderHash } }, null, 2),
         headers: { 'Content-Type': 'application/json' },
       });
 
-      if (!response.ok) {
-        return Promise.reject(response.json());
-      }
-
-      return response.json();
+      if (!response.ok) return Promise.reject(await response.json());
     },
     enabled: !!signature && !!orderHash,
   });
 
   useEffect(() => {
-    if (isSuccess) {
-      navigate(`/c/${collection.key}/?myItems=1`);
-    }
+    console.log({ useEffectIsSuccess: isSuccess });
+    if (isSuccess) navigate(`/c/${collection.key}/?myItems=1`);
   }, [isSuccess]);
+
+  if (!isConnecting && !isConnected) {
+    return <NotFoundPage></NotFoundPage>;
+  }
 
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...acceptedTokens];
@@ -169,7 +167,7 @@ export function CreateOrderPage() {
                 ))}
               </ItemsGrid>
               <ItemsPaginationNavbar
-                tokenIds={filteredTokenIds}
+                items={filteredTokenIds}
                 setPaginatedItems={setPaginatedTokenIds}
                 page={tokensPage}
                 setPage={setTokensPage}
@@ -199,7 +197,7 @@ export function CreateOrderPage() {
                 Cancel
               </button>
               <button
-                onClick={() => signOrder(signOrderArgs)}
+                onClick={() => signOrder(newOrder)}
                 className="w-2/3 bg-green-500 disabled:bg-gray-500"
                 disabled={
                   (!acceptAnyTokenCheck && acceptedTokens.length < Number(tokenPrice)) ||

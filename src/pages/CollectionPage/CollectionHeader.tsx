@@ -8,15 +8,11 @@ export function CollectionHeader() {
   const navigate = useNavigate();
 
   function navigateToItems() {
-    searchParams.delete('activity');
-    const params = searchParams.size ? `?${searchParams.toString()}` : '';
-
-    navigate(`/c/${collection.key}${params}`);
+    navigate(`/c/${collection.key}?${searchParams.toString()}`);
   }
 
   function navigateToActivity() {
-    searchParams.set('activity', '1');
-    navigate(`/c/${collection.key}?${searchParams.toString()}`);
+    navigate(`/c/${collection.key}/activity?${searchParams.toString()}`);
   }
 
   function navigateToToggledMyItems() {
@@ -26,9 +22,7 @@ export function CollectionHeader() {
     } else {
       searchParams.set('myItems', '1');
     }
-
-    const params = searchParams.size ? `?${searchParams.toString()}` : '';
-    navigate(`/c/${collection.key}${params}`);
+    navigate(`?${searchParams.toString()}`);
   }
 
   return (

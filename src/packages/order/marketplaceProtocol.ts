@@ -19,8 +19,33 @@ export interface Order {
   endTime: string;
 }
 
+export type With_Id<t> = t & { _id: string };
 export type WithSignature<T> = T & { signature: string };
 export type WithSelectedTokenIds<T> = T & { selectedTokenIds: string[] };
+
+export interface Activity {
+  etype: string;
+  token: string;
+  tokenId: string;
+  offerer: string;
+  fulfiller: string;
+  fulfillment: {
+    coin?: {
+      amount: string;
+    };
+    token: {
+      amount: string;
+      identifier: string[];
+    };
+  };
+  txHash: string;
+  createdAt: string;
+}
+
+export interface Notification {
+  activityId: string;
+  address: string;
+}
 
 function merkleTree(data: string[]) {
   const leaves = data.map((x) => toHex(Number(x), { size: 32 })).map((x) => keccak256(x));

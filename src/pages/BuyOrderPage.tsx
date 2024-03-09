@@ -14,7 +14,6 @@ import { ItemsGrid } from './CollectionPage/CollectionItems/ItemsGrid';
 import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
 import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
 import { formatEther } from 'viem';
-import { TokenCard } from './components/TokenCard';
 import { useAccount, useBalance } from 'wagmi';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 
@@ -129,7 +128,7 @@ export function BuyOrderPage() {
         })}
       </ItemsGrid>
       <ItemsPaginationNavbar
-        tokenIds={sortedTokenIds}
+        items={sortedTokenIds}
         setPaginatedItems={setPaginatedTokenIds}
         page={tokensPage}
         setPage={setTokensPage}

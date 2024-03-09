@@ -5,16 +5,21 @@ import {
   supportedCollections,
 } from '../collection/collections';
 import NotFoundPage from './NotFound';
-import { ReactElement, createContext, useContext } from 'react';
+import { ReactElement, createContext } from 'react';
 import { WagmiProvider, createConfig, http, useAccount } from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
+import { Notification, With_Id } from '../packages/order/marketplaceProtocol';
 
-type UseQueryResultData = UseQueryResult<{ data: { tokens: string[] } }>;
+type UseQueryUserTokenIdsResultData = UseQueryResult<{ data: { tokens: string[] } }>;
+type UseQueryUserNotificationsResultData = UseQueryResult<{
+  data: { notifications: With_Id<Notification>[] };
+}>;
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<string[]>([]);
+export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
 
 export interface collectionLoaderData {
   collection: CollectionDetails | undefined;
@@ -56,7 +61,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     return <NotFoundPage></NotFoundPage>;
   }
 
-  const { data: result }: UseQueryResultData = useQuery({
+  const { data: userTokenIdsResult }: UseQueryUserTokenIdsResultData = useQuery({
     initialData: { data: { tokens: [] } },
     queryKey: ['user_token_ids'],
     queryFn: () =>
@@ -66,10 +71,25 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     enabled: isConnected,
   });
 
-  const userTokenIds = result.data.tokens;
+  const { data: notificationsResult }: UseQueryUserNotificationsResultData = useQuery({
+    initialData: { data: { notifications: [] } },
+    queryKey: ['user_notifications'],
+    queryFn: () =>
+      fetch(`http://localhost:3000/notifications/${collection.key}/${userAddress}`).then((res) =>
+        res.json(),
+      ),
+    enabled: isConnected,
+  });
+
+  const userTokenIds = userTokenIdsResult.data.tokens;
+  const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
-      <UserTokenIdsContext.Provider value={userTokenIds}>{children}</UserTokenIdsContext.Provider>
+      <UserTokenIdsContext.Provider value={userTokenIds}>
+        <UserNotificationsContext.Provider value={userNotifications}>
+          {children}
+        </UserNotificationsContext.Provider>
+      </UserTokenIdsContext.Provider>
     </CollectionContext.Provider>
   );
 }

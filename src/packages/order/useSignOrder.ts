@@ -19,7 +19,7 @@ export function useSignOrder() {
   const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<Order>();
   const [callSignTypedData, setCallSignTypedData] = useState(false);
-  const { data: orderHash } = useReadContract({
+  const { data: orderHash }: { data?: `0x${string}` } = useReadContract({
     address: marketplaceProtocolContractAddress(),
     abi: marketplaceProtocolABI(),
     functionName: 'getOrderHash',

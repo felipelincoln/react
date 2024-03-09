@@ -1,10 +1,16 @@
+import { useSearchParams } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import { UserActivities } from './CollectionActivities/UserActivities';
+import { Activities } from './CollectionActivities/Activities';
+
 export function CollectionActivity() {
-  return (
-    <div className="flex justify-between">
-      <div>
-        <div>{0} Results</div>
-      </div>
-      <div>Attributes (0)</div>
-    </div>
-  );
+  const { isConnected } = useAccount();
+  const [searchParams] = useSearchParams();
+  const isMyActivities = searchParams.get('myItems') === '1' && isConnected;
+
+  if (isMyActivities) {
+    return <UserActivities></UserActivities>;
+  }
+
+  return <Activities></Activities>;
 }

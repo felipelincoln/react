@@ -1,8 +1,8 @@
 import { useEffect } from 'react';
 
 interface ItemsPaginationNavbarProps {
-  tokenIds: string[];
-  setPaginatedItems: (tokenIds: string[]) => void;
+  items: any[];
+  setPaginatedItems: (items: any[]) => void;
   page: number;
   setPage: (page: number) => void;
 }
@@ -10,13 +10,13 @@ interface ItemsPaginationNavbarProps {
 const TOKENS_PER_PAGE = 10;
 
 export function ItemsPaginationNavbar(props: ItemsPaginationNavbarProps) {
-  const tokensHasNextPage = props.tokenIds.length > (props.page + 1) * TOKENS_PER_PAGE;
-  const paginatedItems = props.tokenIds.slice(
+  const tokensHasNextPage = props.items.length > (props.page + 1) * TOKENS_PER_PAGE;
+  const paginatedItems = props.items.slice(
     props.page * TOKENS_PER_PAGE,
     (props.page + 1) * TOKENS_PER_PAGE,
   );
 
-  useEffect(() => props.setPaginatedItems(paginatedItems), [paginatedItems.join('-')]);
+  useEffect(() => props.setPaginatedItems(paginatedItems), [props.items.length, props.page]);
 
   return (
     <div className="flex justify-center gap-4">
