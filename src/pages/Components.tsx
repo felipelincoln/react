@@ -29,11 +29,15 @@ export function Components() {
         <Checkbox label="Checkbox:Checked" checked />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <Tootltip
-          text={
-            'Lorem ipsum dolor sit amet. Consectetur adipiscing elito asokdo kasodk oaskdo kaoskdo askd kaoskd oaksod kasodk oaksd'
-          }
-        />
+        <Tootltip text={'Lorem ipsum dolor sit amet. Consectetur adipiscing elit'} />
+      </div>
+      <div className="flex flex-col w-72 h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ButtonAccordion>ButtonAccordion</ButtonAccordion>
+        <ButtonAccordion closed>ButtonAccordion:Closed</ButtonAccordion>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <a tabIndex={0}>anchor</a>
+        <a className="red">anchor.red</a>
       </div>
     </div>
   );
@@ -194,7 +198,7 @@ function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
 
 function Tootltip({ text }: { text: string }) {
   return (
-    <div data-tooltip={text} className="tooltip">
+    <div className="tooltip" data-tooltip={text}>
       <svg
         className="h-4 w-4 text-zinc-400 hover:text-zinc-200"
         xmlns="http://www.w3.org/2000/svg"
@@ -221,7 +225,48 @@ function Tootltip({ text }: { text: string }) {
           stroke-linejoin="round"
         />
       </svg>
-      <div className="tooltip"></div>
     </div>
+  );
+}
+
+function ButtonAccordion({ closed, children }: { closed?: boolean; children: string }) {
+  let icon = (
+    <path
+      d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9"
+      stroke="currentColor"
+      stroke-width="2"
+      stroke-linecap="round"
+      stroke-linejoin="round"
+      fill="none"
+    />
+  );
+
+  if (!!closed) {
+    icon = (
+      <path
+        d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
+        stroke="currentColor"
+        stroke-width="2"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        fill="none"
+      />
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      className="h-8 w-full px-4 rounded text-sm bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
+    >
+      <span className="float-left leading-8 pr-1">{children}</span>
+      <svg
+        className="h-4 w-4 float-right mt-2"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        {icon}
+      </svg>
+    </button>
   );
 }

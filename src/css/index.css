@@ -9,6 +9,12 @@
   html.light > body {
     @apply bg-white text-black;
   }
+  a {
+    @apply cursor-pointer text-blue-400;
+  }
+  a.red {
+    @apply text-red-400;
+  }
   button,
   a,
   label {
@@ -21,12 +27,14 @@
   input[type='checkbox']:checked + .checkbox::before {
     @apply bg-cyan-400;
   }
+}
+
+@layer components {
   .tooltip {
     @apply relative;
   }
-  .tooltip::after {
+  .tooltip:hover::after {
     content: attr(data-tooltip);
-    width: attr(data-width);
-    @apply absolute left-8 top-0 p-4 rounded shadow bg-zinc-800 text-zinc-400 text-sm;
+    @apply absolute left-8 top-0 p-4 w-40 rounded shadow bg-zinc-800 text-zinc-400 text-sm;
   }
 }
