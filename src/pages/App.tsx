@@ -6,11 +6,23 @@ import {
 } from '../collection/collections';
 import NotFoundPage from './NotFound';
 import { ReactElement, createContext } from 'react';
-import { WagmiProvider, createConfig, http, useAccount } from 'wagmi';
+import {
+  WagmiProvider,
+  createConfig,
+  http,
+  useAccount,
+  useBalance,
+  useConnect,
+  useDisconnect,
+  useEnsAddress,
+  useEnsName,
+} from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
 import { Notification, With_Id } from '../packages/order/marketplaceProtocol';
+import { ActivityButton, Button } from './Components';
+import { EthereumNetwork, config } from '../config';
 
 type UseQueryUserTokenIdsResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 type UseQueryUserNotificationsResultData = UseQueryResult<{
@@ -87,9 +99,58 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     <CollectionContext.Provider value={collection}>
       <UserTokenIdsContext.Provider value={userTokenIds}>
         <UserNotificationsContext.Provider value={userNotifications}>
+          <Navbar />
           {children}
         </UserNotificationsContext.Provider>
       </UserTokenIdsContext.Provider>
     </CollectionContext.Provider>
   );
+}
+
+function Navbar() {
+  return (
+    <div className="h-24 flex px-8">
+      <div className="my-4 h-16 w-16 bg-zinc-700 rounded"></div>
+      <div className="flex h-8 my-8 flex-grow justify-end gap-4">
+        <ActivityButton count={2}></ActivityButton>
+        <Button disabled>10 RACCOOL</Button>
+        <Button disabled>3,85 ETH</Button>
+        <ConnectButton />
+      </div>
+    </div>
+  );
+}
+
+function ConnectButton() {
+  const { connect, isPending } = useConnect();
+  const { isConnected, isConnecting, address } = useAccount();
+  const {
+    data: ensName,
+    isFetching: isFetchingEns,
+    isFetched: isFetchedEns,
+  } = useEnsName({ address });
+
+  if (isPending || isConnecting || isFetchingEns) {
+    return <Button disabled>Pending...</Button>;
+  }
+
+  if (isConnected && isFetchedEns) {
+    if (!address) throw new Error('Missing address');
+    let shortAddress = address.slice(0, 6) + '...' + address.slice(-4);
+    return <Button>{ensName ?? shortAddress}</Button>;
+  }
+
+  const chainId = (() => {
+    switch (config.ethereumNetwork) {
+      case EthereumNetwork.Mainnet:
+        return mainnet.id;
+      case EthereumNetwork.Sepolia:
+        return sepolia.id;
+      default:
+        throw new Error(`Invalid Ethereum Network: ${config.ethereumNetwork}`);
+    }
+  })();
+
+  let onClick = () => connect({ connector: injected(), chainId });
+  return <Button onClick={onClick}>Connect</Button>;
 }

@@ -4,7 +4,7 @@
 
 @layer base {
   html.dark > body {
-    @apply bg-black text-white;
+    @apply bg-zinc-950 text-zinc-200;
   }
   html.light > body {
     @apply bg-white text-black;
@@ -19,12 +19,5 @@
   a,
   label {
     @apply !outline-none !ring-offset-0 focus-visible:ring-zinc-200 focus-visible:ring-2 focus:ring-0;
-  }
-  .checkbox::before {
-    content: '';
-    @apply inline-block w-4 h-4 mr-2 -mt-px mb-px align-sub rounded border-none bg-zinc-800;
-  }
-  input[type='checkbox']:checked + .checkbox::before {
-    @apply bg-cyan-400;
   }
 }

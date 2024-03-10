@@ -1,4 +1,4 @@
-import { ReactElement } from 'react';
+import { ReactElement, useState } from 'react';
 
 export function Components() {
   return (
@@ -21,7 +21,7 @@ export function Components() {
         <ActivityButton />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <IconNFT src="sep-raccools/6.png" />
+        <IconNFT src="sep-raccools/thumbnail.png" />
         <IconEth />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -40,18 +40,22 @@ export function Components() {
         <a className="red">anchor.red</a>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <ItemNFT src="sep-raccools/6.png" id="6002" />
+        <ItemNFT src="sep-raccools/thumbnail.png" id="6002" />
         <ItemETH value="0.0002" />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <CardNFTSelectable src="sep-raccools/95.png" id="6002" />
-        <CardNFTSelectable src="sep-raccools/95.png" id="6002" selected />
-        <CardNFTSelectable src="sep-raccools/95.png" id="6002" disabled />
+        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" />
+        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" selected />
+        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" disabled />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <CardNFTOrder src="sep-raccools/82.png" token="Raccools #4202" priceToken="1 RACCOOL" />
         <CardNFTOrder
-          src="sep-raccools/78.png"
+          src="sep-raccools/thumbnail.png"
+          token="Raccools #4202"
+          priceToken="1 RACCOOL"
+        />
+        <CardNFTOrder
+          src="sep-raccools/thumbnail.png"
           token="Raccools #105"
           priceToken="1 RACCOOL"
           priceEth="2 ETH"
@@ -61,17 +65,20 @@ export function Components() {
   );
 }
 
-function Button({
+export function Button({
   children,
   disabled,
+  onClick,
 }: {
   children: string | [string, ReactElement];
   disabled?: boolean;
+  onClick?: Function;
 }) {
   return (
     <button
       type="button"
       disabled={!!disabled}
+      onClick={() => onClick?.()}
       className="h-8 w-fit px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap hover:bg-zinc-700 disabled:bg-inherit disabled:border disabled:border-zinc-700"
     >
       {children}
@@ -79,7 +86,7 @@ function Button({
   );
 }
 
-function Tag({ children }: { children: string }) {
+export function Tag({ children }: { children: string }) {
   return (
     <Button>
       {children}
@@ -100,7 +107,7 @@ function Tag({ children }: { children: string }) {
   );
 }
 
-function PriceTag({ children }: { children: string }) {
+export function PriceTag({ children }: { children: string }) {
   return (
     <div className="h-6 w-fit px-2 rounded text-xs text-zinc-200 whitespace-nowrap bg-inherit border border-zinc-700">
       <span className="align-middle">{children}</span>
@@ -108,7 +115,7 @@ function PriceTag({ children }: { children: string }) {
   );
 }
 
-function ExternalLink({ children, href }: { children: string; href: string }) {
+export function ExternalLink({ children, href }: { children: string; href: string }) {
   return (
     <a
       href={href}
@@ -141,7 +148,7 @@ function ExternalLink({ children, href }: { children: string; href: string }) {
   );
 }
 
-function ActivityButton({ count }: { count?: number }) {
+export function ActivityButton({ count }: { count?: number }) {
   if (count && count > 0) {
     return (
       <button
@@ -177,7 +184,7 @@ function ActivityButton({ count }: { count?: number }) {
   );
 }
 
-function IconEth() {
+export function IconEth() {
   return (
     <div className="w-10 h-10 flex bg-zinc-800 text-zinc-200 rounded">
       <svg
@@ -198,23 +205,27 @@ function IconEth() {
   );
 }
 
-function IconNFT({ src }: { src: string }) {
+export function IconNFT({ src }: { src: string }) {
   return <img src={src} className="w-10 h-10 rounded" />;
 }
 
-function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
+export function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
   let id = crypto.randomUUID();
   return (
     <div className="flex items-center text-zinc-400 hover:text-zinc-200">
-      <input id={id} checked={!!checked} type="checkbox" className="hidden" />
-      <label htmlFor={id} tabIndex={0} className="text-sm cursor-pointer text-nowrap checkbox">
+      <input id={id} checked={!!checked} type="checkbox" className="peer hidden" />
+      <label
+        htmlFor={id}
+        tabIndex={0}
+        className="text-sm cursor-pointer text-nowrap before:inline-block before:w-4 before:h-4 before:mr-2 before:-mt-px before:mb-px before:align-sub before:rounded before:border-none before:bg-zinc-800 peer-checked:before:bg-cyan-400"
+      >
         {label}
       </label>
     </div>
   );
 }
 
-function Tootltip({ text }: { text: string }) {
+export function Tootltip({ text }: { text: string }) {
   return (
     <div
       data-text={text}
@@ -250,7 +261,7 @@ function Tootltip({ text }: { text: string }) {
   );
 }
 
-function ButtonAccordion({ closed, children }: { closed?: boolean; children: string }) {
+export function ButtonAccordion({ closed, children }: { closed?: boolean; children: string }) {
   let icon = (
     <path
       d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9"
@@ -292,7 +303,7 @@ function ButtonAccordion({ closed, children }: { closed?: boolean; children: str
   );
 }
 
-function ItemNFT({ src, id }: { src: string; id: string }) {
+export function ItemNFT({ src, id }: { src: string; id: string }) {
   return (
     <div className="flex gap-2">
       <IconNFT src={src} />
@@ -301,7 +312,7 @@ function ItemNFT({ src, id }: { src: string; id: string }) {
   );
 }
 
-function ItemETH({ value }: { value: string }) {
+export function ItemETH({ value }: { value: string }) {
   return (
     <div className="flex gap-2">
       <IconEth />
@@ -310,7 +321,7 @@ function ItemETH({ value }: { value: string }) {
   );
 }
 
-function CardNFTSelectable({
+export function CardNFTSelectable({
   src,
   id,
   selected,
@@ -341,7 +352,7 @@ function CardNFTSelectable({
   );
 }
 
-function CardNFTOrder({
+export function CardNFTOrder({
   src,
   token,
   priceToken,
@@ -354,7 +365,9 @@ function CardNFTOrder({
 }) {
   return (
     <div className="group cursor-pointer">
-      <img src={src} className="w-48 h-48 rounded-t" />
+      <div className="w-48 h-48 rounded overflow-hidden">
+        <img src={src} className="w-48 h-48 rounded-t group-hover:scale-110 transition" />
+      </div>
       <div className="h-8 w-48 text-center text-zinc-200 bg-zinc-800">
         <span className="leading-8">{token}</span>
       </div>
