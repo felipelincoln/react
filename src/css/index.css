@@ -28,13 +28,3 @@
     @apply bg-cyan-400;
   }
 }
-
-@layer components {
-  .tooltip {
-    @apply relative;
-  }
-  .tooltip:hover::after {
-    content: attr(data-tooltip);
-    @apply absolute left-8 top-0 p-4 w-40 rounded shadow bg-zinc-800 text-zinc-400 text-sm;
-  }
-}

@@ -36,8 +36,26 @@ export function Components() {
         <ButtonAccordion closed>ButtonAccordion:Closed</ButtonAccordion>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <a tabIndex={0}>anchor</a>
+        <a>anchor</a>
         <a className="red">anchor.red</a>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ItemNFT src="sep-raccools/6.png" id="6002" />
+        <ItemETH value="0.0002" />
+      </div>
+      <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <CardNFTSelectable src="sep-raccools/95.png" id="6002" />
+        <CardNFTSelectable src="sep-raccools/95.png" id="6002" selected />
+        <CardNFTSelectable src="sep-raccools/95.png" id="6002" disabled />
+      </div>
+      <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <CardNFTOrder src="sep-raccools/82.png" token="Raccools #4202" priceToken="1 RACCOOL" />
+        <CardNFTOrder
+          src="sep-raccools/78.png"
+          token="Raccools #105"
+          priceToken="1 RACCOOL"
+          priceEth="2 ETH"
+        />
       </div>
     </div>
   );
@@ -84,8 +102,8 @@ function Tag({ children }: { children: string }) {
 
 function PriceTag({ children }: { children: string }) {
   return (
-    <div className="leading-6 w-fit px-2 rounded text-xs text-zinc-200 bg-inherit border border-zinc-700 cursor-default">
-      {children}
+    <div className="h-6 w-fit px-2 rounded text-xs text-zinc-200 whitespace-nowrap bg-inherit border border-zinc-700">
+      <span className="align-middle">{children}</span>
     </div>
   );
 }
@@ -181,7 +199,7 @@ function IconEth() {
 }
 
 function IconNFT({ src }: { src: string }) {
-  return <img src={src} className="w-10 h-10 flex rounded" />;
+  return <img src={src} className="w-10 h-10 rounded" />;
 }
 
 function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
@@ -198,7 +216,10 @@ function Checkbox({ checked, label }: { checked?: boolean; label: string }) {
 
 function Tootltip({ text }: { text: string }) {
   return (
-    <div className="tooltip" data-tooltip={text}>
+    <div
+      data-text={text}
+      className="relative hover:after:content-[attr(data-text)] hover:after:absolute hover:after:left-8 hover:after:top-0 hover:after:p-4 hover:after:w-40 hover:after:rounded hover:after:shadow hover:after:bg-zinc-800 hover:after:text-zinc-400 hover:after:text-sm"
+    >
       <svg
         className="h-4 w-4 text-zinc-400 hover:text-zinc-200"
         xmlns="http://www.w3.org/2000/svg"
@@ -268,5 +289,79 @@ function ButtonAccordion({ closed, children }: { closed?: boolean; children: str
         {icon}
       </svg>
     </button>
+  );
+}
+
+function ItemNFT({ src, id }: { src: string; id: string }) {
+  return (
+    <div className="flex gap-2">
+      <IconNFT src={src} />
+      <PriceTag>{`# ${id}`}</PriceTag>
+    </div>
+  );
+}
+
+function ItemETH({ value }: { value: string }) {
+  return (
+    <div className="flex gap-2">
+      <IconEth />
+      <PriceTag>{`${value} ETH`}</PriceTag>
+    </div>
+  );
+}
+
+function CardNFTSelectable({
+  src,
+  id,
+  selected,
+  disabled,
+}: {
+  src: string;
+  id: string;
+  selected?: boolean;
+  disabled?: boolean;
+}) {
+  let cardClass;
+
+  if (!!selected) {
+    cardClass = 'outline outline-2 outline-cyan-400';
+  }
+
+  if (!!disabled) {
+    cardClass = 'grayscale';
+  }
+
+  return (
+    <div className={cardClass}>
+      <img src={src} className="w-24 h-24 rounded-t" />
+      <div className="h-6 w-24 text-sm text-center text-zinc-200 bg-zinc-800 rounded-b">
+        <span className="leading-6">{id}</span>
+      </div>
+    </div>
+  );
+}
+
+function CardNFTOrder({
+  src,
+  token,
+  priceToken,
+  priceEth,
+}: {
+  src: string;
+  token: string;
+  priceToken: string;
+  priceEth?: string;
+}) {
+  return (
+    <div className="group cursor-pointer">
+      <img src={src} className="w-48 h-48 rounded-t" />
+      <div className="h-8 w-48 text-center text-zinc-200 bg-zinc-800">
+        <span className="leading-8">{token}</span>
+      </div>
+      <div className="h-8 w-48 text-xs font-bold px-4 flex justify-between bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-950">
+        <span className="leading-8 m-auto">{priceToken}</span>
+        {!!priceEth && <span className="leading-8 flex-grow text-right">{priceEth}</span>}
+      </div>
+    </div>
   );
 }
