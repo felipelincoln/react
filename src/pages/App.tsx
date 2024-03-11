@@ -5,7 +5,7 @@ import {
   supportedCollections,
 } from '../collection/collections';
 import NotFoundPage from './NotFound';
-import { ReactElement, createContext } from 'react';
+import { ReactElement, createContext, useContext } from 'react';
 import {
   WagmiProvider,
   createConfig,
@@ -23,6 +23,8 @@ import { injected } from 'wagmi/connectors';
 import { Notification, With_Id } from '../packages/order/marketplaceProtocol';
 import { ActivityButton, Button } from './Components';
 import { EthereumNetwork, config } from '../config';
+import { formatEther } from 'viem';
+import { etherToString } from '../packages/utils';
 
 type UseQueryUserTokenIdsResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 type UseQueryUserNotificationsResultData = UseQueryResult<{
@@ -108,36 +110,59 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 }
 
 function Navbar() {
+  const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
+  const userNotifications = useContext(UserNotificationsContext);
+  const { isConnected, address } = useAccount();
+  const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
+
+  let buttons = [<UserButton onClick={() => console.log('oiiiiii')} />];
+  if (isConnected) {
+    let userTokens = `${userTokenIds.length} ${collection.symbol}`;
+    let userEth = etherToString(balance?.value);
+
+    buttons = [
+      <Button disabled>
+        <span className="font-mono">{userTokens}</span>
+      </Button>,
+      <Button disabled loading={!!isLoadingBalance}>
+        <span className="font-mono">{userEth}</span>
+      </Button>,
+      <ActivityButton count={userNotifications.length}></ActivityButton>,
+      ...buttons,
+    ];
+  }
+
   return (
-    <div className="h-24 flex px-8">
-      <div className="my-4 h-16 w-16 bg-zinc-700 rounded"></div>
-      <div className="flex h-8 my-8 flex-grow justify-end gap-4">
-        <ActivityButton count={2}></ActivityButton>
-        <Button disabled>10 RACCOOL</Button>
-        <Button disabled>3,85 ETH</Button>
-        <ConnectButton />
-      </div>
+    <div className="h-24 flex px-8 border-b-2 border-zinc-800">
+      <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
+      <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>
     </div>
   );
 }
 
-function ConnectButton() {
-  const { connect, isPending } = useConnect();
-  const { isConnected, isConnecting, address } = useAccount();
+function UserButton({ onClick }: { onClick: Function }) {
+  const { connect } = useConnect();
+  const { isConnected, address } = useAccount();
   const {
     data: ensName,
     isFetching: isFetchingEns,
     isFetched: isFetchedEns,
+    isSuccess: isSuccessEns,
   } = useEnsName({ address });
 
-  if (isPending || isConnecting || isFetchingEns) {
-    return <Button disabled>Pending...</Button>;
+  if (isFetchingEns && !isSuccessEns) {
+    return <Button loading></Button>;
   }
 
   if (isConnected && isFetchedEns) {
     if (!address) throw new Error('Missing address');
     let shortAddress = address.slice(0, 6) + '...' + address.slice(-4);
-    return <Button>{ensName ?? shortAddress}</Button>;
+    return (
+      <Button onClick={onClick}>
+        <span className="font-mono">{ensName ?? shortAddress}</span>
+      </Button>
+    );
   }
 
   const chainId = (() => {
@@ -151,6 +176,5 @@ function ConnectButton() {
     }
   })();
 
-  let onClick = () => connect({ connector: injected(), chainId });
-  return <Button onClick={onClick}>Connect</Button>;
+  return <Button onClick={() => connect({ connector: injected(), chainId })}>Connect</Button>;
 }

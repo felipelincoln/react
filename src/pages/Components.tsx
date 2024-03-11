@@ -68,12 +68,26 @@ export function Components() {
 export function Button({
   children,
   disabled,
+  loading,
   onClick,
 }: {
-  children: string | [string, ReactElement];
+  children?: string | [string, ReactElement] | ReactElement;
   disabled?: boolean;
+  loading?: boolean;
   onClick?: Function;
 }) {
+  if (loading) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        className="group h-8 w-fit px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap disabled:bg-inherit disabled:border disabled:border-zinc-700"
+      >
+        <span className="animate-pulse inline-block h-4 w-24 my-2 bg-zinc-700 group-disabled:bg-zinc-800"></span>
+      </button>
+    );
+  }
+
   return (
     <button
       type="button"
@@ -153,7 +167,7 @@ export function ActivityButton({ count }: { count?: number }) {
     return (
       <button
         type="button"
-        className="h-8 w-8 rounded text-sm font-semibold bg-cyan-400 text-zinc-950"
+        className="h-8 w-8 rounded text-sm font-mono font-semibold bg-cyan-400 text-zinc-950"
       >
         {count}
       </button>
@@ -161,16 +175,14 @@ export function ActivityButton({ count }: { count?: number }) {
   }
 
   return (
-    <button
-      type="button"
-      className="h-8 w-8 rounded bg-inherit border border-zinc-700 text-zinc-400 hover:text-zinc-200"
-    >
+    <button type="button" className="h-8 w-8 rounded text-zinc-200 bg-zinc-800 hover:bg-zinc-700">
       <svg className="h-4 w-4 m-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
         <path
           d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"
           stroke="currentColor"
           stroke-width="2"
           stroke-linecap="round"
+          fill="none"
         />
         <path
           d="M7.99707 16.999C11.5286 16.999 18.9122 15.5348 18.6979 6.43269M16.4886 8.04302L18.3721 6.14612C18.5656 5.95127 18.8798 5.94981 19.0751 6.14286L20.9971 8.04302"
@@ -178,6 +190,7 @@ export function ActivityButton({ count }: { count?: number }) {
           stroke-width="2"
           stroke-linecap="round"
           stroke-linejoin="round"
+          fill="none"
         />
       </svg>
     </button>
@@ -217,7 +230,7 @@ export function Checkbox({ checked, label }: { checked?: boolean; label: string 
       <label
         htmlFor={id}
         tabIndex={0}
-        className="text-sm cursor-pointer text-nowrap before:inline-block before:w-4 before:h-4 before:mr-2 before:-mt-px before:mb-px before:align-sub before:rounded before:border-none before:bg-zinc-800 peer-checked:before:bg-cyan-400"
+        className="text-sm cursor-pointer text-nowrap before:inline-block before:w-4 before:h-4 before:mr-2 before:-mt-px before:mb-px before:align-sub before:rounded before:border-none before:bg-zinc-700 peer-checked:before:bg-cyan-400"
       >
         {label}
       </label>
@@ -261,7 +274,15 @@ export function Tootltip({ text }: { text: string }) {
   );
 }
 
-export function ButtonAccordion({ closed, children }: { closed?: boolean; children: string }) {
+export function ButtonAccordion({
+  closed,
+  onClick,
+  children,
+}: {
+  closed?: boolean;
+  onClick?: Function;
+  children: string;
+}) {
   let icon = (
     <path
       d="M18 9.00005C18 9.00005 13.5811 15 12 15C10.4188 15 6 9 6 9"
@@ -289,16 +310,19 @@ export function ButtonAccordion({ closed, children }: { closed?: boolean; childr
   return (
     <button
       type="button"
-      className="h-8 w-full px-4 rounded text-sm bg-zinc-700 text-zinc-200 hover:bg-zinc-600"
+      onClick={() => onClick?.()}
+      className="h-8 w-full px-4 rounded text-sm bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
     >
-      <span className="float-left leading-8 pr-1">{children}</span>
-      <svg
-        className="h-4 w-4 float-right mt-2"
-        xmlns="http://www.w3.org/2000/svg"
-        viewBox="0 0 24 24"
-      >
-        {icon}
-      </svg>
+      <span className="flex justify-between items-center">
+        {children}
+        <svg
+          className="inline h-4 w-4 align-text-bottom box-content ml-auto"
+          xmlns="http://www.w3.org/2000/svg"
+          viewBox="0 0 24 24"
+        >
+          {icon}
+        </svg>
+      </span>
     </button>
   );
 }
