@@ -11,7 +11,6 @@ interface ItemsFilterNavbarProps {
 type UseQueryTokensResult = UseQueryResult<{ data: { tokens: string[] } }>;
 
 export function ItemsFilterNavbar(props: ItemsFilterNavbarProps) {
-  const [showAttributesSelection, setShowAttributesSelection] = useState(false);
   const [selectedAttributes, setSelectedAttributes] = useState<{ [attribute: string]: string }>({});
   const collection = useContext(CollectionContext);
 
@@ -46,21 +45,46 @@ export function ItemsFilterNavbar(props: ItemsFilterNavbarProps) {
           ></AttributeTags>
         </div>
         <div>
-          <div
-            className="cursor-pointer"
-            onClick={() => setShowAttributesSelection(!showAttributesSelection)}
-          >
-            Attributes ({Object.keys(selectedAttributes).length})
-          </div>
+          <div>Attributes</div>
         </div>
       </div>
-      {showAttributesSelection && (
-        <AttributesSelection
-          selectedAttributes={selectedAttributes}
-          setSelectedAttributes={setSelectedAttributes}
-          onAttributeSelect={props.onFilterSelect}
-        ></AttributesSelection>
-      )}
+
+      <div className="flex">
+        {Object.keys(collection.attributes).map((attribute) => (
+          <div key={attribute}>
+            <div>{attribute}</div>
+            <div>
+              {collection.attributes[attribute].sort().map((value) => (
+                <div
+                  key={value}
+                  className="cursor-pointer"
+                  onClick={() => {
+                    if (selectedAttributes[attribute] === value) {
+                      const selectedFiltersCopy = { ...selectedAttributes };
+                      delete selectedFiltersCopy[attribute];
+                      setSelectedAttributes(selectedFiltersCopy);
+                      props.onFilterSelect?.();
+                    } else {
+                      setSelectedAttributes({
+                        ...selectedAttributes,
+                        [attribute]: value,
+                      });
+                      props.onFilterSelect?.();
+                    }
+                  }}
+                >
+                  <input
+                    type="checkbox"
+                    checked={selectedAttributes[attribute] === value}
+                    onChange={() => {}}
+                  />
+                  <div className="inline-block">{value}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
@@ -98,55 +122,6 @@ function AttributeTags(props: AttributeTagsProps) {
         >
           {props.selectedAttributes[attributeName]}
         </button>
-      ))}
-    </div>
-  );
-}
-
-interface AttributesSelectionProps {
-  selectedAttributes: { [attribute: string]: string };
-  setSelectedAttributes: (attributes: { [attribute: string]: string }) => void;
-  onAttributeSelect?: Function;
-}
-
-function AttributesSelection(props: AttributesSelectionProps) {
-  const { attributes } = useContext(CollectionContext);
-
-  return (
-    <div className="flex">
-      {Object.keys(attributes).map((attribute) => (
-        <div key={attribute}>
-          <div>{attribute}</div>
-          <div>
-            {attributes[attribute].sort().map((value) => (
-              <div
-                key={value}
-                className="cursor-pointer"
-                onClick={() => {
-                  if (props.selectedAttributes[attribute] === value) {
-                    const selectedFiltersCopy = { ...props.selectedAttributes };
-                    delete selectedFiltersCopy[attribute];
-                    props.setSelectedAttributes(selectedFiltersCopy);
-                    props.onAttributeSelect?.();
-                  } else {
-                    props.setSelectedAttributes({
-                      ...props.selectedAttributes,
-                      [attribute]: value,
-                    });
-                    props.onAttributeSelect?.();
-                  }
-                }}
-              >
-                <input
-                  type="checkbox"
-                  checked={props.selectedAttributes[attribute] === value}
-                  onChange={() => {}}
-                />
-                <div className="inline-block">{value}</div>
-              </div>
-            ))}
-          </div>
-        </div>
       ))}
     </div>
   );

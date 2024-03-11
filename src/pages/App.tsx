@@ -116,19 +116,19 @@ function Navbar() {
   const { isConnected, address } = useAccount();
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
 
-  let buttons = [<UserButton onClick={() => console.log('oiiiiii')} />];
+  let buttons = [<UserButton key="1" onClick={() => console.log('oiiiiii')} />];
   if (isConnected) {
     let userTokens = `${userTokenIds.length} ${collection.symbol}`;
     let userEth = etherToString(balance?.value);
 
     buttons = [
-      <Button disabled>
+      <Button key="2" disabled>
         <span className="font-mono">{userTokens}</span>
       </Button>,
-      <Button disabled loading={!!isLoadingBalance}>
+      <Button key="3" disabled loading={!!isLoadingBalance}>
         <span className="font-mono">{userEth}</span>
       </Button>,
-      <ActivityButton count={userNotifications.length}></ActivityButton>,
+      <ActivityButton key="4" count={userNotifications.length}></ActivityButton>,
       ...buttons,
     ];
   }

@@ -8,6 +8,7 @@ import { CollectionHeader } from './pages/CollectionPage/CollectionHeader';
 import { CollectionActivity } from './pages/CollectionPage/CollectionActivity';
 import { BuyOrderPage, buyOrderLoader } from './pages/BuyOrderPage';
 import { Components } from './pages/Components';
+import { ListedItems } from './pages/CollectionPage/CollectionItems/ListedItems';
 import { CollectionItems } from './pages/CollectionItems';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
