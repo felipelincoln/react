@@ -79,8 +79,18 @@ export function Components() {
         />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <ActionButton>ActionButton</ActionButton>
-        <ActionButton disabled>ActionButton:Disabled</ActionButton>
+        <ActionButton onClick={() => {}}>ActionButton</ActionButton>
+        <ActionButton onClick={() => {}} disabled>
+          ActionButton:Disabled
+        </ActionButton>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <Paginator
+          items={Array.from({ length: 100 })}
+          page={0}
+          setItems={() => {}}
+          setPage={() => {}}
+        ></Paginator>
       </div>
     </div>
   );
