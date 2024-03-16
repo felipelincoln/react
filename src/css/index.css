@@ -20,12 +20,33 @@
   a {
     @apply cursor-pointer text-blue-400;
   }
+  a:hover {
+    @apply underline;
+  }
   a.red {
     @apply text-red-400;
+  }
+  a.default {
+    @apply text-zinc-200;
   }
   button,
   a,
   label {
-    @apply !outline-none !ring-offset-0 focus-visible:ring-zinc-200 focus-visible:ring-2 focus:ring-0;
+    @apply !ring-offset-0 focus-visible:ring-zinc-200 focus-visible:ring-2 focus:ring-0;
+  }
+  h1 {
+    @apply text-xl font-medium;
+  }
+  /* Chrome, Safari, Edge, Opera */
+  input::-webkit-outer-spin-button,
+  input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  /* Firefox */
+  input[type=number] {
+    appearance: textfield;
+    -moz-appearance: textfield;
   }
 }

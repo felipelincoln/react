@@ -10,6 +10,7 @@ import { BuyOrderPage, buyOrderLoader } from './pages/BuyOrderPage';
 import { Components } from './pages/Components';
 import { ListedItems } from './pages/CollectionPage/CollectionItems/ListedItems';
 import { CollectionItems } from './pages/CollectionItems';
+import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -56,10 +57,10 @@ const router = createBrowserRouter([
     path: '/c/:collectionName/order/fulfill/:tokenId',
     element: (
       <App>
-        <BuyOrderPage></BuyOrderPage>
+        <OrderFulfill></OrderFulfill>
       </App>
     ),
-    loader: buyOrderLoader,
+    loader: OrderFulfillLoader,
   },
   {
     path: '/components',

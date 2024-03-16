@@ -1,7 +1,7 @@
-import { ReactElement, useContext, useState } from 'react';
+import { ReactElement, useEffect } from 'react';
 import { CollectionDetails } from '../collection/collections';
-import { CollectionContext } from './App';
 import { useNavigate } from 'react-router-dom';
+import { etherToString } from '../packages/utils';
 
 export function Components() {
   const collection = {
@@ -37,7 +37,7 @@ export function Components() {
         <Checkbox onClick={() => {}} label="Checkbox:Checked" checked />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <Tootltip text={'Lorem ipsum dolor sit amet. Consectetur adipiscing elit'} />
+        <Tootltip>Lorem ipsum dolor sit amet. Consectetur adipiscing elit</Tootltip>
       </div>
       <div className="flex flex-col w-72 h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <ButtonAccordion>ButtonAccordion</ButtonAccordion>
@@ -46,19 +46,41 @@ export function Components() {
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <a>anchor</a>
         <a className="red">anchor.red</a>
+        <a className="default">anchor.default</a>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <ItemNFT src="sep-raccools/thumbnail.png" id="6002" />
+        <ItemNFT collection={collection} tokenId="60" />
         <ItemETH value="0.0002" />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" />
-        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" selected />
-        <CardNFTSelectable src="sep-raccools/thumbnail.png" id="6002" disabled />
+        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" />
+        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" selected />
+        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" disabled />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <CardNFTOrder collection={collection} tokenId="33" priceToken="1" />
         <CardNFTOrder collection={collection} tokenId="94" priceToken="1" priceEth="2" />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <Input type="text" value={'Input'} />
+        <Input type="text" value={'Input:Disabled'} disabled />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <InputDisabledWithLabel label="label" value={'InputDisabledWithLabel'} />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <TextBox>TextBox</TextBox>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <TextBoxWithNFTs
+          collection={collection}
+          tokenIds={['1', '10', '100']}
+          value="TextBoxWithNFTs"
+        />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ActionButton>ActionButton</ActionButton>
+        <ActionButton disabled>ActionButton:Disabled</ActionButton>
       </div>
     </div>
   );
@@ -70,7 +92,7 @@ export function Button({
   loading,
   onClick,
 }: {
-  children?: string | [string, ReactElement] | ReactElement;
+  children?: number | string | [string, ReactElement] | ReactElement;
   disabled?: boolean;
   loading?: boolean;
   onClick?: Function;
@@ -80,7 +102,7 @@ export function Button({
       <button
         type="button"
         disabled={disabled}
-        className="group h-8 w-fit px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap disabled:bg-inherit disabled:border disabled:border-zinc-700"
+        className="group h-8 px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap disabled:bg-inherit disabled:outline disabled:outline-1 -disabled:outline-offset-1 disabled:outline-zinc-700"
       >
         <span className="animate-pulse inline-block h-4 w-24 my-2 bg-zinc-700 group-disabled:bg-zinc-800"></span>
       </button>
@@ -92,7 +114,7 @@ export function Button({
       type="button"
       disabled={!!disabled}
       onClick={() => onClick?.()}
-      className="h-8 w-fit px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap hover:bg-zinc-700 disabled:bg-inherit disabled:border disabled:border-zinc-700"
+      className="h-8 px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap hover:bg-zinc-700 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-700"
     >
       {children}
     </button>
@@ -251,10 +273,10 @@ export function Checkbox({
   );
 }
 
-export function Tootltip({ text }: { text: string }) {
+export function Tootltip({ children }: { children: string }) {
   return (
     <div
-      data-text={text}
+      data-text={children}
       className="relative hover:after:content-[attr(data-text)] hover:after:absolute hover:after:left-8 hover:after:top-0 hover:after:p-4 hover:after:w-40 hover:after:rounded hover:after:shadow hover:after:bg-zinc-800 hover:after:text-zinc-400 hover:after:text-sm"
     >
       <svg
@@ -340,11 +362,17 @@ export function ButtonAccordion({
   );
 }
 
-export function ItemNFT({ src, id }: { src: string; id: string }) {
+export function ItemNFT({
+  collection,
+  tokenId,
+}: {
+  collection: CollectionDetails;
+  tokenId: string;
+}) {
   return (
     <div className="flex gap-2">
-      <IconNFT src={src} />
-      <PriceTag>{`# ${id}`}</PriceTag>
+      <IconNFT src={`/${collection.key}/${tokenId}.png`} />
+      <PriceTag>{`# ${tokenId}`}</PriceTag>
     </div>
   );
 }
@@ -359,31 +387,37 @@ export function ItemETH({ value }: { value: string }) {
 }
 
 export function CardNFTSelectable({
-  src,
-  id,
+  collection,
+  tokenId,
   selected,
   disabled,
+  onSelect,
 }: {
-  src: string;
-  id: string;
+  collection: CollectionDetails;
+  tokenId: string;
   selected?: boolean;
   disabled?: boolean;
+  onSelect: Function;
 }) {
-  let cardClass;
+  let cardClass = 'cursor-pointer';
 
   if (!!selected) {
-    cardClass = 'outline outline-2 outline-cyan-400';
+    cardClass = 'cursor-pointer outline outline-2 outline-cyan-400';
   }
 
   if (!!disabled) {
-    cardClass = 'grayscale';
+    cardClass = 'grayscale !cursor-default';
   }
 
   return (
-    <div className={cardClass}>
-      <img src={src} draggable="false" className="w-24 h-24 rounded-t" />
+    <div className={`rounded ${cardClass}`} onClick={() => !disabled && onSelect()}>
+      <img
+        src={`/${collection.key}/${tokenId}.png`}
+        draggable="false"
+        className="w-24 h-24 rounded-t"
+      />
       <div className="h-6 w-24 text-sm text-center text-zinc-200 bg-zinc-800 rounded-b">
-        <span className="leading-6">{id}</span>
+        <span className="leading-6">{tokenId}</span>
       </div>
     </div>
   );
@@ -416,10 +450,140 @@ export function CardNFTOrder({
       <div className="h-8 w-48 text-center text-zinc-200 bg-zinc-800">
         <span className="leading-8">{`${collection.name} #${tokenId}`}</span>
       </div>
-      <div className="h-8 w-48 rounded-b text-xs font-bold px-4 flex justify-between bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-950">
-        <span className="leading-8 m-auto">{`${priceToken} ${collection.symbol}`}</span>
-        {!!priceEth && <span className="leading-8 flex-grow text-right">{priceEth} ETH</span>}
+      <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-950">
+        <span className="leading-8 m-auto font-mono overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
+        {!!priceEth && (
+          <span className="leading-8 flex-grow text-right font-mono overflow-hidden text-ellipsis">
+            {etherToString(BigInt(priceEth))}
+          </span>
+        )}
       </div>
+    </div>
+  );
+}
+
+export function Input({
+  disabled,
+  value,
+  type,
+}: {
+  disabled?: boolean;
+  type: string;
+  value?: any;
+}) {
+  return (
+    <input
+      disabled={disabled}
+      value={value}
+      className="rounded bg-transparent leading-8 h-8 px-4 w-full text-zinc-400 border-zinc-700 !ring-0 focus:border-zinc-500 focus:text-zinc-200 disabled:bg-zinc-800"
+      type={type}
+    />
+  );
+}
+
+export function InputDisabledWithLabel({ value, label }: { value: any; label: string }) {
+  return (
+    <div className="flex w-52">
+      <input
+        disabled
+        value={value}
+        className="w-full rounded-l leading-8 h-8 px-4 text-zinc-400 border-zinc-700 overflow-hidden text-ellipsis !ring-0 focus:border-zinc-500 focus:text-zinc-200 disabled:bg-zinc-800"
+        type="text"
+      />
+      <div className="px-4 bg-zinc-700 rounded-r text-center leading-8 text-nowrap">{label}</div>
+    </div>
+  );
+}
+
+export function TextBox({ children, mono }: { children?: string; mono?: boolean }) {
+  const monoClass = !!mono ? 'font-mono text-sm' : '';
+  return (
+    <input
+      disabled
+      value={children}
+      className={`rounded bg-transparent leading-8 h-8 px-4 w-full border-zinc-700 ${monoClass}`}
+      type="text"
+    />
+  );
+}
+
+export function TextBoxWithNFTs({
+  value,
+  collection,
+  tokenIds,
+}: {
+  value: string;
+  collection: CollectionDetails;
+  tokenIds: string[];
+}) {
+  const textBoxRounded = tokenIds.length > 0 ? 'rounded-t' : 'rounded';
+
+  return (
+    <div>
+      <input
+        disabled
+        value={value}
+        className={`${textBoxRounded} font-mono text-sm bg-transparent leading-8 h-8 px-4 w-full border-zinc-700`}
+        type="text"
+      />
+      {tokenIds.length > 0 && (
+        <div className="px-4 py-2 grid grid-cols-2 gap-x-4 gap-y-2 rounded-b border border-t-0 border-zinc-700">
+          {tokenIds.map((tokenId) => (
+            <div key={tokenId} className="">
+              <ItemNFT collection={collection} tokenId={tokenId} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+export function ActionButton({
+  children,
+  disabled,
+  onClick,
+}: {
+  children: string;
+  disabled?: boolean;
+  onClick: Function;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={!!disabled}
+      onClick={() => onClick()}
+      className="h-8 w-full px-4 rounded bg-cyan-400 text-zinc-950 font-medium whitespace-nowrap hover:bg-cyan-300 disabled:text-zinc-400 disabled:font-normal disabled:bg-inherit disabled:border disabled:border-zinc-700"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function Paginator({
+  items,
+  page,
+  setItems,
+  setPage,
+  itemsPerPage = 10,
+}: {
+  items: any[];
+  page: number;
+  setItems: Function;
+  setPage: Function;
+  itemsPerPage?: number;
+}) {
+  const pages = Array.from({ length: Math.ceil(items.length / itemsPerPage) }, (_, index) => index);
+  const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+  useEffect(() => setItems(paginatedItems), [items.length, page]);
+
+  return (
+    <div className="flex gap-2">
+      {pages.map((pageNumber) => (
+        <Button key={pageNumber} disabled={pageNumber == page} onClick={() => setPage(pageNumber)}>
+          {pageNumber + 1}
+        </Button>
+      ))}
     </div>
   );
 }
