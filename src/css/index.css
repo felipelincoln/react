@@ -23,7 +23,7 @@
   a:hover {
     @apply underline;
   }
-  a.red {
+  .red {
     @apply text-red-400;
   }
   a.default {

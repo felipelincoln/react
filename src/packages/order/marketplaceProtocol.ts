@@ -184,8 +184,6 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
     ];
   });
 
-  console.log({ consideration, criteriaResolvers });
-
   return [
     advancedOrder,
     criteriaResolvers,

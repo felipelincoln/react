@@ -8,11 +8,13 @@ import {
   marketplaceProtocolFulfillOrderArgs,
 } from './marketplaceProtocol';
 import { useCheckCollectionAllowance } from './useCheckCollectionAllowance';
-import { useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
+import { CollectionContext } from '../../pages/App';
 
 export function useFulfillOrder() {
-  const { data: hash, writeContract } = useWriteContract();
-  const { isSuccess: isFulfillConfirmed, isFetching } = useWaitForTransactionReceipt({ hash }); // TODO: not working
+  const collection = useContext(CollectionContext);
+  const { data: hash, writeContract, error } = useWriteContract();
+  const { isSuccess: isFulfillConfirmed } = useWaitForTransactionReceipt({ hash });
   const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<WithSelectedTokenIds<WithSignature<Order>>>();
   const [sendWriteContract, setSendWriteContract] = useState(false);
@@ -20,16 +22,13 @@ export function useFulfillOrder() {
   useEffect(() => {
     if (!!args && isApprovedForAll && sendWriteContract) {
       setSendWriteContract(false);
-      writeContract(
-        {
-          abi: marketplaceProtocolABI(),
-          address: marketplaceProtocolContractAddress(),
-          functionName: 'fulfillAdvancedOrder',
-          args: marketplaceProtocolFulfillOrderArgs(args),
-          value: BigInt(args.fulfillmentCriteria.coin?.amount || '0'),
-        },
-        { onError: (error) => console.error(error) },
-      );
+      writeContract({
+        abi: [...marketplaceProtocolABI(), ...collection.abi],
+        address: marketplaceProtocolContractAddress(),
+        functionName: 'fulfillAdvancedOrder',
+        args: marketplaceProtocolFulfillOrderArgs(args),
+        value: BigInt(args.fulfillmentCriteria.coin?.amount || '0'),
+      });
     }
   }, [!!args, isApprovedForAll, sendWriteContract]);
 
@@ -39,5 +38,5 @@ export function useFulfillOrder() {
     setApprovalForAll();
   }
 
-  return { isFulfillConfirmed, fulfillOrder };
+  return { isFulfillConfirmed, fulfillOrder, error: error?.message };
 }

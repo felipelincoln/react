@@ -14,6 +14,7 @@ export function Components() {
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Button>Button</Button>
         <Button disabled>Button:Disabled</Button>
+        <Button loading>Button:Loading</Button>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Tag onClick={() => {}}>Tag</Tag>

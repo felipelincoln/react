@@ -2,28 +2,26 @@ import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import {
   ActionButton,
   CardNFTSelectable,
-  Input,
   InputDisabledWithLabel,
   Paginator,
+  Skeleton,
   TextBox,
   TextBoxWithNFTs,
   Tootltip,
 } from './Components';
 import { Order, WithSelectedTokenIds, WithSignature } from '../packages/order/marketplaceProtocol';
-import { useContext, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
   UserTokenIdsContext,
   collectionLoader,
   collectionLoaderData,
 } from './App';
-import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
-import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
-
-type UseQueryOrdersResult = UseQueryResult<{ data: { orders: WithSignature<Order>[] } }>;
+import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -38,30 +36,58 @@ export function OrderFulfillLoader(loaderArgs: LoaderFunctionArgs): OrderFulfill
 
 export function OrderFulfill() {
   const collection = useContext(CollectionContext);
-  const userTokenIds = useContext(UserTokenIdsContext);
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
+  const navigate = useNavigate();
+  const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const { fulfillOrder, isFulfillConfirmed } = useFulfillOrder();
+  const { data: userTokenIdsResult, isFetched: isUserTokenIdsFetched } = useQueryUserTokenIds({
+    collection,
+  });
+  const { fulfillOrder, isFulfillConfirmed, error } = useFulfillOrder();
 
-  const { data: ordersResult }: UseQueryOrdersResult = useQuery({
-    queryKey: ['order'],
+  const { data: ordersResult, isFetched: isOrderFetched } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+  }>({
+    queryKey: ['order', tokenId],
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ collection: collection?.address, tokenIds: [tokenId] }, null, 2),
+        body: JSON.stringify({ collection: collection.address, tokenIds: [tokenId] }, null, 2),
       }).then((res) => res.json()),
   });
 
+  console.log({ isFulfillConfirmed, error });
+
   const order = ordersResult?.data.orders[0];
-  const orderTokens = order?.fulfillmentCriteria.token.identifier || [];
+  const orderTokenIds = order?.fulfillmentCriteria.token.identifier || [];
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
   const canConfirmOrder = selectedTokenIds.length == orderTokenAmount;
+  let userTokenIds = userTokenIdsResult || [];
+
+  useEffect(() => {
+    if (!isOrderFetched || !isUserTokenIdsFetched) {
+      return;
+    }
+    const orderTokenIdsCopy = [...orderTokenIds];
+    orderTokenIdsCopy.sort((a, b) => {
+      const aIsUserToken = userTokenIds.includes(a);
+      const bIsUserToken = userTokenIds.includes(b);
+      if (aIsUserToken && !bIsUserToken) {
+        return -1;
+      } else if (!aIsUserToken && bIsUserToken) {
+        return 1;
+      } else {
+        return +a - +b;
+      }
+    });
+    setOrderTokenIdsSorted(orderTokenIdsCopy);
+  }, [isOrderFetched, isUserTokenIdsFetched]);
 
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...selectedTokenIds];
@@ -116,7 +142,7 @@ export function OrderFulfill() {
               ))}
           </div>
           <Paginator
-            items={orderTokens}
+            items={orderTokenIdsSorted}
             page={tokensPage}
             setItems={setPaginatedTokenIds}
             setPage={setTokensPage}
@@ -150,8 +176,11 @@ export function OrderFulfill() {
             <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
               Confirm
             </ActionButton>
-            <a className="default mx-8">Cancel</a>
+            <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
+              Cancel
+            </a>
           </div>
+          <div className="red text-xs">{error}</div>
         </div>
       </div>
     </div>
