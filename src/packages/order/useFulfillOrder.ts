@@ -14,7 +14,7 @@ import { CollectionContext } from '../../pages/App';
 export function useFulfillOrder() {
   const collection = useContext(CollectionContext);
   const { data: hash, writeContract, error } = useWriteContract();
-  const { isSuccess: isFulfillConfirmed } = useWaitForTransactionReceipt({ hash });
+  const { isSuccess, isFetching } = useWaitForTransactionReceipt({ hash });
   const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<WithSelectedTokenIds<WithSignature<Order>>>();
   const [sendWriteContract, setSendWriteContract] = useState(false);
@@ -38,5 +38,5 @@ export function useFulfillOrder() {
     setApprovalForAll();
   }
 
-  return { isFulfillConfirmed, fulfillOrder, error: error?.message };
+  return { data: hash, isSuccess, isFetching, fulfillOrder, error: error?.message };
 }

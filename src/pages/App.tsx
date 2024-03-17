@@ -52,7 +52,7 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
     connectors: [injected()],
     transports: {
       [mainnet.id]: http(),
-      [sepolia.id]: http(),
+      [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/Y8rL2bPTVaAg5E-vr47ab4g-kP5ZjTTL'),
     },
   });
 

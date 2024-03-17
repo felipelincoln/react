@@ -45,6 +45,8 @@ export function CreateOrderPage() {
   const [tokensPage, setTokensPage] = useState(0);
   const navigate = useNavigate();
 
+  console.log({ userTokenIds });
+
   const allTokenIds = collection.mintedTokens.filter((x) => !userTokenIds.includes(x));
   const newOrder: Order = {
     tokenId,

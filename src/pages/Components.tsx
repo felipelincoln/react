@@ -421,7 +421,7 @@ export function CardNFTSelectable({
   }
 
   return (
-    <div className={`rounded ${cardClass}`} onClick={() => !disabled && onSelect()}>
+    <div className={`rounded bg-zinc-800 ${cardClass}`} onClick={() => !disabled && onSelect()}>
       <img
         src={`/${collection.key}/${tokenId}.png`}
         draggable="false"
