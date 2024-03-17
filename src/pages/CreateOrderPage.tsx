@@ -47,7 +47,7 @@ export function CreateOrderPage() {
 
   console.log({ userTokenIds });
 
-  const allTokenIds = collection.mintedTokens.filter((x) => !userTokenIds.includes(x));
+  const allTokenIds = collection.mintedTokens;
   const newOrder: Order = {
     tokenId,
     token: collection.address,

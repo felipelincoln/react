@@ -1,4 +1,4 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   ActionButton,
   CardNFTSelectable,
@@ -8,14 +8,9 @@ import {
   TextBoxWithNFTs,
   Tootltip,
 } from './Components';
-import { Order, WithSelectedTokenIds, WithSignature } from '../packages/order/marketplaceProtocol';
+import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
-import {
-  CollectionContext,
-  UserTokenIdsContext,
-  collectionLoader,
-  collectionLoaderData,
-} from './App';
+import { CollectionContext, collectionLoader, collectionLoaderData } from './App';
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
@@ -33,6 +28,11 @@ export function OrderFulfillLoader(loaderArgs: LoaderFunctionArgs): OrderFulfill
 
   return { tokenId, ...collectionLoaderResult };
 }
+
+// TODO: handle tx revert
+// TODO: handle tx replace
+// TODO: handle not enough ETH
+// TODO: loading skeleton
 
 export function OrderFulfill() {
   const collection = useContext(CollectionContext);
@@ -63,6 +63,7 @@ export function OrderFulfill() {
     data: { orders: WithSignature<Order>[] };
   }>({
     queryKey: ['order', tokenId],
+    refetchInterval: isFulfillConfirmed ? 1000 : false,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/`, {
         method: 'POST',
@@ -78,8 +79,8 @@ export function OrderFulfill() {
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
   const canConfirmOrder = selectedTokenIds.length == orderTokenAmount;
-  let userTokenIds = userTokenIdsResult || [];
-  const errorMessage = fulfillOrderError?.split('\n').slice(0, 3).join('\n');
+  const userTokenIds = userTokenIdsResult || [];
+  const errorMessage = fulfillOrderError?.split('\n').slice(0, -1).join('\n');
 
   useEffect(() => {
     if (isUserTokenIdsFetching && !isUserTokenIdsFetched) {
@@ -105,17 +106,16 @@ export function OrderFulfill() {
   }, [isOrderFetched, isUserTokenIdsFetched, isUserTokenIdsFetching]);
 
   useEffect(() => {
-    if (isFulfillConfirmed) {
+    if (isFulfillConfirmed && !order) {
       navigate(`/c/${collection.key}`);
     }
-  }, [isFulfillConfirmed]);
+  }, [isFulfillConfirmed, order]);
 
   useEffect(() => {
-    console.log({ isFulfillFetching });
-    if (!!isFulfillFetching) {
+    if (isFulfillFetching || (isFulfillConfirmed && !!order)) {
       setTimeout(() => setPendingCounter(pendingCounter + 1), 1000);
     }
-  }, [isFulfillFetching, pendingCounter]);
+  }, [isFulfillFetching, isFulfillConfirmed, pendingCounter, order]);
 
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...selectedTokenIds];
@@ -200,7 +200,7 @@ export function OrderFulfill() {
             <div>Order expires</div>
             <TextBox>{moment(orderEndTimeMs).fromNow()}</TextBox>
           </div>
-          {!isFulfillFetching && (
+          {pendingCounter == 0 && (
             <div className="flex items-center">
               <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
                 Confirm
@@ -210,7 +210,7 @@ export function OrderFulfill() {
               </a>
             </div>
           )}
-          {isFulfillFetching && (
+          {pendingCounter > 0 && (
             <div className="overflow-hidden text-ellipsis">
               Transaction is pending ({pendingCounter}s){' '}
               <a target="_blank" href={`https://sepolia.etherscan.io/tx/${fulfillOrderTxHash}`}>
@@ -218,7 +218,9 @@ export function OrderFulfill() {
               </a>
             </div>
           )}
-          {!!errorMessage && <div className="red text-xs">{errorMessage}</div>}
+          {!!errorMessage && (
+            <div className="overflow-hidden text-ellipsis red">{errorMessage}</div>
+          )}
         </div>
       </div>
     </div>

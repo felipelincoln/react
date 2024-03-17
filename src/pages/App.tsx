@@ -25,6 +25,7 @@ import { ActivityButton, Button } from './Components';
 import { EthereumNetwork, config } from '../config';
 import { formatEther } from 'viem';
 import { etherToString } from '../packages/utils';
+import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 type UseQueryUserTokenIdsResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 type UseQueryUserNotificationsResultData = UseQueryResult<{
@@ -111,18 +112,22 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 
 function Navbar() {
   const collection = useContext(CollectionContext);
-  const userTokenIds = useContext(UserTokenIdsContext);
+  const { data: userTokenIdsResult, isFetching: isUserTokenIdsFetching } = useQueryUserTokenIds({
+    collection,
+  });
   const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
 
-  let buttons = [<UserButton key="1" onClick={() => console.log('oiiiiii')} />];
+  const userTokenIds = userTokenIdsResult || [];
+
+  let buttons = [<UserButton key="1" onClick={() => console.log('TODO')} />];
   if (isConnected) {
-    let userTokens = `${userTokenIds.length} ${collection.symbol}`;
+    let userTokens = `${userTokenIds?.length} ${collection.symbol}`;
     let userEth = etherToString(balance?.value);
 
     buttons = [
-      <Button key="2" disabled>
+      <Button key="2" disabled loading={!!isUserTokenIdsFetching}>
         <span className="font-mono">{userTokens}</span>
       </Button>,
       <Button key="3" disabled loading={!!isLoadingBalance}>
