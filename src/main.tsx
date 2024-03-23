@@ -3,12 +3,9 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFoundPage from './pages/NotFound';
 import App, { collectionLoader } from './pages/App';
-import { CreateOrderPage, createOrderLoader } from './pages/CreateOrderPage';
 import { CollectionHeader } from './pages/CollectionPage/CollectionHeader';
 import { CollectionActivity } from './pages/CollectionPage/CollectionActivity';
-import { BuyOrderPage, buyOrderLoader } from './pages/BuyOrderPage';
 import { Components } from './pages/Components';
-import { ListedItems } from './pages/CollectionPage/CollectionItems/ListedItems';
 import { CollectionItems } from './pages/CollectionItems';
 import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';
 import { OrderCreate, OrderCreateLoader } from './pages/OrderCreate';
@@ -66,7 +63,7 @@ const router = createBrowserRouter([
   {
     path: '/components',
     element: <Components></Components>,
-    loader: buyOrderLoader,
+    loader: OrderFulfillLoader,
   },
 ]);
 
