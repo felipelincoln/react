@@ -128,10 +128,10 @@ function Navbar() {
 
     buttons = [
       <Button key="2" disabled loading={!!isUserTokenIdsFetching}>
-        <span className="font-mono">{userTokens}</span>
+        <span>{userTokens}</span>
       </Button>,
       <Button key="3" disabled loading={!!isLoadingBalance}>
-        <span className="font-mono">{userEth}</span>
+        <span>{userEth}</span>
       </Button>,
       <ActivityButton key="4" count={userNotifications.length}></ActivityButton>,
       ...buttons,
@@ -165,7 +165,7 @@ function UserButton({ onClick }: { onClick: Function }) {
     let shortAddress = address.slice(0, 6) + '...' + address.slice(-4);
     return (
       <Button onClick={onClick}>
-        <span className="font-mono">{ensName ?? shortAddress}</span>
+        <span>{ensName ?? shortAddress}</span>
       </Button>
     );
   }

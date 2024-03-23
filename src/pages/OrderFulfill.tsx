@@ -185,7 +185,7 @@ export function OrderFulfill() {
           <div className="flex flex-col gap-4">
             <div>You pay</div>
             {order?.fulfillmentCriteria.coin?.amount && (
-              <TextBox mono>{`${etherToString(
+              <TextBox>{`${etherToString(
                 BigInt(order?.fulfillmentCriteria.coin?.amount),
                 false,
               )}`}</TextBox>

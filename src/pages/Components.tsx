@@ -1,4 +1,4 @@
-import { ReactElement, useEffect } from 'react';
+import React, { ReactElement, useEffect } from 'react';
 import { CollectionDetails } from '../collection/collections';
 import { useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
@@ -199,7 +199,7 @@ export function ActivityButton({ count }: { count?: number }) {
     return (
       <button
         type="button"
-        className="h-8 w-8 rounded text-sm font-mono font-semibold bg-cyan-400 text-zinc-950"
+        className="h-8 w-8 rounded text-sm font-semibold bg-cyan-400 text-zinc-950"
       >
         {count}
       </button>
@@ -462,9 +462,9 @@ export function CardNFTOrder({
         <span className="leading-8">{`${collection.name} #${tokenId}`}</span>
       </div>
       <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-950">
-        <span className="leading-8 m-auto font-mono overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
+        <span className="leading-8 m-auto overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
         {!!priceEth && (
-          <span className="leading-8 flex-grow text-right font-mono overflow-hidden text-ellipsis">
+          <span className="leading-8 flex-grow text-right overflow-hidden text-ellipsis">
             {etherToString(BigInt(priceEth))}
           </span>
         )}
@@ -477,10 +477,12 @@ export function Input({
   disabled,
   value,
   type,
+  onChange,
 }: {
   disabled?: boolean;
   type: string;
   value?: any;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }) {
   return (
     <input
@@ -488,6 +490,7 @@ export function Input({
       value={value}
       className="rounded bg-transparent leading-8 h-8 px-4 w-full text-zinc-400 border-zinc-700 !ring-0 focus:border-zinc-500 focus:text-zinc-200 disabled:bg-zinc-800"
       type={type}
+      onChange={(e) => onChange?.(e)}
     />
   );
 }
@@ -506,15 +509,13 @@ export function InputDisabledWithLabel({ value, label }: { value: any; label: st
   );
 }
 
-export function TextBox({ children, mono }: { children?: string; mono?: boolean }) {
-  const monoClass = !!mono ? 'font-mono text-sm' : '';
+export function TextBox({ children }: { children?: string | ReactElement }) {
   return (
-    <input
-      disabled
-      value={children}
-      className={`rounded bg-transparent leading-8 h-8 px-4 w-full border-zinc-700 ${monoClass}`}
-      type="text"
-    />
+    <div
+      className={`text-sm rounded bg-transparent leading-8 px-4 w-full outline outline-1 -outline-offset-1 outline-zinc-700`}
+    >
+      {children}
+    </div>
   );
 }
 
@@ -534,7 +535,7 @@ export function TextBoxWithNFTs({
       <input
         disabled
         value={value}
-        className={`${textBoxRounded} font-mono text-sm bg-transparent leading-8 h-8 px-4 w-full border-zinc-700`}
+        className={`${textBoxRounded} text-sm bg-transparent leading-8 h-8 px-4 w-full border-zinc-700`}
         type="text"
       />
       {tokenIds.length > 0 && (

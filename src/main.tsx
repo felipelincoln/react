@@ -11,6 +11,7 @@ import { Components } from './pages/Components';
 import { ListedItems } from './pages/CollectionPage/CollectionItems/ListedItems';
 import { CollectionItems } from './pages/CollectionItems';
 import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';
+import { OrderCreate, OrderCreateLoader } from './pages/OrderCreate';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -48,10 +49,10 @@ const router = createBrowserRouter([
     path: '/c/:collectionName/order/create/:tokenId',
     element: (
       <App>
-        <CreateOrderPage></CreateOrderPage>
+        <OrderCreate></OrderCreate>
       </App>
     ),
-    loader: createOrderLoader,
+    loader: OrderCreateLoader,
   },
   {
     path: '/c/:collectionName/order/fulfill/:tokenId',
