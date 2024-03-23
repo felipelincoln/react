@@ -17,7 +17,15 @@ export function Components() {
         <Button loading>Button:Loading</Button>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ButtonLight>ButtonLight</ButtonLight>
+        <ButtonLight disabled>ButtonLight:Disabled</ButtonLight>
+        <ButtonLight loading>ButtonLight:Loading</ButtonLight>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Tag onClick={() => {}}>Tag</Tag>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <TagLight onClick={() => {}}>TagLight</TagLight>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <PriceTag>PriceTag</PriceTag>
@@ -132,6 +140,41 @@ export function Button({
   );
 }
 
+export function ButtonLight({
+  children,
+  disabled,
+  loading,
+  onClick,
+}: {
+  children?: number | string | [string, ReactElement] | ReactElement;
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: Function;
+}) {
+  if (loading) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        className="group h-8 px-4 rounded text-sm bg-zinc-700 text-zinc-200 whitespace-nowrap disabled:bg-inherit disabled:outline disabled:outline-1 -disabled:outline-offset-1 disabled:outline-zinc-600"
+      >
+        <span className="animate-pulse inline-block h-4 w-24 my-2 bg-zinc-600 group-disabled:bg-zinc-700"></span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!!disabled}
+      onClick={() => onClick?.()}
+      className="h-8 px-4 rounded text-sm bg-zinc-700 text-zinc-200 whitespace-nowrap hover:bg-zinc-600 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-600"
+    >
+      {children}
+    </button>
+  );
+}
+
 export function Tag({ children, onClick }: { children: string; onClick: Function }) {
   return (
     <Button onClick={() => onClick()}>
@@ -150,6 +193,27 @@ export function Tag({ children, onClick }: { children: string; onClick: Function
         />
       </svg>
     </Button>
+  );
+}
+
+export function TagLight({ children, onClick }: { children: string; onClick: Function }) {
+  return (
+    <ButtonLight onClick={() => onClick()}>
+      {children}
+      <svg
+        className="inline h-4 w-4 align-text-bottom box-content pl-1"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
+        <path
+          d="M19 5L5 19M5 5L19 19"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </ButtonLight>
   );
 }
 

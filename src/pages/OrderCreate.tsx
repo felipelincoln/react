@@ -3,12 +3,14 @@ import {
   ActionButton,
   Button,
   ButtonAccordion,
+  ButtonLight,
   CardNFTSelectable,
   Checkbox,
   Input,
   InputDisabledWithLabel,
   Paginator,
   Tag,
+  TagLight,
   TextBox,
   TextBoxWithNFTs,
   Tootltip,
@@ -22,6 +24,7 @@ import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import { useAccount } from 'wagmi';
+import { parseEther } from 'viem';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -130,7 +133,12 @@ export function OrderCreate() {
                 <span className="text-sm font-medium">Selected items</span>{' '}
                 <Tootltip>Selected items will be used to fulfill this order</Tootltip>
               </span>
-              <Input disabled type="text" value={acceptAny ? '-' : selectedTokenIds.length} />
+              <div className="flex gap-2">
+                <Input disabled type="text" value={acceptAny ? '-' : selectedTokenIds.length} />
+                {selectedTokenIds.length > 0 && !acceptAny && (
+                  <Button onClick={() => setSelectedTokenIds([])}>Clear</Button>
+                )}
+              </div>
               <Checkbox
                 label="Accept any item"
                 checked={acceptAny}
@@ -145,14 +153,18 @@ export function OrderCreate() {
                 setFilteredAttributes={setFilteredAttributes}
                 setFilteredTokenIds={setFilteredTokenIds}
               ></ItemsNavigation>
-              <div className="flex h-8 gap-4 items-center">
+              <div className="flex h-8 gap-4 items-center justify-between">
                 <div>{filteredTokenIds.length} Results</div>
-                <AttributeTags
-                  filteredAttributes={filteredAttributes}
-                  setFilteredAttributes={setFilteredAttributes}
-                />
+                <Button
+                  onClick={() => {
+                    setSelectedTokenIds(
+                      Array.from(new Set([...filteredTokenIds, ...selectedTokenIds])),
+                    );
+                  }}
+                >
+                  Select all
+                </Button>
               </div>
-
               <div className="flex flex-wrap gap-4">
                 {order &&
                   paginatedTokenIds.map((tokenId) => (
@@ -220,6 +232,7 @@ function ItemsNavigation(props: {
   setFilteredTokenIds: Function;
 }) {
   const collection = useContext(CollectionContext);
+  const [showAttributes, setShowAttributes] = useState(false);
 
   const { data: filteredTokenIds } = useQuery<{ data: { tokens: string[] } }>({
     queryKey: ['tokens', props.filteredAttributes],
@@ -237,54 +250,70 @@ function ItemsNavigation(props: {
   useEffect(() => props.setFilteredTokenIds(tokenIds), [tokenIds.join('-')]);
 
   return (
-    <div className="bg-zinc-800 rounded px-8 py-4">
-      <div className="flex justify-between h-96 pr-8 gap-4 overflow-x-scroll">
-        {Object.keys(collection.attributes).map((attr, index) => (
-          <div key={index}>
-            <div className="flex flex-col gap-2 pb-4 relative">
-              <div className="sticky left-0 top-0 pb-2 border-b border-b-zinc-600 bg-zinc-800">
-                {attr}
-              </div>
-              {collection.attributes[attr].map((val, index) => (
-                <Checkbox
-                  key={index}
-                  label={val}
-                  checked={props.filteredAttributes[attr] === val}
-                  onClick={() => {
-                    if (props.filteredAttributes[attr] === val) {
-                      const selectedFiltersCopy = { ...props.filteredAttributes };
-                      delete selectedFiltersCopy[attr];
-                      props.setFilteredAttributes(selectedFiltersCopy);
-                      props.onAttributeSelect?.();
-                    } else {
-                      props.setFilteredAttributes({
-                        ...props.filteredAttributes,
-                        [attr]: val,
-                      });
-                      props.onAttributeSelect?.();
-                    }
-                  }}
-                ></Checkbox>
-              ))}
-            </div>
-          </div>
-        ))}
+    <div className="bg-zinc-800 rounded px-8 py-4 flex flex-col gap-4">
+      <div className="flex gap-8">
+        <div className="w-32 flex-shrink-0">
+          <ButtonAccordion
+            closed={!showAttributes}
+            onClick={() => {
+              setShowAttributes(!showAttributes);
+            }}
+          >
+            Attributes
+          </ButtonAccordion>
+        </div>
+        <AttributeTags
+          filteredAttributes={props.filteredAttributes}
+          setFilteredAttributes={props.setFilteredAttributes}
+        />
       </div>
+      {showAttributes && (
+        <div className="flex justify-between h-96 pr-8 gap-4 overflow-x-scroll">
+          {Object.keys(collection.attributes).map((attr, index) => (
+            <div key={index}>
+              <div className="flex flex-col gap-2 pb-4 relative">
+                <div className="sticky left-0 top-0 pb-2 bg-zinc-800">{attr}</div>
+                {collection.attributes[attr].map((val, index) => (
+                  <Checkbox
+                    key={index}
+                    label={val}
+                    checked={props.filteredAttributes[attr] === val}
+                    onClick={() => {
+                      if (props.filteredAttributes[attr] === val) {
+                        const selectedFiltersCopy = { ...props.filteredAttributes };
+                        delete selectedFiltersCopy[attr];
+                        props.setFilteredAttributes(selectedFiltersCopy);
+                        props.onAttributeSelect?.();
+                      } else {
+                        props.setFilteredAttributes({
+                          ...props.filteredAttributes,
+                          [attr]: val,
+                        });
+                        props.onAttributeSelect?.();
+                      }
+                    }}
+                  ></Checkbox>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
 interface AttributeTagsProps {
   filteredAttributes: { [attribute: string]: string };
-  setFilteredAttributes: (attributes: { [attribute: string]: string }) => void;
+  setFilteredAttributes: Function;
   onAttributeSelect?: Function;
 }
 
 function AttributeTags(props: AttributeTagsProps) {
   return (
-    <div className="flex gap-4 items-center">
+    <div className="flex flex-wrap gap-4 items-center">
       {Object.keys(props.filteredAttributes).map((attributeName) => (
-        <Tag
+        <TagLight
           key={`${attributeName}-${props.filteredAttributes[attributeName]}`}
           onClick={() => {
             const filteredAttributesCopy = { ...props.filteredAttributes };
@@ -294,7 +323,7 @@ function AttributeTags(props: AttributeTagsProps) {
           }}
         >
           {`${attributeName}: ${props.filteredAttributes[attributeName]}`}
-        </Tag>
+        </TagLight>
       ))}
       {Object.keys(props.filteredAttributes).length > 0 && (
         <a

@@ -6,6 +6,7 @@
   html,
   body,
   #root {
+    color-scheme: dark light;
     @apply h-full;
   }
   #root {
@@ -45,7 +46,7 @@
   }
 
   /* Firefox */
-  input[type=number] {
+  input[type='number'] {
     appearance: textfield;
     -moz-appearance: textfield;
   }
