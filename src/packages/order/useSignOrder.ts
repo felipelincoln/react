@@ -29,6 +29,7 @@ export function useSignOrder() {
 
   useEffect(() => {
     if (!!args && isApprovedForAll && callSignTypedData) {
+      console.log('calling signOrder');
       setCallSignTypedData(false);
       signTypedData({
         message: marketplaceProtocolEIP712Message(args),

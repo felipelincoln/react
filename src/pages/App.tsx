@@ -120,6 +120,7 @@ function Navbar() {
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
 
   const userTokenIds = userTokenIdsResult || [];
+  console.log({ userTokenIds });
 
   let buttons = [<UserButton key="1" onClick={() => console.log('TODO')} />];
   if (isConnected) {

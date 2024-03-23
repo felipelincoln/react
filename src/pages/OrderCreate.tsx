@@ -25,6 +25,7 @@ import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
+import { useSignOrder } from '../packages/order';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -46,45 +47,60 @@ export function OrderCreate() {
   const collection = useContext(CollectionContext);
   const { tokenId } = useLoaderData() as OrderCreateLoaderData;
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { isConnected, address } = useAccount();
+  const { signature, orderHash, signOrder } = useSignOrder();
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [acceptAny, setAcceptAny] = useState(false);
   const [ethPrice, setEthPrice] = useState<string | undefined>(undefined);
   const [tokenPrice, setTokenPrice] = useState(1);
   const [expireDays, setExpireDays] = useState(1);
+  const [orderEndTime, setOrderEndTime] = useState('');
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const {
-    data: userTokenIdsResult,
-    isFetched: isUserTokenIdsFetched,
-    isFetching: isUserTokenIdsFetching,
-  } = useQueryUserTokenIds({
-    collection,
-  });
 
-  const { data: ordersResult, isFetched: isOrderFetched } = useQuery<{
-    data: { orders: WithSignature<Order>[] };
-  }>({
-    queryKey: ['order', tokenId],
+  const allTokenIds = collection.mintedTokens;
+  const newOrder: Order = {
+    tokenId,
+    token: collection.address,
+    offerer: address || '',
+    endTime: orderEndTime,
+    fulfillmentCriteria: {
+      coin: ethPrice ? { amount: parseEther(ethPrice).toString() } : undefined,
+      token: {
+        amount: tokenPrice.toString(),
+        identifier: acceptAny ? allTokenIds : selectedTokenIds,
+      },
+    },
+  };
+
+  useEffect(
+    () => setOrderEndTime(moment().add(expireDays, 'days').unix().toString()),
+    [expireDays],
+  );
+
+  const { isSuccess, error, isFetching } = useQuery({
+    queryKey: ['order-create'],
+    retry: false,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
+      fetch(`http://localhost:3000/orders/create/`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ collection: collection.address, tokenIds: [tokenId] }, null, 2),
-      }).then((res) => res.json()),
+        body: JSON.stringify({ order: { ...newOrder, signature, orderHash } }, null, 2),
+        headers: { 'Content-Type': 'application/json' },
+      }).then(async (response) => {
+        if (!response.ok) return Promise.reject(await response.json());
+        return response.json();
+      }),
+    enabled: !!signature && !!orderHash,
   });
 
-  const allTokenIds = collection.mintedTokens.filter((t) => t != tokenId);
-  const order = ordersResult?.data.orders[0];
-  const orderTokenIds = order?.fulfillmentCriteria.token.identifier || [];
-  const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
-  const orderEndTimeMs = Number(order?.endTime) * 1000;
+  useEffect(() => {
+    console.log({ useEffectIsSuccess: isSuccess });
+    if (isSuccess) navigate(`/c/${collection.key}`);
+  }, [isSuccess]);
+
   const canConfirmOrder = true;
-  const userTokenIds = userTokenIdsResult || [];
   const errorMessage = undefined;
   const orderExpireTimestamp = moment().add(expireDays, 'days');
 
@@ -99,7 +115,7 @@ export function OrderCreate() {
   }
 
   function handleConfirm() {
-    console.log('order created');
+    signOrder(newOrder);
   }
 
   return (
@@ -166,16 +182,15 @@ export function OrderCreate() {
                 </Button>
               </div>
               <div className="flex flex-wrap gap-4">
-                {order &&
-                  paginatedTokenIds.map((tokenId) => (
-                    <CardNFTSelectable
-                      key={tokenId}
-                      tokenId={tokenId}
-                      collection={collection}
-                      onSelect={() => handleSelectToken(tokenId)}
-                      selected={selectedTokenIds.includes(tokenId)}
-                    />
-                  ))}
+                {paginatedTokenIds.map((tokenId) => (
+                  <CardNFTSelectable
+                    key={tokenId}
+                    tokenId={tokenId}
+                    collection={collection}
+                    onSelect={() => handleSelectToken(tokenId)}
+                    selected={selectedTokenIds.includes(tokenId)}
+                  />
+                ))}
               </div>
               <Paginator
                 items={filteredTokenIds}
