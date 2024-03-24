@@ -10,7 +10,7 @@ export function useQueryUserTokenIds({ collection }: { collection?: CollectionDe
     isFetched,
   } = useQuery<{ data: { tokens: string[] } }>({
     enabled: !!collection && !!address && isConnected,
-    queryKey: ['userTokenIds', collection?.key, address],
+    queryKey: ['user_token_ids'],
     queryFn: () =>
       fetch(`http://localhost:3000/tokens/${collection?.key}/${address}`).then((res) => res.json()),
   });

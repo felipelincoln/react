@@ -9,6 +9,7 @@ import { Components } from './pages/Components';
 import { CollectionItems } from './pages/CollectionItems';
 import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';
 import { OrderCreate, OrderCreateLoader } from './pages/OrderCreate';
+import { CollectionActivities } from './pages/CollectionActivities';
 
 if (!['dark', 'light'].includes(localStorage.theme)) {
   const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -36,8 +37,7 @@ const router = createBrowserRouter([
     path: '/c/:collectionName/activity',
     element: (
       <App>
-        <CollectionHeader></CollectionHeader>
-        <CollectionActivity></CollectionActivity>
+        <CollectionActivities></CollectionActivities>
       </App>
     ),
     loader: collectionLoader,

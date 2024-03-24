@@ -42,11 +42,8 @@ import {
   PriceTag,
 } from './Components';
 import { EthereumNetwork, config } from '../config';
-import { formatEther } from 'viem';
 import { etherToString } from '../packages/utils';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
-import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
-import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
 import moment from 'moment';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
@@ -103,7 +100,6 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   }
 
   const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
-    initialData: { data: { tokens: [] } },
     queryKey: ['user_token_ids'],
     queryFn: () =>
       fetch(`http://localhost:3000/tokens/${collection.key}/${userAddress}`).then((res) =>
@@ -124,7 +120,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     enabled: isConnected,
   });
 
-  const userTokenIds = userTokenIdsResult.data.tokens;
+  const userTokenIds = userTokenIdsResult?.data.tokens || [];
   const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
@@ -379,9 +375,10 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
 
 function Tab({ hidden, children }: { hidden: boolean; children: ReactElement | ReactElement[] }) {
   const display = hidden ? 'translate-x-96' : 'z-40';
+  const containerZIndex = hidden ? '-z-50' : '';
 
   return (
-    <div className="absolute right-0 top-0 w-96 h-screen">
+    <div className={`absolute right-0 top-0 w-96 h-screen ${containerZIndex}`}>
       <div
         className={`fixed flex flex-col h-full w-96 box-content border-l-2 border-zinc-800 bg-zinc-900 transition ease-in-out delay-0 ${display}`}
       >

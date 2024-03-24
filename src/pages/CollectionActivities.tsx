@@ -1,23 +1,32 @@
 import { useContext, useEffect, useState } from 'react';
 import { CollectionContext } from './App';
-import { Button, ButtonAccordion, ButtonLight, CardNFTOrder, Checkbox, Tag } from './Components';
+import {
+  Button,
+  ButtonAccordion,
+  ButtonLight,
+  CardNFTOrder,
+  Checkbox,
+  ExternalLink,
+  ItemETH,
+  ItemNFT,
+  Tag,
+} from './Components';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
-import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
+import { Activity, Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
-type UseQueryOrdersResult = UseQueryResult<{ data: { orders: WithSignature<Order>[] } }>;
-
-export function CollectionItems() {
+export function CollectionActivities() {
   const collection = useContext(CollectionContext);
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  const { data: ordersResult }: UseQueryOrdersResult = useQuery({
-    queryKey: ['order', filteredTokenIds.join('-')],
+  const { data: activitiesResult } = useQuery<{ data: { activities: Activity[] } }>({
+    queryKey: ['activity', filteredTokenIds.join('-')],
     enabled: filteredTokenIds.length > 0,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
+      fetch(`http://localhost:3000/activity/list/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -30,7 +39,7 @@ export function CollectionItems() {
       }).then((res) => res.json()),
   });
 
-  const orders = ordersResult?.data.orders.map((order) => order) || [];
+  const activities = activitiesResult?.data.activities.map((activity) => activity) || [];
 
   return (
     <div className="flex flex-grow">
@@ -46,10 +55,8 @@ export function CollectionItems() {
             </div>
 
             <div className="flex gap-2 *:flex-grow">
-              <ButtonLight disabled>Items</ButtonLight>
-              <ButtonLight onClick={() => navigate(`/c/${collection.key}/activity`)}>
-                Activity
-              </ButtonLight>
+              <ButtonLight onClick={() => navigate(`/c/${collection.key}/`)}>Items</ButtonLight>
+              <ButtonLight disabled>Activity</ButtonLight>
             </div>
           </div>
 
@@ -62,25 +69,63 @@ export function CollectionItems() {
       </div>
       <div className="flex-grow p-8">
         <div className="flex h-8 gap-4 items-center">
-          <div>{orders.length} Results</div>
+          <div>{activities.length} Results</div>
           <AttributeTags
             filteredAttributes={filteredAttributes}
             setFilteredAttributes={setFilteredAttributes}
           />
         </div>
-        <div className="flex flex-wrap justify-between gap-4 pt-8">
-          {orders.map(({ tokenId, fulfillmentCriteria }) => (
-            <div key={tokenId} className="">
-              <CardNFTOrder
-                priceToken={fulfillmentCriteria.token.amount}
-                priceEth={fulfillmentCriteria.coin?.amount}
-                collection={collection}
-                tokenId={tokenId}
-              ></CardNFTOrder>
-            </div>
-          ))}
-          <div className="flex-grow"></div>
-        </div>
+        <div className="h-8"></div>
+
+        <table className="w-full">
+          <thead>
+            <tr className="*:font-normal text-sm text-zinc-400 text-left">
+              <th>Item</th>
+              <th>Payment</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            {activities.map((activity) => (
+              <tr key={activity.txHash} className="border-b-2 border-zinc-800 *:py-4 last:border-0">
+                <td className="align-top">
+                  <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                </td>
+                <td>
+                  <div className="flex flex-col gap-2">
+                    {activity.fulfillment.coin && (
+                      <ItemETH value={activity.fulfillment.coin.amount} />
+                    )}
+                    {activity.fulfillment.token.identifier.map((tokenId) => (
+                      <ItemNFT
+                        key={activity.txHash.concat(tokenId)}
+                        collection={collection}
+                        tokenId={tokenId}
+                      />
+                    ))}
+                  </div>
+                </td>
+                <td className="text-xs align-top">
+                  <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.offerer}`}>
+                    {activity.offerer}
+                  </ExternalLink>
+                </td>
+                <td className="text-xs align-top">
+                  <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.fulfiller}`}>
+                    {activity.fulfiller}
+                  </ExternalLink>
+                </td>
+                <td className="text-xs align-top">
+                  <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                    {moment(Number(activity.createdAt)).fromNow()}
+                  </ExternalLink>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
