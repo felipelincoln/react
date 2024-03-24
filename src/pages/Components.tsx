@@ -38,7 +38,7 @@ export function Components() {
         <ActivityButton />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <IconNFT src="sep-raccools/thumbnail.png" />
+        <IconNFT collection={collection} tokenId="55" />
         <IconEth />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -315,8 +315,20 @@ export function IconEth() {
   );
 }
 
-export function IconNFT({ src }: { src: string }) {
-  return <img src={src} draggable="false" className="w-10 h-10 rounded" />;
+export function IconNFT({
+  collection,
+  tokenId,
+}: {
+  collection: CollectionDetails;
+  tokenId: string;
+}) {
+  return (
+    <img
+      src={`/${collection.key}/${tokenId}.png`}
+      draggable="false"
+      className="w-10 h-10 rounded"
+    />
+  );
 }
 
 export function Checkbox({
@@ -447,7 +459,7 @@ export function ItemNFT({
 }) {
   return (
     <div className="flex gap-2">
-      <IconNFT src={`/${collection.key}/${tokenId}.png`} />
+      <IconNFT collection={collection} tokenId={tokenId} />
       <PriceTag>{`# ${tokenId}`}</PriceTag>
     </div>
   );

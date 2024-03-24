@@ -20,14 +20,15 @@ import {
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
-import { Notification, With_Id } from '../packages/order/marketplaceProtocol';
-import { ActivityButton, Button } from './Components';
+import { Notification, Order, WithSignature, With_Id } from '../packages/order/marketplaceProtocol';
+import { ActivityButton, Button, CardNFTSelectable, IconNFT, ItemNFT } from './Components';
 import { EthereumNetwork, config } from '../config';
 import { formatEther } from 'viem';
 import { etherToString } from '../packages/utils';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
+import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
+import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
 
-type UseQueryUserTokenIdsResultData = UseQueryResult<{ data: { tokens: string[] } }>;
 type UseQueryUserNotificationsResultData = UseQueryResult<{
   data: { notifications: With_Id<Notification>[] };
 }>;
@@ -78,7 +79,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     return <NotFoundPage></NotFoundPage>;
   }
 
-  const { data: userTokenIdsResult }: UseQueryUserTokenIdsResultData = useQuery({
+  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
     initialData: { data: { tokens: [] } },
     queryKey: ['user_token_ids'],
     queryFn: () =>
@@ -114,7 +115,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
               setShowAccountTab(false);
             }}
           />
-          <AccountTab hidden={!showAccountTab} />
+          <AccountTab hidden={false} />
           <ActivityTab hidden={!showActivityTab} />
           {children}
         </UserNotificationsContext.Provider>
@@ -124,9 +125,79 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 }
 
 function AccountTab({ hidden }: { hidden: boolean }) {
+  const collection = useContext(CollectionContext);
+  const { address, isConnected } = useAccount();
+  const { data: ensName } = useEnsName({ address });
+  const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
+
+  function handleSelectToken(tokenId: string) {
+    if (selectedTokenId === tokenId) {
+      setSelectedTokenId(undefined);
+      return;
+    }
+    setSelectedTokenId(tokenId);
+  }
+
+  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
+    initialData: { data: { tokens: [] } },
+    queryKey: ['user_token_ids'],
+    queryFn: () =>
+      fetch(`http://localhost:3000/tokens/${collection.key}/${address}`).then((res) => res.json()),
+    enabled: isConnected,
+  });
+
+  const { data: ordersResult } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+  }>({
+    queryKey: ['user-order'],
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ collection: collection.address }, null, 2),
+      }).then((res) => res.json()),
+  });
+
+  const userOrders = ordersResult?.data.orders || [];
+  const userTokenIds = userTokenIdsResult.data.tokens.filter(
+    (tokenId) => !userOrders.find((order) => order.tokenId === tokenId),
+  );
+
+  console.log({ userOrders, userTokenIds });
+
   return (
     <Tab hidden={hidden}>
-      <div>user</div>
+      <div className="overflow-hidden text-ellipsis font-medium">
+        {ensName ? (
+          <span className="text-lg">{ensName}</span>
+        ) : (
+          <span className="text-sm">{address}</span>
+        )}
+      </div>
+      <div className="flex flex-col gap-4">
+        <div className="text-sm text-zinc-400">Listed</div>
+        <div className="flex flex-wrap gap-4">
+          {userOrders.map(({ tokenId }) => (
+            <IconNFT key={tokenId} collection={collection} tokenId={tokenId} />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-col gap-4">
+        <div className="text-sm text-zinc-400">Unlisted</div>
+        <div className="flex flex-wrap gap-4">
+          {userTokenIds.map((tokenId) => (
+            <CardNFTSelectable
+              key={tokenId}
+              collection={collection}
+              selected={selectedTokenId === tokenId}
+              onSelect={() => handleSelectToken(tokenId)}
+              tokenId={tokenId}
+            />
+          ))}
+        </div>
+      </div>
     </Tab>
   );
 }
@@ -144,7 +215,9 @@ function Tab({ hidden, children }: { hidden: boolean; children: ReactElement[] |
 
   return (
     <div className="absolute z-50 top-24 right-0 w-96">
-      <div className={`fixed h-full w-full bg-zinc-800 transition ease-in-out delay-0 ${display}`}>
+      <div
+        className={`fixed h-full overflow-y-scroll w-96 p-8 box-content border-l-2 border-zinc-800 flex flex-col gap-8 bg-zinc-950 transition ease-in-out delay-0 ${display}`}
+      >
         {children}
       </div>
     </div>
