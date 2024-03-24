@@ -49,10 +49,6 @@ import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
 import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
 import moment from 'moment';
 
-type UseQueryUserNotificationsResultData = UseQueryResult<{
-  data: { notifications: With_Id<Notification>[] };
-}>;
-
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<string[]>([]);
 export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
@@ -116,7 +112,9 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     enabled: isConnected,
   });
 
-  const { data: notificationsResult }: UseQueryUserNotificationsResultData = useQuery({
+  const { data: notificationsResult } = useQuery<{
+    data: { notifications: With_Id<Notification>[] };
+  }>({
     initialData: { data: { notifications: [] } },
     queryKey: ['user_notifications'],
     queryFn: () =>
@@ -143,7 +141,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
             }}
           />
           <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
-          <ActivityTab showTab={true} />
+          <ActivityTab showTab={showActivityTab} />
           {children}
         </UserNotificationsContext.Provider>
       </UserTokenIdsContext.Provider>
@@ -277,7 +275,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   const collection = useContext(CollectionContext);
   const { address, isConnected } = useAccount();
 
-  const { data: userActivitiesResult } = useQuery<{ data: { activities: Activity[] } }>({
+  const { data: userActivitiesResult } = useQuery<{ data: { activities: With_Id<Activity>[] } }>({
     queryKey: ['user_activities'],
     enabled: isConnected,
     queryFn: () =>
@@ -291,6 +289,32 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   });
 
   const userActivities = userActivitiesResult?.data.activities || [];
+
+  const { data: notificationsResult } = useQuery<{
+    data: { notifications: With_Id<Notification>[] };
+  }>({
+    queryKey: ['user_notifications'],
+    enabled: isConnected,
+    queryFn: () =>
+      fetch(`http://localhost:3000/notifications/${collection.key}/${address}`).then((res) =>
+        res.json(),
+      ),
+  });
+
+  const userNotifications = notificationsResult?.data.notifications || [];
+
+  useQuery<{ data: { activities: With_Id<Activity>[] } }>({
+    queryKey: ['user_view_notifications'],
+    enabled: isConnected && userNotifications.length > 0 && showTab,
+    queryFn: () =>
+      fetch('http://localhost:3000/notifications/view/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationIds: userNotifications.map((n) => n._id) }, null, 2),
+      }).then((res) => res.json()),
+  });
 
   return (
     <Tab hidden={!showTab}>
@@ -314,7 +338,12 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                   >
                     <td className="align-top">
                       <div className="relative">
-                        <div className="absolute top-0 -left-4 h-1 w-1 bg-cyan-400"></div>
+                        {userNotifications.find(
+                          (notification) => notification.activityId == activity._id,
+                        ) && (
+                          <div className="absolute top-0 -left-4 h-2 w-2 rounded-full bg-cyan-400"></div>
+                        )}
+
                         <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
                       </div>
                     </td>
