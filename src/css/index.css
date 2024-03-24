@@ -10,7 +10,7 @@
     @apply h-full;
   }
   #root {
-    @apply flex flex-col;
+    @apply flex flex-col pt-24;
   }
   html.dark > body {
     @apply bg-zinc-950 text-zinc-200;

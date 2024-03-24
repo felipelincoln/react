@@ -168,6 +168,7 @@ export function OrderCreate() {
                 filteredAttributes={filteredAttributes}
                 setFilteredAttributes={setFilteredAttributes}
                 setFilteredTokenIds={setFilteredTokenIds}
+                onAttributeSelect={() => setTokensPage(0)}
               ></ItemsNavigation>
               <div className="flex h-8 gap-4 items-center justify-between">
                 <div>{filteredTokenIds.length} Results</div>
@@ -202,7 +203,7 @@ export function OrderCreate() {
             </div>
           )}
         </div>
-        <div className="w-80 h-fit flex-shrink-0 text-sm bg-zinc-800 p-8 rounded flex flex-col gap-8">
+        <div className="w-80 h-fit sticky top-32 flex-shrink-0 text-sm bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
             <img className="rounded w-40 h-40 mx-auto" src={`/${collection.key}/${tokenId}.png`} />
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>

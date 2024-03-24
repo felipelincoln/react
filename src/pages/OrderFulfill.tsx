@@ -177,7 +177,7 @@ export function OrderFulfill() {
             itemsPerPage={18}
           />
         </div>
-        <div className="w-80 h-fit flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
+        <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
             <img className="rounded w-40 h-40 mx-auto" src={`/${collection.key}/${tokenId}.png`} />
             <div className="text-center leading-8">{`${collection.name} #${tokenId}`}</div>

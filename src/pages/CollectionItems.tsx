@@ -32,19 +32,21 @@ export function CollectionItems() {
 
   return (
     <div className="flex flex-grow">
-      <div className="w-80 h-full bg-zinc-800 p-8 flex flex-col flex-shrink-0 gap-8">
-        <div className="flex gap-4">
-          <img src={`/${collection.key}/thumbnail.png`} className="w-16 h-16 rounded" />
-          <div>
-            <div className="text-lg font-medium">{collection.name}</div>
-            <div className="text-sm text-zinc-400">{collection.mintedTokens.length} items</div>
+      <div className="w-80 h-full bg-zinc-800 p-8 flex-shrink-0 gap-8">
+        <div className="sticky top-32 flex flex-col gap-8">
+          <div className="flex gap-4">
+            <img src={`/${collection.key}/thumbnail.png`} className="w-16 h-16 rounded" />
+            <div>
+              <div className="text-lg font-medium">{collection.name}</div>
+              <div className="text-sm text-zinc-400">{collection.mintedTokens.length} items</div>
+            </div>
           </div>
+          <ItemsNavigation
+            filteredAttributes={filteredAttributes}
+            setFilteredAttributes={setFilteredAttributes}
+            setFilteredTokenIds={setFilteredTokenIds}
+          ></ItemsNavigation>
         </div>
-        <ItemsNavigation
-          filteredAttributes={filteredAttributes}
-          setFilteredAttributes={setFilteredAttributes}
-          setFilteredTokenIds={setFilteredTokenIds}
-        ></ItemsNavigation>
       </div>
       <div className="flex-grow p-8">
         <div className="flex h-8 gap-4 items-center">

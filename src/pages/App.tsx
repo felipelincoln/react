@@ -5,7 +5,7 @@ import {
   supportedCollections,
 } from '../collection/collections';
 import NotFoundPage from './NotFound';
-import { ReactElement, createContext, useContext } from 'react';
+import { ReactElement, createContext, useContext, useState } from 'react';
 import {
   WagmiProvider,
   createConfig,
@@ -71,6 +71,8 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected } = useAccount();
+  const [showAccountTab, setShowAccountTab] = useState(false);
+  const [showActivityTab, setShowActivityTab] = useState(false);
 
   if (!collection) {
     return <NotFoundPage></NotFoundPage>;
@@ -102,7 +104,18 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     <CollectionContext.Provider value={collection}>
       <UserTokenIdsContext.Provider value={userTokenIds}>
         <UserNotificationsContext.Provider value={userNotifications}>
-          <Navbar />
+          <Navbar
+            onClickAccount={() => {
+              setShowAccountTab(!showAccountTab);
+              setShowActivityTab(false);
+            }}
+            onClickActivity={() => {
+              setShowActivityTab(!showActivityTab);
+              setShowAccountTab(false);
+            }}
+          />
+          <AccountTab hidden={!showAccountTab} />
+          <ActivityTab hidden={!showActivityTab} />
           {children}
         </UserNotificationsContext.Provider>
       </UserTokenIdsContext.Provider>
@@ -110,7 +123,41 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   );
 }
 
-function Navbar() {
+function AccountTab({ hidden }: { hidden: boolean }) {
+  return (
+    <Tab hidden={hidden}>
+      <div>user</div>
+    </Tab>
+  );
+}
+
+function ActivityTab({ hidden }: { hidden: boolean }) {
+  return (
+    <Tab hidden={hidden}>
+      <div>activity</div>
+    </Tab>
+  );
+}
+
+function Tab({ hidden, children }: { hidden: boolean; children: ReactElement[] | ReactElement }) {
+  const display = hidden ? 'translate-x-96' : '';
+
+  return (
+    <div className="absolute z-50 top-24 right-0 w-96">
+      <div className={`fixed h-full w-full bg-zinc-800 transition ease-in-out delay-0 ${display}`}>
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Navbar({
+  onClickAccount,
+  onClickActivity,
+}: {
+  onClickAccount: Function;
+  onClickActivity: Function;
+}) {
   const collection = useContext(CollectionContext);
   const { data: userTokenIdsResult, isFetching: isUserTokenIdsFetching } = useQueryUserTokenIds({
     collection,
@@ -122,7 +169,7 @@ function Navbar() {
   const userTokenIds = userTokenIdsResult || [];
   console.log({ userTokenIds });
 
-  let buttons = [<UserButton key="1" onClick={() => console.log('TODO')} />];
+  let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (isConnected) {
     let userTokens = `${userTokenIds?.length} ${collection.symbol}`;
     let userEth = etherToString(balance?.value);
@@ -134,15 +181,21 @@ function Navbar() {
       <Button key="3" disabled loading={!!isLoadingBalance}>
         <span>{userEth}</span>
       </Button>,
-      <ActivityButton key="4" count={userNotifications.length}></ActivityButton>,
+      <ActivityButton
+        key="4"
+        count={userNotifications.length}
+        onClick={onClickActivity}
+      ></ActivityButton>,
       ...buttons,
     ];
   }
 
   return (
-    <div className="h-24 flex px-8 border-b-2 border-zinc-800">
-      <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
-      <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>
+    <div className="fixed top-0 z-50 w-full bg-zinc-950">
+      <div className="h-24 flex px-8 border-b-2 border-zinc-800">
+        <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
+        <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>
+      </div>
     </div>
   );
 }

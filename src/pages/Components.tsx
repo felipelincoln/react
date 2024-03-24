@@ -258,12 +258,13 @@ export function ExternalLink({ children, href }: { children: string; href: strin
   );
 }
 
-export function ActivityButton({ count }: { count?: number }) {
+export function ActivityButton({ count, onClick }: { count?: number; onClick?: Function }) {
   if (count && count > 0) {
     return (
       <button
         type="button"
         className="h-8 w-8 rounded text-sm font-semibold bg-cyan-400 text-zinc-950"
+        onClick={() => onClick?.()}
       >
         {count}
       </button>
