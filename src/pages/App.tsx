@@ -1,11 +1,11 @@
-import { LoaderFunctionArgs, useLoaderData } from 'react-router-dom';
+import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import {
   CollectionDetails,
   defaultCollection,
   supportedCollections,
 } from '../collection/collections';
 import NotFoundPage from './NotFound';
-import { ReactElement, createContext, useContext, useState } from 'react';
+import { ReactElement, createContext, useContext, useEffect, useState } from 'react';
 import {
   WagmiProvider,
   createConfig,
@@ -16,12 +16,23 @@ import {
   useDisconnect,
   useEnsAddress,
   useEnsName,
+  useFeeData,
 } from 'wagmi';
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
 import { Notification, Order, WithSignature, With_Id } from '../packages/order/marketplaceProtocol';
-import { ActivityButton, Button, CardNFTSelectable, IconNFT, ItemNFT } from './Components';
+import {
+  ActionButton,
+  ActivityButton,
+  Button,
+  CardNFTSelectable,
+  IconNFT,
+  IconNFTLarge,
+  ItemNFT,
+  ListedNFT,
+  PriceTag,
+} from './Components';
 import { EthereumNetwork, config } from '../config';
 import { formatEther } from 'viem';
 import { etherToString } from '../packages/utils';
@@ -71,9 +82,16 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
-  const { address: userAddress, isConnected } = useAccount();
+  const { address: userAddress, isConnected, isConnecting } = useAccount();
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
+
+  useEffect(() => {
+    if (!isConnected && !isConnecting) {
+      setShowAccountTab(false);
+      setShowActivityTab(false);
+    }
+  }, [isConnected, isConnecting]);
 
   if (!collection) {
     return <NotFoundPage></NotFoundPage>;
@@ -115,7 +133,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
               setShowAccountTab(false);
             }}
           />
-          <AccountTab hidden={false} />
+          <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
           <ActivityTab hidden={!showActivityTab} />
           {children}
         </UserNotificationsContext.Provider>
@@ -124,11 +142,46 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   );
 }
 
-function AccountTab({ hidden }: { hidden: boolean }) {
+function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
   const collection = useContext(CollectionContext);
   const { address, isConnected } = useAccount();
   const { data: ensName } = useEnsName({ address });
+  const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
+  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
+
+  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
+    queryKey: ['user_token_ids'],
+    queryFn: () =>
+      fetch(`http://localhost:3000/tokens/${collection.key}/${address}`).then((res) => res.json()),
+    enabled: isConnected,
+  });
+
+  const userTokenIds = userTokenIdsResult?.data.tokens || [];
+  const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
+
+  const { data: ordersResult } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+  }>({
+    queryKey: ['user-order'],
+    enabled: userTokenIds.length > 0,
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ collection: collection.address, tokenIds: userTokenIds }, null, 2),
+      }).then((res) => res.json()),
+  });
+
+  const userOrders = ordersResult?.data.orders || [];
+
+  useEffect(() => {
+    if (selectedTokenId) {
+      setLastSelectedTokenId(selectedTokenId);
+    }
+  }, [selectedTokenId]);
 
   function handleSelectToken(tokenId: string) {
     if (selectedTokenId === tokenId) {
@@ -138,65 +191,74 @@ function AccountTab({ hidden }: { hidden: boolean }) {
     setSelectedTokenId(tokenId);
   }
 
-  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
-    initialData: { data: { tokens: [] } },
-    queryKey: ['user_token_ids'],
-    queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection.key}/${address}`).then((res) => res.json()),
-    enabled: isConnected,
-  });
+  function handleClickListItem() {
+    setShowTab(false);
+    setSelectedTokenId(undefined);
+    navigate(`/c/${collection.key}/order/create/${selectedTokenId}`);
+  }
 
-  const { data: ordersResult } = useQuery<{
-    data: { orders: WithSignature<Order>[] };
-  }>({
-    queryKey: ['user-order'],
-    queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ collection: collection.address }, null, 2),
-      }).then((res) => res.json()),
-  });
+  function handleClickListedItem(tokenId: string) {
+    setShowTab(false);
+    setSelectedTokenId(undefined);
+    navigate(`/c/${collection.key}/order/fulfill/${tokenId}`);
+  }
 
-  const userOrders = ordersResult?.data.orders || [];
-  const userTokenIds = userTokenIdsResult.data.tokens.filter(
+  const userUnlistedTokenIds = userTokenIds.filter(
     (tokenId) => !userOrders.find((order) => order.tokenId === tokenId),
   );
 
-  console.log({ userOrders, userTokenIds });
-
   return (
-    <Tab hidden={hidden}>
-      <div className="overflow-hidden text-ellipsis font-medium">
-        {ensName ? (
-          <span className="text-lg">{ensName}</span>
-        ) : (
-          <span className="text-sm">{address}</span>
-        )}
-      </div>
-      <div className="flex flex-col gap-4">
-        <div className="text-sm text-zinc-400">Listed</div>
-        <div className="flex flex-wrap gap-4">
-          {userOrders.map(({ tokenId }) => (
-            <IconNFT key={tokenId} collection={collection} tokenId={tokenId} />
-          ))}
+    <Tab hidden={!showTab}>
+      <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
+        <div className="p-8 flex flex-col gap-8">
+          <div className="overflow-x-hidden text-ellipsis font-medium">
+            {ensName ? (
+              <span className="text-lg">{ensName}</span>
+            ) : (
+              <span className="text-sm">{address}</span>
+            )}
+          </div>
+          {userOrders.length > 0 && (
+            <div className="flex flex-col gap-4">
+              <div className="text-sm text-zinc-400">Listed</div>
+              <div className="flex flex-col flex-wrap gap-4">
+                {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
+                  <ListedNFT
+                    tokenId={tokenId}
+                    collection={collection}
+                    key={tokenId}
+                    tokenPrice={fulfillmentCriteria.token.amount}
+                    ethPrice={fulfillmentCriteria.coin?.amount}
+                    onClick={() => handleClickListedItem(tokenId)}
+                  />
+                ))}
+                <Button>Cancel all listings</Button>
+              </div>
+            </div>
+          )}
+
+          <div className="flex flex-col gap-4">
+            <div className="text-sm text-zinc-400">Unlisted</div>
+            <div className="grid grid-cols-3 gap-4">
+              {userUnlistedTokenIds.map((tokenId) => (
+                <CardNFTSelectable
+                  key={tokenId}
+                  collection={collection}
+                  selected={selectedTokenId === tokenId}
+                  onSelect={() => handleSelectToken(tokenId)}
+                  tokenId={tokenId}
+                />
+              ))}
+            </div>
+          </div>
         </div>
       </div>
-      <div className="flex flex-col gap-4">
-        <div className="text-sm text-zinc-400">Unlisted</div>
-        <div className="flex flex-wrap gap-4">
-          {userTokenIds.map((tokenId) => (
-            <CardNFTSelectable
-              key={tokenId}
-              collection={collection}
-              selected={selectedTokenId === tokenId}
-              onSelect={() => handleSelectToken(tokenId)}
-              tokenId={tokenId}
-            />
-          ))}
-        </div>
+      <div>{selectedTokenId && <div className="h-16"></div>}</div>
+      <div
+        className={`fixed bottom-0 right-0 px-8 py-4 w-96 bg-zinc-800 flex gap-4 transition ease-in-out delay-0 ${displayListButton}`}
+      >
+        <Button disabled>{`${collection.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
+        <ActionButton onClick={handleClickListItem}>List Item</ActionButton>
       </div>
     </Tab>
   );
@@ -210,13 +272,13 @@ function ActivityTab({ hidden }: { hidden: boolean }) {
   );
 }
 
-function Tab({ hidden, children }: { hidden: boolean; children: ReactElement[] | ReactElement }) {
-  const display = hidden ? 'translate-x-96' : '';
+function Tab({ hidden, children }: { hidden: boolean; children: ReactElement | ReactElement[] }) {
+  const display = hidden ? 'translate-x-96' : 'z-40';
 
   return (
-    <div className="absolute z-50 top-24 right-0 w-96">
+    <div className="absolute right-0 top-0 w-96 h-screen">
       <div
-        className={`fixed h-full overflow-y-scroll w-96 p-8 box-content border-l-2 border-zinc-800 flex flex-col gap-8 bg-zinc-950 transition ease-in-out delay-0 ${display}`}
+        className={`fixed flex flex-col h-full w-96 box-content border-l-2 border-zinc-800 bg-zinc-950 transition ease-in-out delay-0 ${display}`}
       >
         {children}
       </div>

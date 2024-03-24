@@ -31,6 +31,9 @@ export function Components() {
         <PriceTag>PriceTag</PriceTag>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <PriceTagClickable>PriceTagClickable</PriceTagClickable>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <ExternalLink href="">5d ago</ExternalLink>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -100,6 +103,10 @@ export function Components() {
           setItems={() => {}}
           setPage={() => {}}
         ></Paginator>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ListedNFT collection={collection} tokenId="15" tokenPrice="2" />
+        <ListedNFT collection={collection} tokenId="95" tokenPrice="2" ethPrice="10000000" />
       </div>
     </div>
   );
@@ -219,7 +226,18 @@ export function TagLight({ children, onClick }: { children: string; onClick: Fun
 
 export function PriceTag({ children }: { children: string }) {
   return (
-    <div className="h-6 w-fit px-2 rounded text-xs text-zinc-200 whitespace-nowrap bg-inherit border border-zinc-700">
+    <div className="h-6 w-fit px-2 rounded text-xs text-zinc-200 whitespace-nowrap bg-inherit border border-zinc-700 cursor-default">
+      <span className="align-middle">{children}</span>
+    </div>
+  );
+}
+
+export function PriceTagClickable({ children, onClick }: { children: string; onClick?: Function }) {
+  return (
+    <div
+      className="h-6 w-fit px-2 rounded text-xs whitespace-nowrap bg-inherit border border-zinc-700 cursor-pointer"
+      onClick={() => onClick?.()}
+    >
       <span className="align-middle">{children}</span>
     </div>
   );
@@ -327,6 +345,22 @@ export function IconNFT({
       src={`/${collection.key}/${tokenId}.png`}
       draggable="false"
       className="w-10 h-10 rounded"
+    />
+  );
+}
+
+export function IconNFTLarge({
+  collection,
+  tokenId,
+}: {
+  collection: CollectionDetails;
+  tokenId: string;
+}) {
+  return (
+    <img
+      src={`/${collection.key}/${tokenId}.png`}
+      draggable="false"
+      className="w-12 h-12 rounded"
     />
   );
 }
@@ -498,7 +532,10 @@ export function CardNFTSelectable({
   }
 
   return (
-    <div className={`rounded bg-zinc-800 ${cardClass}`} onClick={() => !disabled && onSelect()}>
+    <div
+      className={`rounded w-24 bg-zinc-800 ${cardClass}`}
+      onClick={() => !disabled && onSelect()}
+    >
       <img
         src={`/${collection.key}/${tokenId}.png`}
         draggable="false"
@@ -673,6 +710,35 @@ export function Paginator({
           {pageNumber + 1}
         </Button>
       ))}
+    </div>
+  );
+}
+
+export function ListedNFT({
+  tokenId,
+  collection,
+  onClick,
+  tokenPrice,
+  ethPrice,
+}: {
+  tokenId: string;
+  collection: CollectionDetails;
+  tokenPrice: string;
+  ethPrice?: string;
+  onClick?: Function;
+}) {
+  return (
+    <div className="flex gap-2 items-end cursor-pointer" onClick={() => onClick?.()}>
+      <IconNFTLarge collection={collection} tokenId={tokenId} />
+      <div className="flex-grow max-w-64 overflow-hidden">
+        <div>{`${collection.name} #${tokenId}`}</div>
+        <div className="flex gap-2 *:max-w-28 *:overflow-x-hidden *:text-ellipsis">
+          <PriceTagClickable>{`${tokenPrice} ${collection.symbol}`}</PriceTagClickable>
+          {ethPrice && (
+            <PriceTagClickable>{etherToString(BigInt(ethPrice), true)}</PriceTagClickable>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
