@@ -33,8 +33,10 @@ import {
   ActivityButton,
   Button,
   CardNFTSelectable,
+  ExternalLink,
   IconNFT,
   IconNFTLarge,
+  ItemETH,
   ItemNFT,
   ListedNFT,
   PriceTag,
@@ -45,6 +47,7 @@ import { etherToString } from '../packages/utils';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import { ItemCard } from './CollectionPage/CollectionItems/ItemCard';
 import { SelectableItemCard } from './CollectionPage/CollectionItems/SelectableItemCard';
+import moment from 'moment';
 
 type UseQueryUserNotificationsResultData = UseQueryResult<{
   data: { notifications: With_Id<Notification>[] };
@@ -140,7 +143,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
             }}
           />
           <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
-          <ActivityTab showTab={false} />
+          <ActivityTab showTab={true} />
           {children}
         </UserNotificationsContext.Provider>
       </UserTokenIdsContext.Provider>
@@ -275,37 +278,70 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   const { address, isConnected } = useAccount();
 
   const { data: userActivitiesResult } = useQuery<{ data: { activities: Activity[] } }>({
-    queryKey: ['user_token_ids'],
+    queryKey: ['user_activities'],
     enabled: isConnected,
     queryFn: () =>
-      fetch(`http://localhost:3000/activity/list/${collection.key}/${address}`).then((res) =>
-        res.json(),
-      ),
+      fetch('http://localhost:3000/activity/list', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ collection: collection.address, address }, null, 2),
+      }).then((res) => res.json()),
   });
 
   const userActivities = userActivitiesResult?.data.activities || [];
 
-  console.log({ userActivities });
-
   return (
-    <Tab hidden={showTab}>
+    <Tab hidden={!showTab}>
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
         <div className="p-8 flex flex-col gap-8">
           <div className="font-medium text-lg">Activity</div>
-          <table>
-            <thead className="*:font-normal text-sm text-zinc-400 text-left">
-              <th>Item</th>
-              <th>Received</th>
-              <th>Time</th>
-            </thead>
-            <tbody>
-              <tr>
-                <td>oi</td>
-                <td>oiii</td>
-                <td>oiiiiiii</td>
-              </tr>
-            </tbody>
-          </table>
+          {userActivities.length > 0 && (
+            <table>
+              <thead>
+                <tr className="*:font-normal text-sm text-zinc-400 text-left">
+                  <th>Item</th>
+                  <th>Received</th>
+                  <th>Time</th>
+                </tr>
+              </thead>
+              <tbody>
+                {userActivities.map((activity) => (
+                  <tr
+                    key={activity.txHash}
+                    className="border-b-2 border-zinc-800 *:py-4 last:border-0"
+                  >
+                    <td className="align-top">
+                      <div className="relative">
+                        <div className="absolute top-0 -left-4 h-1 w-1 bg-cyan-400"></div>
+                        <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                      </div>
+                    </td>
+                    <td>
+                      <div className="flex flex-col gap-2">
+                        {activity.fulfillment.coin && (
+                          <ItemETH value={activity.fulfillment.coin.amount} />
+                        )}
+                        {activity.fulfillment.token.identifier.map((tokenId) => (
+                          <ItemNFT
+                            key={activity.txHash.concat(tokenId)}
+                            collection={collection}
+                            tokenId={tokenId}
+                          />
+                        ))}
+                      </div>
+                    </td>
+                    <td className="text-xs text-zinc-400 align-top max-w-12">
+                      <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                        {moment(Number(activity.createdAt)).fromNow()}
+                      </ExternalLink>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
         </div>
       </div>
     </Tab>

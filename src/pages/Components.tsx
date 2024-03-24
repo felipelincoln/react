@@ -62,7 +62,7 @@ export function Components() {
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <ItemNFT collection={collection} tokenId="60" />
-        <ItemETH value="0.0002" />
+        <ItemETH value="20000000000000000" />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" />
@@ -249,7 +249,7 @@ export function ExternalLink({ children, href }: { children: string; href: strin
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="text-xs text-zinc-400 whitespace-nowrap hover:text-zinc-200"
+      className="text-xs text-zinc-400 hover:text-zinc-200"
     >
       {children}
       <svg
@@ -263,6 +263,7 @@ export function ExternalLink({ children, href }: { children: string; href: strin
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
+          fill="none"
         />
         <path
           d="M20.5561 3.49637L11.0488 13.0589M20.5561 3.49637C20.0622 3.00175 16.7345 3.04785 16.031 3.05786M20.5561 3.49637C21.0501 3.99098 21.0041 7.32297 20.9941 8.02738"
@@ -290,7 +291,11 @@ export function ActivityButton({ count, onClick }: { count?: number; onClick?: F
   }
 
   return (
-    <button type="button" className="h-8 w-8 rounded text-zinc-200 bg-zinc-800 hover:bg-zinc-700">
+    <button
+      type="button"
+      className="h-8 w-8 rounded text-zinc-200 bg-zinc-800 hover:bg-zinc-700"
+      onClick={() => onClick?.()}
+    >
       <svg className="h-4 w-4 m-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
         <path
           d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"
@@ -503,7 +508,7 @@ export function ItemETH({ value }: { value: string }) {
   return (
     <div className="flex gap-2">
       <IconEth />
-      <PriceTag>{`${value} ETH`}</PriceTag>
+      <PriceTag>{etherToString(BigInt(value))}</PriceTag>
     </div>
   );
 }
