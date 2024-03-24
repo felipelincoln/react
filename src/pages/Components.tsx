@@ -10,7 +10,7 @@ export function Components() {
     name: 'Raccools',
   } as CollectionDetails;
   return (
-    <div className="p-20 bg-zinc-950 flex flex-row gap-6 flex-wrap">
+    <div className="p-20 bg-zinc-900 flex flex-row gap-6 flex-wrap">
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Button>Button</Button>
         <Button disabled>Button:Disabled</Button>
@@ -281,7 +281,7 @@ export function ActivityButton({ count, onClick }: { count?: number; onClick?: F
     return (
       <button
         type="button"
-        className="h-8 w-8 rounded text-sm font-semibold bg-cyan-400 text-zinc-950"
+        className="h-8 w-8 rounded text-sm font-semibold bg-cyan-400 text-zinc-900"
         onClick={() => onClick?.()}
       >
         {count}
@@ -575,7 +575,7 @@ export function CardNFTOrder({
       <div className="h-8 w-48 text-center text-zinc-200 bg-zinc-800">
         <span className="leading-8">{`${collection.name} #${tokenId}`}</span>
       </div>
-      <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-950">
+      <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-900">
         <span className="leading-8 m-auto overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
         {!!priceEth && (
           <span className="leading-8 flex-grow text-right overflow-hidden text-ellipsis">
@@ -679,7 +679,7 @@ export function ActionButton({
       type="button"
       disabled={!!disabled}
       onClick={() => onClick()}
-      className="h-8 w-full px-4 rounded bg-cyan-400 text-zinc-950 font-medium whitespace-nowrap hover:bg-cyan-300 disabled:text-zinc-400 disabled:font-normal disabled:bg-inherit disabled:border disabled:border-zinc-700"
+      className="h-8 w-full px-4 rounded bg-cyan-400 text-zinc-900 font-medium whitespace-nowrap hover:bg-cyan-300 disabled:text-zinc-400 disabled:font-normal disabled:bg-inherit disabled:border disabled:border-zinc-700"
     >
       {children}
     </button>

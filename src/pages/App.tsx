@@ -21,7 +21,13 @@ import {
 import { mainnet, sepolia } from 'viem/chains';
 import { QueryClient, QueryClientProvider, UseQueryResult, useQuery } from '@tanstack/react-query';
 import { injected } from 'wagmi/connectors';
-import { Notification, Order, WithSignature, With_Id } from '../packages/order/marketplaceProtocol';
+import {
+  Activity,
+  Notification,
+  Order,
+  WithSignature,
+  With_Id,
+} from '../packages/order/marketplaceProtocol';
 import {
   ActionButton,
   ActivityButton,
@@ -134,7 +140,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
             }}
           />
           <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
-          <ActivityTab hidden={!showActivityTab} />
+          <ActivityTab showTab={false} />
           {children}
         </UserNotificationsContext.Provider>
       </UserTokenIdsContext.Provider>
@@ -264,10 +270,44 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   );
 }
 
-function ActivityTab({ hidden }: { hidden: boolean }) {
+function ActivityTab({ showTab }: { showTab: boolean }) {
+  const collection = useContext(CollectionContext);
+  const { address, isConnected } = useAccount();
+
+  const { data: userActivitiesResult } = useQuery<{ data: { activities: Activity[] } }>({
+    queryKey: ['user_token_ids'],
+    enabled: isConnected,
+    queryFn: () =>
+      fetch(`http://localhost:3000/activity/list/${collection.key}/${address}`).then((res) =>
+        res.json(),
+      ),
+  });
+
+  const userActivities = userActivitiesResult?.data.activities || [];
+
+  console.log({ userActivities });
+
   return (
-    <Tab hidden={hidden}>
-      <div>activity</div>
+    <Tab hidden={showTab}>
+      <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
+        <div className="p-8 flex flex-col gap-8">
+          <div className="font-medium text-lg">Activity</div>
+          <table>
+            <thead className="*:font-normal text-sm text-zinc-400 text-left">
+              <th>Item</th>
+              <th>Received</th>
+              <th>Time</th>
+            </thead>
+            <tbody>
+              <tr>
+                <td>oi</td>
+                <td>oiii</td>
+                <td>oiiiiiii</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
     </Tab>
   );
 }
@@ -278,7 +318,7 @@ function Tab({ hidden, children }: { hidden: boolean; children: ReactElement | R
   return (
     <div className="absolute right-0 top-0 w-96 h-screen">
       <div
-        className={`fixed flex flex-col h-full w-96 box-content border-l-2 border-zinc-800 bg-zinc-950 transition ease-in-out delay-0 ${display}`}
+        className={`fixed flex flex-col h-full w-96 box-content border-l-2 border-zinc-800 bg-zinc-900 transition ease-in-out delay-0 ${display}`}
       >
         {children}
       </div>
@@ -326,7 +366,7 @@ function Navbar({
   }
 
   return (
-    <div className="fixed top-0 z-50 w-full bg-zinc-950">
+    <div className="fixed top-0 z-50 w-full bg-zinc-900">
       <div className="h-24 flex px-8 border-b-2 border-zinc-800">
         <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
         <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>
