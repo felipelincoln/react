@@ -81,17 +81,18 @@ export function OrderFulfill() {
   const errorMessage = fulfillOrderError?.split('\n').slice(0, -1).join('\n');
 
   useEffect(() => {
-    if (!userTokenIds) {
+    if (isConnected && !userTokenIds) {
+      console.log('updating order tokens');
       setOrderTokenIdsSorted([]);
       return;
     }
-    if (!isOrderFetched || (isConnected && !userTokenIds)) {
+    if (!isOrderFetched) {
       return;
     }
     const orderTokenIdsCopy = [...orderTokenIds];
     orderTokenIdsCopy.sort((a, b) => {
-      const aIsUserToken = userTokenIds.includes(a);
-      const bIsUserToken = userTokenIds.includes(b);
+      const aIsUserToken = (userTokenIds || []).includes(a);
+      const bIsUserToken = (userTokenIds || []).includes(b);
       if (aIsUserToken && !bIsUserToken) {
         return -1;
       } else if (!aIsUserToken && bIsUserToken) {
@@ -101,7 +102,7 @@ export function OrderFulfill() {
       }
     });
     setOrderTokenIdsSorted(orderTokenIdsCopy);
-  }, [isOrderFetched, userTokenIds]);
+  }, [isOrderFetched, userTokenIds, isConnected]);
 
   console.log({ userTokenIds });
 
