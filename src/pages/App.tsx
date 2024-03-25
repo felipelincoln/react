@@ -47,11 +47,7 @@ import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import moment from 'moment';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
-export const UserTokenIdsContext = createContext<{
-  data: string[] | undefined;
-  isFetching: boolean;
-  isFetched: boolean;
-}>({ data: undefined, isFetched: false, isFetching: false });
+export const UserTokenIdsContext = createContext<string[] | undefined>(undefined);
 export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
 
 export interface collectionLoaderData {
@@ -89,9 +85,17 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected, isConnecting } = useAccount();
+  const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
-  const userTokenIdsQuery = useQueryUserTokenIds({ collection });
+  const { data, isFetched, isFetching } = useQueryUserTokenIds({ collection });
+
+  useEffect(() => {
+    if (!isFetching && isFetched) {
+      console.log('updating user tokens');
+      setUserTokenIds(data);
+    }
+  }, [isFetching, isFetched]);
 
   useEffect(() => {
     if (!isConnected && !isConnecting) {
@@ -119,7 +123,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
-      <UserTokenIdsContext.Provider value={userTokenIdsQuery}>
+      <UserTokenIdsContext.Provider value={userTokenIds}>
         <UserNotificationsContext.Provider value={userNotifications}>
           <Navbar
             onClickAccount={() => {
@@ -147,10 +151,10 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
-  const { data: userTokenIdsResult } = useContext(UserTokenIdsContext);
+  const userTokenIdsContext = useContext(UserTokenIdsContext);
 
-  const userTokenIds = userTokenIdsResult || [];
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
+  const userTokenIds = userTokenIdsContext || [];
 
   const { data: ordersResult } = useQuery<{
     data: { orders: WithSignature<Order>[] };
@@ -385,14 +389,10 @@ function Navbar({
   onClickActivity: Function;
 }) {
   const collection = useContext(CollectionContext);
-  const { data: userTokenIdsResult, isFetching: isUserTokenIdsFetching } =
-    useContext(UserTokenIdsContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
   const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
-
-  const userTokenIds = userTokenIdsResult || [];
-  console.log({ userTokenIds });
 
   let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (isConnected) {
@@ -400,7 +400,7 @@ function Navbar({
     let userEth = etherToString(balance?.value);
 
     buttons = [
-      <Button key="2" disabled loading={!!isUserTokenIdsFetching}>
+      <Button key="2" disabled loading={!userTokenIds}>
         <span>{userTokens}</span>
       </Button>,
       <Button key="3" disabled loading={!!isLoadingBalance}>

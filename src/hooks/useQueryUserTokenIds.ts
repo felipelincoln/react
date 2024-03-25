@@ -24,7 +24,7 @@ export function useQueryUserTokenIds({
       fetch(`http://localhost:3000/tokens/${collection?.key}/${address}`).then((res) => res.json()),
   });
 
-  console.log('CALLING useQueryUserTokenIds', { isStale });
+  console.log('CALLING useQueryUserTokenIds', { isStale, isFetching });
 
   const data = userTokenIds?.data.tokens;
 

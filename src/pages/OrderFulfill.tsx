@@ -44,16 +44,12 @@ export function OrderFulfill() {
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { refetch } = useQueryUserTokenIds({ collection, disabled: true });
+  const { refetch, isFetching, data } = useQueryUserTokenIds({ collection, disabled: true });
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const {
-    data: userTokenIdsResult,
-    isFetched: isUserTokenIdsFetched,
-    isFetching: isUserTokenIdsFetching,
-  } = useContext(UserTokenIdsContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -83,15 +79,14 @@ export function OrderFulfill() {
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
   const canConfirmOrder = selectedTokenIds.length == orderTokenAmount;
-  const userTokenIds = userTokenIdsResult || [];
   const errorMessage = fulfillOrderError?.split('\n').slice(0, -1).join('\n');
 
   useEffect(() => {
-    if (isUserTokenIdsFetching && !isUserTokenIdsFetched) {
+    if (!userTokenIds) {
       setOrderTokenIdsSorted([]);
       return;
     }
-    if (!isOrderFetched || (isConnected && !isUserTokenIdsFetched)) {
+    if (!isOrderFetched || (isConnected && !userTokenIds)) {
       return;
     }
     const orderTokenIdsCopy = [...orderTokenIds];
@@ -107,11 +102,12 @@ export function OrderFulfill() {
       }
     });
     setOrderTokenIdsSorted(orderTokenIdsCopy);
-  }, [isOrderFetched, isUserTokenIdsFetched, isUserTokenIdsFetching]);
+  }, [isOrderFetched, userTokenIds]);
 
   useEffect(() => {
     if (isFulfillConfirmed && !order) {
-      // refetch(); TODO: update user tokens
+      console.log('purchase confirmed.', { isFetching, data });
+      refetch();
       navigate(`/c/${collection.key}`);
     }
   }, [isFulfillConfirmed, order]);
@@ -170,7 +166,7 @@ export function OrderFulfill() {
                   collection={collection}
                   onSelect={() => handleSelectToken(tokenId)}
                   selected={selectedTokenIds.includes(tokenId)}
-                  disabled={!userTokenIds.includes(tokenId)}
+                  disabled={!userTokenIds?.includes(tokenId)}
                 />
               ))}
           </div>
