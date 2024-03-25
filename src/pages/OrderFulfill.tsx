@@ -10,13 +10,18 @@ import {
 } from './Components';
 import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
-import { CollectionContext, collectionLoader, collectionLoaderData } from './App';
+import {
+  CollectionContext,
+  UserTokenIdsContext,
+  collectionLoader,
+  collectionLoaderData,
+} from './App';
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
-import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import { useAccount } from 'wagmi';
+import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -39,6 +44,7 @@ export function OrderFulfill() {
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
   const { isConnected } = useAccount();
+  const { refetch } = useQueryUserTokenIds({ collection, disabled: true });
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
@@ -47,9 +53,7 @@ export function OrderFulfill() {
     data: userTokenIdsResult,
     isFetched: isUserTokenIdsFetched,
     isFetching: isUserTokenIdsFetching,
-  } = useQueryUserTokenIds({
-    collection,
-  });
+  } = useContext(UserTokenIdsContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -107,6 +111,7 @@ export function OrderFulfill() {
 
   useEffect(() => {
     if (isFulfillConfirmed && !order) {
+      // refetch(); TODO: update user tokens
       navigate(`/c/${collection.key}`);
     }
   }, [isFulfillConfirmed, order]);

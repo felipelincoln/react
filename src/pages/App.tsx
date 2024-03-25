@@ -47,7 +47,11 @@ import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import moment from 'moment';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
-export const UserTokenIdsContext = createContext<string[]>([]);
+export const UserTokenIdsContext = createContext<{
+  data: string[] | undefined;
+  isFetching: boolean;
+  isFetched: boolean;
+}>({ data: undefined, isFetched: false, isFetching: false });
 export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
 
 export interface collectionLoaderData {
@@ -87,6 +91,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const { address: userAddress, isConnected, isConnecting } = useAccount();
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
+  const userTokenIdsQuery = useQueryUserTokenIds({ collection });
 
   useEffect(() => {
     if (!isConnected && !isConnecting) {
@@ -98,15 +103,6 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   if (!collection) {
     return <NotFoundPage></NotFoundPage>;
   }
-
-  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
-    queryKey: ['user_token_ids'],
-    queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection.key}/${userAddress}`).then((res) =>
-        res.json(),
-      ),
-    enabled: isConnected,
-  });
 
   const { data: notificationsResult } = useQuery<{
     data: { notifications: With_Id<Notification>[] };
@@ -120,11 +116,10 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     enabled: isConnected,
   });
 
-  const userTokenIds = userTokenIdsResult?.data.tokens || [];
   const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
-      <UserTokenIdsContext.Provider value={userTokenIds}>
+      <UserTokenIdsContext.Provider value={userTokenIdsQuery}>
         <UserNotificationsContext.Provider value={userNotifications}>
           <Navbar
             onClickAccount={() => {
@@ -152,15 +147,9 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
+  const { data: userTokenIdsResult } = useContext(UserTokenIdsContext);
 
-  const { data: userTokenIdsResult } = useQuery<{ data: { tokens: string[] } }>({
-    queryKey: ['user_token_ids'],
-    queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection.key}/${address}`).then((res) => res.json()),
-    enabled: isConnected,
-  });
-
-  const userTokenIds = userTokenIdsResult?.data.tokens || [];
+  const userTokenIds = userTokenIdsResult || [];
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
 
   const { data: ordersResult } = useQuery<{
@@ -396,9 +385,8 @@ function Navbar({
   onClickActivity: Function;
 }) {
   const collection = useContext(CollectionContext);
-  const { data: userTokenIdsResult, isFetching: isUserTokenIdsFetching } = useQueryUserTokenIds({
-    collection,
-  });
+  const { data: userTokenIdsResult, isFetching: isUserTokenIdsFetching } =
+    useContext(UserTokenIdsContext);
   const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });

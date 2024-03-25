@@ -21,11 +21,10 @@ import { CollectionContext, collectionLoader, collectionLoaderData } from './App
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
-import { useFulfillOrder } from '../packages/order/useFulfillOrder';
-import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 import { useSignOrder } from '../packages/order';
+import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -97,7 +96,9 @@ export function OrderCreate() {
 
   useEffect(() => {
     console.log({ useEffectIsSuccess: isSuccess });
-    if (isSuccess) navigate(`/c/${collection.key}`);
+    if (isSuccess) {
+      navigate(`/c/${collection.key}`);
+    }
   }, [isSuccess]);
 
   const canConfirmOrder = true;
