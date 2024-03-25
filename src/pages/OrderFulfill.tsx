@@ -44,12 +44,11 @@ export function OrderFulfill() {
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
   const { isConnected } = useAccount();
-  const { refetch, isFetching, data } = useQueryUserTokenIds({ collection, disabled: true });
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const userTokenIds = useContext(UserTokenIdsContext);
+  const { data: userTokenIds, refetch } = useContext(UserTokenIdsContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -104,9 +103,11 @@ export function OrderFulfill() {
     setOrderTokenIdsSorted(orderTokenIdsCopy);
   }, [isOrderFetched, userTokenIds]);
 
+  console.log({ userTokenIds });
+
   useEffect(() => {
     if (isFulfillConfirmed && !order) {
-      console.log('purchase confirmed.', { isFetching, data });
+      console.log('purchase confirmed.');
       refetch();
       navigate(`/c/${collection.key}`);
     }

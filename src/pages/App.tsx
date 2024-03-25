@@ -47,7 +47,9 @@ import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import moment from 'moment';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
-export const UserTokenIdsContext = createContext<string[] | undefined>(undefined);
+export const UserTokenIdsContext = createContext<{ data: string[] | undefined; refetch: Function }>(
+  { data: undefined, refetch: () => {} },
+);
 export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
 
 export interface collectionLoaderData {
@@ -88,7 +90,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
-  const { data, isFetched, isFetching } = useQueryUserTokenIds({ collection });
+  const { data, isFetched, isFetching, refetch } = useQueryUserTokenIds({ collection });
 
   useEffect(() => {
     if (!isFetching && isFetched) {
@@ -123,7 +125,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
-      <UserTokenIdsContext.Provider value={userTokenIds}>
+      <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch }}>
         <UserNotificationsContext.Provider value={userNotifications}>
           <Navbar
             onClickAccount={() => {
@@ -151,7 +153,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
-  const userTokenIdsContext = useContext(UserTokenIdsContext);
+  const { data: userTokenIdsContext } = useContext(UserTokenIdsContext);
 
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
   const userTokenIds = userTokenIdsContext || [];
@@ -389,7 +391,7 @@ function Navbar({
   onClickActivity: Function;
 }) {
   const collection = useContext(CollectionContext);
-  const userTokenIds = useContext(UserTokenIdsContext);
+  const { data: userTokenIds } = useContext(UserTokenIdsContext);
   const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
   const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });

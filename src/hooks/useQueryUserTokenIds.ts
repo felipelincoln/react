@@ -14,7 +14,6 @@ export function useQueryUserTokenIds({
     data: userTokenIds,
     isFetching,
     isFetched,
-    isStale,
     refetch,
   } = useQuery<{ data: { tokens: string[] } }>({
     enabled: !!collection && !!address && isConnected && !disabled,
@@ -23,8 +22,6 @@ export function useQueryUserTokenIds({
     queryFn: () =>
       fetch(`http://localhost:3000/tokens/${collection?.key}/${address}`).then((res) => res.json()),
   });
-
-  console.log('CALLING useQueryUserTokenIds', { isStale, isFetching });
 
   const data = userTokenIds?.data.tokens;
 

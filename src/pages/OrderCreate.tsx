@@ -24,7 +24,6 @@ import moment from 'moment';
 import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 import { useSignOrder } from '../packages/order';
-import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
