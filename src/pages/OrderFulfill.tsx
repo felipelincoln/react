@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { QueryClient, useQuery } from '@tanstack/react-query';
 import {
   ActionButton,
   CardNFTSelectable,
@@ -48,7 +48,8 @@ export function OrderFulfill() {
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const { data: userTokenIds, refetch } = useContext(UserTokenIdsContext);
+  const { data: userTokenIds, refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
+  const { refetch: refetchUserBalance } = useContext(UserTokenIdsContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -109,7 +110,8 @@ export function OrderFulfill() {
   useEffect(() => {
     if (isFulfillConfirmed && !order) {
       console.log('purchase confirmed.');
-      refetch();
+      refetchUserTokenIds();
+      refetchUserBalance();
       navigate(`/c/${collection.key}`);
     }
   }, [isFulfillConfirmed, order]);

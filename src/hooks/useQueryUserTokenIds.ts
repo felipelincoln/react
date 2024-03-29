@@ -10,12 +10,10 @@ export function useQueryUserTokenIds({
   disabled?: boolean;
 }) {
   const { address, isConnected } = useAccount();
-  const {
-    data: userTokenIds,
-    isFetching,
-    isFetched,
-    refetch,
-  } = useQuery<{ data: { tokens: string[] } }>({
+  const { data, isFetching, isFetched, refetch } = useQuery<{
+    data?: { tokens: string[] };
+    error?: string;
+  }>({
     enabled: !!collection && !!address && isConnected && !disabled,
     queryKey: ['user_token_ids'],
     staleTime: Infinity,
@@ -23,7 +21,8 @@ export function useQueryUserTokenIds({
       fetch(`http://localhost:3000/tokens/${collection?.key}/${address}`).then((res) => res.json()),
   });
 
-  const data = userTokenIds?.data.tokens;
+  const isError = !!data?.error;
+  const userTokenIds = isError ? [] : data?.data?.tokens;
 
-  return { data, isFetching, isFetched, refetch };
+  return { data: userTokenIds, isFetching, isFetched, refetch };
 }

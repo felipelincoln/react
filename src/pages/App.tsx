@@ -45,11 +45,16 @@ import { EthereumNetwork, config } from '../config';
 import { etherToString } from '../packages/utils';
 import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import moment from 'moment';
+import { useQueryUserBalance } from '../hooks/useQueryUserBalance';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<{ data: string[] | undefined; refetch: Function }>(
   { data: undefined, refetch: () => {} },
 );
+export const UserBalanceContext = createContext<{ data: string | undefined; refetch: Function }>({
+  data: undefined,
+  refetch: () => {},
+});
 export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
 
 export interface collectionLoaderData {
@@ -88,16 +93,35 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected, isConnecting } = useAccount();
   const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
+  const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
-  const { data, isFetched, isFetching, refetch } = useQueryUserTokenIds({ collection });
+  const {
+    data: userTokenIdsData,
+    isFetched: userTokenIdsIsFetched,
+    isFetching: userTokenIdsIsFetching,
+    refetch: userTokenIdsRefetch,
+  } = useQueryUserTokenIds({ collection });
+  const {
+    data: userBalanceData,
+    isFetched: userBalanceIsFetched,
+    isFetching: UserBalanceIsFetching,
+    refetch: userBalanceRefetch,
+  } = useQueryUserBalance();
 
   useEffect(() => {
-    if (!isFetching && isFetched) {
+    if (!userTokenIdsIsFetching && userTokenIdsIsFetched) {
       console.log('updating user tokens');
-      setUserTokenIds(data);
+      setUserTokenIds(userTokenIdsData);
     }
-  }, [isFetching, isFetched]);
+  }, [userTokenIdsIsFetching, userTokenIdsIsFetched]);
+
+  useEffect(() => {
+    if (!UserBalanceIsFetching && userBalanceIsFetched) {
+      console.log('updating user balance');
+      setUserBalance(userBalanceData);
+    }
+  }, [UserBalanceIsFetching, userBalanceIsFetched]);
 
   useEffect(() => {
     if (!isConnected && !isConnecting) {
@@ -125,22 +149,24 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
-      <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch }}>
-        <UserNotificationsContext.Provider value={userNotifications}>
-          <Navbar
-            onClickAccount={() => {
-              setShowAccountTab(!showAccountTab);
-              setShowActivityTab(false);
-            }}
-            onClickActivity={() => {
-              setShowActivityTab(!showActivityTab);
-              setShowAccountTab(false);
-            }}
-          />
-          <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
-          <ActivityTab showTab={showActivityTab} />
-          {children}
-        </UserNotificationsContext.Provider>
+      <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch: userTokenIdsRefetch }}>
+        <UserBalanceContext.Provider value={{ data: userBalance, refetch: userBalanceRefetch }}>
+          <UserNotificationsContext.Provider value={userNotifications}>
+            <Navbar
+              onClickAccount={() => {
+                setShowAccountTab(!showAccountTab);
+                setShowActivityTab(false);
+              }}
+              onClickActivity={() => {
+                setShowActivityTab(!showActivityTab);
+                setShowAccountTab(false);
+              }}
+            />
+            <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
+            <ActivityTab showTab={showActivityTab} />
+            {children}
+          </UserNotificationsContext.Provider>
+        </UserBalanceContext.Provider>
       </UserTokenIdsContext.Provider>
     </CollectionContext.Provider>
   );
@@ -392,20 +418,20 @@ function Navbar({
 }) {
   const collection = useContext(CollectionContext);
   const { data: userTokenIds } = useContext(UserTokenIdsContext);
+  const { data: userBalance } = useContext(UserBalanceContext);
   const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
-  const { data: balance, isLoading: isLoadingBalance } = useBalance({ address });
 
   let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (isConnected) {
     let userTokens = `${userTokenIds?.length} ${collection.symbol}`;
-    let userEth = etherToString(balance?.value);
+    let userEth = etherToString(BigInt(userBalance || '0'));
 
     buttons = [
       <Button key="2" disabled loading={!userTokenIds}>
         <span>{userTokens}</span>
       </Button>,
-      <Button key="3" disabled loading={!!isLoadingBalance}>
+      <Button key="3" disabled loading={!userBalance}>
         <span>{userEth}</span>
       </Button>,
       <ActivityButton
