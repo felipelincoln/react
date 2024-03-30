@@ -12,6 +12,7 @@ import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
+  UserBalanceContext,
   UserTokenIdsContext,
   collectionLoader,
   collectionLoaderData,
@@ -49,7 +50,7 @@ export function OrderFulfill() {
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
   const { data: userTokenIds, refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
-  const { refetch: refetchUserBalance } = useContext(UserTokenIdsContext);
+  const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,

@@ -175,7 +175,6 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
   const collection = useContext(CollectionContext);
   const { address, isConnected } = useAccount();
-  const { data: ensName } = useEnsName({ address });
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
@@ -236,11 +235,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
         <div className="p-8 flex flex-col gap-8">
           <div className="overflow-x-hidden text-ellipsis font-medium">
-            {ensName ? (
-              <span className="text-lg">{ensName}</span>
-            ) : (
-              <span className="text-sm">{address}</span>
-            )}
+            <span className="text-sm">{address}</span>
           </div>
           {userOrders.length > 0 && (
             <div className="flex flex-col gap-4">
@@ -456,23 +451,13 @@ function Navbar({
 function UserButton({ onClick }: { onClick: Function }) {
   const { connect } = useConnect();
   const { isConnected, address } = useAccount();
-  const {
-    data: ensName,
-    isFetching: isFetchingEns,
-    isFetched: isFetchedEns,
-    isSuccess: isSuccessEns,
-  } = useEnsName({ address });
 
-  if (isFetchingEns && !isSuccessEns) {
-    return <Button loading></Button>;
-  }
-
-  if (isConnected && isFetchedEns) {
+  if (isConnected) {
     if (!address) throw new Error('Missing address');
     let shortAddress = address.slice(0, 6) + '...' + address.slice(-4);
     return (
       <Button onClick={onClick}>
-        <span>{ensName ?? shortAddress}</span>
+        <span>{shortAddress}</span>
       </Button>
     );
   }

@@ -8,9 +8,10 @@ export function useQueryUserBalance({ disabled } = { disabled: false }) {
     error?: string;
   }>({
     enabled: !!address && isConnected && !disabled,
-    queryKey: ['user_balance'],
+    queryKey: ['eth_user_balance'],
     staleTime: Infinity,
-    queryFn: () => fetch(`http://localhost:3000/user/balance/${address}`).then((res) => res.json()),
+    queryFn: () =>
+      fetch(`http://localhost:3000/eth/user/balance/${address}`).then((res) => res.json()),
   });
 
   const isError = !!data?.error;

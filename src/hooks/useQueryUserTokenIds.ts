@@ -15,10 +15,12 @@ export function useQueryUserTokenIds({
     error?: string;
   }>({
     enabled: !!collection && !!address && isConnected && !disabled,
-    queryKey: ['user_token_ids'],
+    queryKey: ['eth_user_tokens'],
     staleTime: Infinity,
     queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection?.key}/${address}`).then((res) => res.json()),
+      fetch(`http://localhost:3000/eth/user/tokens/${collection?.key}/${address}`).then((res) =>
+        res.json(),
+      ),
   });
 
   const isError = !!data?.error;
