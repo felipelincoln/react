@@ -381,6 +381,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
     }
   }, [userNotificationsCache]);
 
+  // TODO: view notifications when user closes activity tab
   useQuery<{ data: { activities: With_Id<Activity>[] } }>({
     queryKey: ['user_view_notifications'],
     enabled: isConnected && userNotifications.length > 0 && showTab,
@@ -399,61 +400,60 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   return (
     <Tab hidden={!showTab}>
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
-        <div className="p-8 flex flex-col gap-8">
+        <div className="p-8 flex flex-col gap-4">
           <div className="font-medium text-lg">Activity</div>
           {userActivities.length > 0 && (
             <table>
-              <thead>
-                <tr className="*:font-normal text-sm text-zinc-400 text-left">
-                  <th>Event</th>
-                  <th>Item</th>
-                  <th>Payment</th>
-                  <th>Time</th>
-                </tr>
-              </thead>
               <tbody>
                 {userActivities.map((activity) => {
                   const isOfferer = activity.offerer === address;
+                  const isNew = userNotifications.find(
+                    (notification) => notification.activityId == activity._id,
+                  );
 
                   return (
-                    <tr
-                      key={activity.txHash}
-                      className="border-b-2 border-zinc-800 *:py-4 last:border-0"
-                    >
-                      <td className="text-xs text-zinc-400 align-top max-w-12">
-                        {isOfferer ? 'SELL' : 'BUY'}
-                      </td>
-                      <td className="align-top">
-                        <div className="relative">
-                          {userNotifications.find(
-                            (notification) => notification.activityId == activity._id,
-                          ) && (
-                            <div className="absolute top-0 -left-4 h-2 w-2 rounded-full bg-cyan-400"></div>
-                          )}
-
+                    <>
+                      <tr>
+                        <td className="text-sm text-zinc-400 pt-4 align-baseline">
+                          <div className="relative">
+                            {isNew && (
+                              <div className="absolute bottom-1 -left-5 h-2 w-2 rounded-full bg-cyan-400"></div>
+                            )}
+                            <span className={isNew ? 'font-medium text-zinc-200' : ''}>
+                              {' '}
+                              Item {isOfferer ? 'sold' : 'bought'}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="text-xs text-zinc-400 pt-4 align-baseline">
+                          <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                            {moment(Number(activity.createdAt)).fromNow()}
+                          </ExternalLink>
+                        </td>
+                      </tr>
+                      <tr
+                        key={activity.txHash}
+                        className="border-b-2 border-zinc-800 *:py-4 last:border-0"
+                      >
+                        <td className="align-top">
                           <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex flex-col gap-2">
-                          {activity.fulfillment.coin && (
-                            <ItemETH value={activity.fulfillment.coin.amount} />
-                          )}
-                          {activity.fulfillment.token.identifier.map((tokenId) => (
-                            <ItemNFT
-                              key={activity.txHash.concat(tokenId)}
-                              collection={collection}
-                              tokenId={tokenId}
-                            />
-                          ))}
-                        </div>
-                      </td>
-                      <td className="text-xs text-zinc-400 align-top max-w-12">
-                        <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
-                          {moment(Number(activity.createdAt)).fromNow()}
-                        </ExternalLink>
-                      </td>
-                    </tr>
+                        </td>
+                        <td>
+                          <div className="flex flex-col gap-2">
+                            {activity.fulfillment.coin && (
+                              <ItemETH value={activity.fulfillment.coin.amount} />
+                            )}
+                            {activity.fulfillment.token.identifier.map((tokenId) => (
+                              <ItemNFT
+                                key={activity.txHash.concat(tokenId)}
+                                collection={collection}
+                                tokenId={tokenId}
+                              />
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                    </>
                   );
                 })}
               </tbody>

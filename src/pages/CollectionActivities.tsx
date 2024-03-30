@@ -15,9 +15,11 @@ import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { Activity, Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
 import moment from 'moment';
+import { useAccount } from 'wagmi';
 
 export function CollectionActivities() {
   const collection = useContext(CollectionContext);
+  const { address } = useAccount();
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -109,12 +111,12 @@ export function CollectionActivities() {
                 </td>
                 <td className="text-xs align-top">
                   <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.offerer}`}>
-                    {activity.offerer}
+                    {activity.offerer == address ? 'You' : activity.offerer}
                   </ExternalLink>
                 </td>
                 <td className="text-xs align-top">
                   <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.fulfiller}`}>
-                    {activity.fulfiller}
+                    {activity.fulfiller == address ? 'You' : activity.fulfiller}
                   </ExternalLink>
                 </td>
                 <td className="text-xs align-top">
