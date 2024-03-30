@@ -1,9 +1,10 @@
 import { useContext, useEffect, useState } from 'react';
-import { CollectionContext } from './App';
+import { CollectionContext, UserBalanceContext } from './App';
 import { Button, ButtonAccordion, ButtonLight, CardNFTOrder, Checkbox, Tag } from './Components';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { useAccount, useBalance } from 'wagmi';
 
 type UseQueryOrdersResult = UseQueryResult<{ data: { orders: WithSignature<Order>[] } }>;
 
@@ -15,18 +16,14 @@ export function CollectionItems() {
 
   const { data: ordersResult }: UseQueryOrdersResult = useQuery({
     queryKey: ['order', filteredTokenIds.join('-')],
-    enabled: filteredTokenIds.length > 0,
+    enabled: !!collection && filteredTokenIds.length > 0,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
+      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(
-          { collection: collection.address, tokenIds: filteredTokenIds },
-          null,
-          2,
-        ),
+        body: JSON.stringify({ tokenIds: filteredTokenIds }, null, 2),
       }).then((res) => res.json()),
   });
 

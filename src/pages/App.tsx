@@ -9,7 +9,9 @@ import { ReactElement, createContext, useContext, useEffect, useState } from 're
 import {
   WagmiProvider,
   createConfig,
+  fallback,
   http,
+  unstable_connector,
   useAccount,
   useBalance,
   useConnect,
@@ -43,9 +45,7 @@ import {
 } from './Components';
 import { EthereumNetwork, config } from '../config';
 import { etherToString } from '../packages/utils';
-import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 import moment from 'moment';
-import { useQueryUserBalance } from '../hooks/useQueryUserBalance';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserTokenIdsContext = createContext<{ data: string[] | undefined; refetch: Function }>(
@@ -55,7 +55,20 @@ export const UserBalanceContext = createContext<{ data: string | undefined; refe
   data: undefined,
   refetch: () => {},
 });
-export const UserNotificationsContext = createContext<With_Id<Notification>[]>([]);
+export const UserOrdersContext = createContext<{
+  data: WithSignature<Order>[] | undefined;
+  refetch: Function;
+}>({
+  data: undefined,
+  refetch: () => {},
+});
+export const UserActivitiesContext = createContext<{
+  data: With_Id<Activity>[] | undefined;
+  refetch: Function;
+}>({
+  data: undefined,
+  refetch: () => {},
+});
 
 export interface collectionLoaderData {
   collection: CollectionDetails | undefined;
@@ -73,16 +86,16 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
     chains: [mainnet, sepolia],
     connectors: [injected()],
     transports: {
-      [mainnet.id]: http(),
-      [sepolia.id]: http('https://eth-sepolia.g.alchemy.com/v2/Y8rL2bPTVaAg5E-vr47ab4g-kP5ZjTTL'),
+      [mainnet.id]: fallback([unstable_connector(injected), http('http://localhost:3000/jsonrpc')]),
+      [sepolia.id]: fallback([unstable_connector(injected), http('http://localhost:3000/jsonrpc')]),
     },
   });
 
-  const wagmiQueryClient = new QueryClient();
+  const queryClient = new QueryClient();
 
   return (
     <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
-      <QueryClientProvider client={wagmiQueryClient}>
+      <QueryClientProvider client={queryClient}>
         <AppContextProvider>{children}</AppContextProvider>
       </QueryClientProvider>
     </WagmiProvider>
@@ -92,36 +105,106 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
   const { address: userAddress, isConnected, isConnecting } = useAccount();
-  const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
   const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
+  const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
+  const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
+  const [userActivities, setUserActivities] = useState<With_Id<Activity>[] | undefined>(undefined);
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
   const {
-    data: userTokenIdsData,
-    isFetched: userTokenIdsIsFetched,
-    isFetching: userTokenIdsIsFetching,
-    refetch: userTokenIdsRefetch,
-  } = useQueryUserTokenIds({ collection });
-  const {
     data: userBalanceData,
-    isFetched: userBalanceIsFetched,
-    isFetching: UserBalanceIsFetching,
     refetch: userBalanceRefetch,
-  } = useQueryUserBalance();
+    isFetched: userBalanceIsFetched,
+    isFetching: userBalanceIsFetching,
+  } = useBalance({
+    address: userAddress,
+    query: { staleTime: Infinity },
+  });
+  const {
+    data: userTokenIdsData,
+    refetch: userTokenIdsRefetch,
+    isFetched: userTokenIdsDataIsFetched,
+    isFetching: userTokenIdsDataIsFetching,
+  } = useQuery<{
+    data?: { tokens: string[] };
+    error?: string;
+  }>({
+    enabled: !!collection && !!userAddress,
+    queryKey: ['eth_tokens_user'],
+    staleTime: Infinity,
+    queryFn: () =>
+      fetch(`http://localhost:3000/eth/tokens/${collection?.key}/${userAddress}`).then((res) =>
+        res.json(),
+      ),
+  });
+  const {
+    data: userOrdersData,
+    refetch: userOrdersRefetch,
+    isFetched: userOrdersIsFetched,
+    isFetching: userOrdersIsFetching,
+  } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+    error?: string;
+  }>({
+    queryKey: ['orders_list_user', userTokenIds?.join('-')],
+    staleTime: Infinity,
+    enabled: !!collection && !!userAddress && (userTokenIds || []).length > 0,
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds: userTokenIds }, null, 2),
+      }).then((res) => res.json()),
+  });
+
+  const {
+    data: userActivitiesData,
+    refetch: userActivitiesRefetch,
+    isFetched: userActivitiesIsFetched,
+    isFetching: userActivitiesIsFetching,
+  } = useQuery<{ data: { activities: With_Id<Activity>[] }; error?: string }>({
+    queryKey: ['activities_list_user'],
+    staleTime: Infinity,
+    enabled: !!collection && !!userAddress,
+    queryFn: () =>
+      fetch(`http://localhost:3000/activities/list/${collection?.key}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userAddress }, null, 2),
+      }).then((res) => res.json()),
+  });
 
   useEffect(() => {
-    if (!userTokenIdsIsFetching && userTokenIdsIsFetched) {
-      console.log('updating user tokens');
-      setUserTokenIds(userTokenIdsData);
-    }
-  }, [userTokenIdsIsFetching, userTokenIdsIsFetched]);
-
-  useEffect(() => {
-    if (!UserBalanceIsFetching && userBalanceIsFetched) {
+    if (!userBalanceIsFetching && userBalanceIsFetched) {
       console.log('updating user balance');
-      setUserBalance(userBalanceData);
+      setUserBalance(userBalanceData?.value.toString());
     }
-  }, [UserBalanceIsFetching, userBalanceIsFetched]);
+  }, [userBalanceIsFetching]);
+
+  useEffect(() => {
+    if (!userTokenIdsDataIsFetching && userTokenIdsDataIsFetched) {
+      console.log('updating user token ids');
+      setUserTokenIds(userTokenIdsData?.data?.tokens);
+    }
+  }, [userTokenIdsDataIsFetching]);
+
+  useEffect(() => {
+    if (!userOrdersIsFetching && userOrdersIsFetched) {
+      console.log('updating user orders');
+      setUserOrders(userOrdersData?.data?.orders);
+    }
+  }, [userOrdersIsFetching]);
+
+  useEffect(() => {
+    if (!userActivitiesIsFetching && userActivitiesIsFetched) {
+      console.log('updating user activities');
+      setUserActivities(userActivitiesData?.data?.activities);
+    }
+  }, [userActivitiesIsFetching]);
 
   useEffect(() => {
     if (!isConnected && !isConnecting) {
@@ -134,38 +217,29 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     return <NotFoundPage></NotFoundPage>;
   }
 
-  const { data: notificationsResult } = useQuery<{
-    data: { notifications: With_Id<Notification>[] };
-  }>({
-    initialData: { data: { notifications: [] } },
-    queryKey: ['user_notifications'],
-    queryFn: () =>
-      fetch(`http://localhost:3000/notifications/${collection.key}/${userAddress}`).then((res) =>
-        res.json(),
-      ),
-    enabled: isConnected,
-  });
-
-  const userNotifications = notificationsResult.data.notifications;
   return (
     <CollectionContext.Provider value={collection}>
       <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch: userTokenIdsRefetch }}>
         <UserBalanceContext.Provider value={{ data: userBalance, refetch: userBalanceRefetch }}>
-          <UserNotificationsContext.Provider value={userNotifications}>
-            <Navbar
-              onClickAccount={() => {
-                setShowAccountTab(!showAccountTab);
-                setShowActivityTab(false);
-              }}
-              onClickActivity={() => {
-                setShowActivityTab(!showActivityTab);
-                setShowAccountTab(false);
-              }}
-            />
-            <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
-            <ActivityTab showTab={showActivityTab} />
-            {children}
-          </UserNotificationsContext.Provider>
+          <UserOrdersContext.Provider value={{ data: userOrders, refetch: userOrdersRefetch }}>
+            <UserActivitiesContext.Provider
+              value={{ data: userActivities, refetch: userActivitiesRefetch }}
+            >
+              <Navbar
+                onClickAccount={() => {
+                  setShowAccountTab(!showAccountTab);
+                  setShowActivityTab(false);
+                }}
+                onClickActivity={() => {
+                  setShowActivityTab(!showActivityTab);
+                  setShowAccountTab(false);
+                }}
+              />
+              <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
+              <ActivityTab showTab={showActivityTab} />
+              {children}
+            </UserActivitiesContext.Provider>
+          </UserOrdersContext.Provider>
         </UserBalanceContext.Provider>
       </UserTokenIdsContext.Provider>
     </CollectionContext.Provider>
@@ -178,27 +252,12 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
-  const { data: userTokenIdsContext } = useContext(UserTokenIdsContext);
+  const { data: userTokenIdsData } = useContext(UserTokenIdsContext);
+  const { data: userOrdersData } = useContext(UserOrdersContext);
 
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
-  const userTokenIds = userTokenIdsContext || [];
-
-  const { data: ordersResult } = useQuery<{
-    data: { orders: WithSignature<Order>[] };
-  }>({
-    queryKey: ['user-order'],
-    enabled: userTokenIds.length > 0,
-    queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ collection: collection.address, tokenIds: userTokenIds }, null, 2),
-      }).then((res) => res.json()),
-  });
-
-  const userOrders = ordersResult?.data.orders || [];
+  const userTokenIds = userTokenIdsData || [];
+  const userOrders = userOrdersData || [];
 
   useEffect(() => {
     if (selectedTokenId) {
@@ -285,35 +344,42 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
 
 function ActivityTab({ showTab }: { showTab: boolean }) {
   const collection = useContext(CollectionContext);
+  const [userNotificationsCache, setuserNotificationsCache] = useState(0);
   const { address, isConnected } = useAccount();
-
-  const { data: userActivitiesResult } = useQuery<{ data: { activities: With_Id<Activity>[] } }>({
-    queryKey: ['user_activities'],
-    enabled: isConnected,
-    queryFn: () =>
-      fetch('http://localhost:3000/activity/list', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ collection: collection.address, address }, null, 2),
-      }).then((res) => res.json()),
-  });
-
-  const userActivities = userActivitiesResult?.data.activities || [];
-
-  const { data: notificationsResult } = useQuery<{
+  const { refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
+  const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
+  const { refetch: refetchUserActivities, data: userActivitiesData } =
+    useContext(UserActivitiesContext);
+  const {
+    data: userNotificationsData,
+    isFetching: userNotificationsIsFetching,
+    isFetched: userNotificationsIsFetched,
+  } = useQuery<{
     data: { notifications: With_Id<Notification>[] };
   }>({
-    queryKey: ['user_notifications'],
-    enabled: isConnected,
+    queryKey: ['notifications_list_user'],
+    enabled: !!address,
     queryFn: () =>
-      fetch(`http://localhost:3000/notifications/${collection.key}/${address}`).then((res) =>
+      fetch(`http://localhost:3000/notifications/list/${collection.key}/${address}`).then((res) =>
         res.json(),
       ),
   });
+  const userNotifications = userNotificationsData?.data.notifications || [];
 
-  const userNotifications = notificationsResult?.data.notifications || [];
+  useEffect(() => {
+    if (!userNotificationsIsFetching && userNotificationsIsFetched) {
+      setuserNotificationsCache(userNotifications.length);
+    }
+  }, [userNotificationsIsFetching]);
+
+  useEffect(() => {
+    if (userNotificationsCache > 0) {
+      console.log('new notification');
+      refetchUserTokenIds();
+      refetchUserBalance();
+      refetchUserActivities();
+    }
+  }, [userNotificationsCache]);
 
   useQuery<{ data: { activities: With_Id<Activity>[] } }>({
     queryKey: ['user_view_notifications'],
@@ -328,6 +394,8 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
       }).then((res) => res.json()),
   });
 
+  const userActivities = userActivitiesData || [];
+
   return (
     <Tab hidden={!showTab}>
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
@@ -337,49 +405,57 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
             <table>
               <thead>
                 <tr className="*:font-normal text-sm text-zinc-400 text-left">
+                  <th>Event</th>
                   <th>Item</th>
-                  <th>Received</th>
+                  <th>Payment</th>
                   <th>Time</th>
                 </tr>
               </thead>
               <tbody>
-                {userActivities.map((activity) => (
-                  <tr
-                    key={activity.txHash}
-                    className="border-b-2 border-zinc-800 *:py-4 last:border-0"
-                  >
-                    <td className="align-top">
-                      <div className="relative">
-                        {userNotifications.find(
-                          (notification) => notification.activityId == activity._id,
-                        ) && (
-                          <div className="absolute top-0 -left-4 h-2 w-2 rounded-full bg-cyan-400"></div>
-                        )}
+                {userActivities.map((activity) => {
+                  const isOfferer = activity.offerer === address;
 
-                        <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="flex flex-col gap-2">
-                        {activity.fulfillment.coin && (
-                          <ItemETH value={activity.fulfillment.coin.amount} />
-                        )}
-                        {activity.fulfillment.token.identifier.map((tokenId) => (
-                          <ItemNFT
-                            key={activity.txHash.concat(tokenId)}
-                            collection={collection}
-                            tokenId={tokenId}
-                          />
-                        ))}
-                      </div>
-                    </td>
-                    <td className="text-xs text-zinc-400 align-top max-w-12">
-                      <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
-                        {moment(Number(activity.createdAt)).fromNow()}
-                      </ExternalLink>
-                    </td>
-                  </tr>
-                ))}
+                  return (
+                    <tr
+                      key={activity.txHash}
+                      className="border-b-2 border-zinc-800 *:py-4 last:border-0"
+                    >
+                      <td className="text-xs text-zinc-400 align-top max-w-12">
+                        {isOfferer ? 'SELL' : 'BUY'}
+                      </td>
+                      <td className="align-top">
+                        <div className="relative">
+                          {userNotifications.find(
+                            (notification) => notification.activityId == activity._id,
+                          ) && (
+                            <div className="absolute top-0 -left-4 h-2 w-2 rounded-full bg-cyan-400"></div>
+                          )}
+
+                          <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-2">
+                          {activity.fulfillment.coin && (
+                            <ItemETH value={activity.fulfillment.coin.amount} />
+                          )}
+                          {activity.fulfillment.token.identifier.map((tokenId) => (
+                            <ItemNFT
+                              key={activity.txHash.concat(tokenId)}
+                              collection={collection}
+                              tokenId={tokenId}
+                            />
+                          ))}
+                        </div>
+                      </td>
+                      <td className="text-xs text-zinc-400 align-top max-w-12">
+                        <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                          {moment(Number(activity.createdAt)).fromNow()}
+                        </ExternalLink>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           )}
@@ -414,8 +490,20 @@ function Navbar({
   const collection = useContext(CollectionContext);
   const { data: userTokenIds } = useContext(UserTokenIdsContext);
   const { data: userBalance } = useContext(UserBalanceContext);
-  const userNotifications = useContext(UserNotificationsContext);
   const { isConnected, address } = useAccount();
+  const { data: userNotificationsData } = useQuery<{
+    data: { notifications: With_Id<Notification>[] };
+  }>({
+    queryKey: ['notifications_list_user'],
+    enabled: !!address,
+    refetchInterval: 12_000,
+    queryFn: () =>
+      fetch(`http://localhost:3000/notifications/list/${collection.key}/${address}`).then((res) =>
+        res.json(),
+      ),
+  });
+
+  const userNotifications = userNotificationsData?.data.notifications || [];
 
   let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (isConnected) {

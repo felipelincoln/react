@@ -26,7 +26,7 @@ export function CollectionActivities() {
     queryKey: ['activity', filteredTokenIds.join('-')],
     enabled: filteredTokenIds.length > 0,
     queryFn: () =>
-      fetch(`http://localhost:3000/activity/list/`, {
+      fetch(`http://localhost:3000/activities/list/${collection.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

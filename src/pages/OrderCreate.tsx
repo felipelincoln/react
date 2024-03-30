@@ -17,7 +17,12 @@ import {
 } from './Components';
 import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
-import { CollectionContext, collectionLoader, collectionLoaderData } from './App';
+import {
+  CollectionContext,
+  UserOrdersContext,
+  collectionLoader,
+  collectionLoaderData,
+} from './App';
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
@@ -57,6 +62,7 @@ export function OrderCreate() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
+  const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
 
   const allTokenIds = collection.mintedTokens;
   const newOrder: Order = {
@@ -94,8 +100,8 @@ export function OrderCreate() {
   });
 
   useEffect(() => {
-    console.log({ useEffectIsSuccess: isSuccess });
     if (isSuccess) {
+      refetchUserOrders();
       navigate(`/c/${collection.key}`);
     }
   }, [isSuccess]);

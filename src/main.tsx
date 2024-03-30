@@ -3,8 +3,6 @@ import ReactDOM from 'react-dom/client';
 import { RouterProvider, createBrowserRouter } from 'react-router-dom';
 import NotFoundPage from './pages/NotFound';
 import App, { collectionLoader } from './pages/App';
-import { CollectionHeader } from './pages/CollectionPage/CollectionHeader';
-import { CollectionActivity } from './pages/CollectionPage/CollectionActivity';
 import { Components } from './pages/Components';
 import { CollectionItems } from './pages/CollectionItems';
 import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';

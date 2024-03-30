@@ -12,7 +12,9 @@ import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
+  UserActivitiesContext,
   UserBalanceContext,
+  UserOrdersContext,
   UserTokenIdsContext,
   collectionLoader,
   collectionLoaderData,
@@ -22,7 +24,6 @@ import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 import { useAccount } from 'wagmi';
-import { useQueryUserTokenIds } from '../hooks/useQueryUserTokenIds';
 
 interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -51,6 +52,7 @@ export function OrderFulfill() {
   const [tokensPage, setTokensPage] = useState(0);
   const { data: userTokenIds, refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
+  const { refetch: refetchUserActivities } = useContext(UserActivitiesContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -66,7 +68,7 @@ export function OrderFulfill() {
     queryKey: ['order', tokenId],
     refetchInterval: isFulfillConfirmed ? 1000 : false,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/`, {
+      fetch(`http://localhost:3000/orders/list/${collection.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -113,6 +115,7 @@ export function OrderFulfill() {
       console.log('purchase confirmed.');
       refetchUserTokenIds();
       refetchUserBalance();
+      refetchUserActivities();
       navigate(`/c/${collection.key}`);
     }
   }, [isFulfillConfirmed, order]);
