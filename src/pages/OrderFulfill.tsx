@@ -1,6 +1,8 @@
 import { QueryClient, useQuery } from '@tanstack/react-query';
 import {
   ActionButton,
+  Button,
+  ButtonRed,
   CardNFTSelectable,
   InputDisabledWithLabel,
   Paginator,
@@ -24,6 +26,8 @@ import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 import { useAccount } from 'wagmi';
+import { useCancelOrder } from '../packages/order/useCancelOrder';
+import NotFoundPage from './NotFound';
 
 interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -45,7 +49,7 @@ export function OrderFulfill() {
   const collection = useContext(CollectionContext);
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
-  const { isConnected } = useAccount();
+  const { address: userAddress, isConnected } = useAccount();
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
@@ -60,6 +64,13 @@ export function OrderFulfill() {
     isFetching: isFulfillFetching,
     error: fulfillOrderError,
   } = useFulfillOrder();
+  const {
+    data: cancelOrderTxHash,
+    cancelOrder,
+    isSuccess: isCancelConfirmed,
+    isFetching: isCancelFetching,
+    error: cancelOrderError,
+  } = useCancelOrder();
   const [pendingCounter, setPendingCounter] = useState(0);
 
   const {
@@ -70,7 +81,7 @@ export function OrderFulfill() {
     data: { orders: WithSignature<Order>[] };
   }>({
     queryKey: ['order', tokenId],
-    refetchInterval: isFulfillConfirmed ? 1000 : false,
+    refetchInterval: isFulfillConfirmed || isCancelConfirmed ? 1000 : false,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/${collection.key}`, {
         method: 'POST',
@@ -85,8 +96,9 @@ export function OrderFulfill() {
   const orderTokenIds = order?.fulfillmentCriteria.token.identifier || [];
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
-  const canConfirmOrder = selectedTokenIds.length == orderTokenAmount;
-  const errorMessage = fulfillOrderError?.split('\n').slice(0, -1).join('\n');
+  const isOrderOwner = order?.offerer === userAddress;
+  const canConfirmOrder = selectedTokenIds.length == orderTokenAmount && !isOrderOwner;
+  const errorMessage = (fulfillOrderError || cancelOrderError)?.split('\n').slice(0, -1).join('\n');
 
   useEffect(() => {
     if (isConnected && !userTokenIds) {
@@ -112,8 +124,6 @@ export function OrderFulfill() {
     setOrderTokenIdsSorted(orderTokenIdsCopy);
   }, [isOrderFetched, userTokenIds, isConnected]);
 
-  console.log({ userTokenIds });
-
   useEffect(() => {
     if (isFulfillConfirmed && !order) {
       console.log('purchase confirmed.');
@@ -129,6 +139,12 @@ export function OrderFulfill() {
       setTimeout(() => setPendingCounter(pendingCounter + 1), 1000);
     }
   }, [isFulfillFetching, isFulfillConfirmed, pendingCounter, order]);
+
+  useEffect(() => {
+    if (isCancelFetching || (isCancelConfirmed && !!order)) {
+      setTimeout(() => setPendingCounter(pendingCounter + 1), 1000);
+    }
+  }, [isCancelFetching, isCancelConfirmed, pendingCounter, order]);
 
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...selectedTokenIds];
@@ -161,9 +177,16 @@ export function OrderFulfill() {
     return <div className="mx-auto w-fit p-8">Loading...</div>;
   }
 
+  if (!order) {
+    return <NotFoundPage></NotFoundPage>;
+  }
+
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <h1 className="pb-8">Fulfill order</h1>
+      <div className="flex justify-between">
+        <h1 className="pb-8">Fulfill order</h1>
+        {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
+      </div>
       <div className="flex">
         <div className="flex-grow flex flex-col gap-8">
           <div>
@@ -230,9 +253,16 @@ export function OrderFulfill() {
           {pendingCounter > 0 && (
             <div className="overflow-hidden text-ellipsis">
               Transaction is pending ({pendingCounter}s){' '}
-              <a target="_blank" href={`https://sepolia.etherscan.io/tx/${fulfillOrderTxHash}`}>
-                {fulfillOrderTxHash}
-              </a>
+              {fulfillOrderTxHash && (
+                <a target="_blank" href={`https://sepolia.etherscan.io/tx/${fulfillOrderTxHash}`}>
+                  {fulfillOrderTxHash}
+                </a>
+              )}
+              {cancelOrderTxHash && (
+                <a target="_blank" href={`https://sepolia.etherscan.io/tx/${cancelOrderTxHash}`}>
+                  {cancelOrderTxHash}
+                </a>
+              )}
             </div>
           )}
           {!!errorMessage && (

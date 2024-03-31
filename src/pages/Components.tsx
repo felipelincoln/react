@@ -22,6 +22,16 @@ export function Components() {
         <ButtonLight loading>ButtonLight:Loading</ButtonLight>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ButtonRed>ButtonRed</ButtonRed>
+        <ButtonRed disabled>ButtonRed:Disabled</ButtonRed>
+        <ButtonRed loading>ButtonRed:Loading</ButtonRed>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <ButtonBlue>ButtonBlue</ButtonBlue>
+        <ButtonBlue disabled>ButtonBlue:Disabled</ButtonBlue>
+        <ButtonBlue loading>ButtonBlue:Loading</ButtonBlue>
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Tag onClick={() => {}}>Tag</Tag>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -176,6 +186,76 @@ export function ButtonLight({
       disabled={!!disabled}
       onClick={() => onClick?.()}
       className="h-8 px-4 rounded text-sm bg-zinc-700 text-zinc-200 whitespace-nowrap hover:bg-zinc-600 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-600"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function ButtonRed({
+  children,
+  disabled,
+  loading,
+  onClick,
+}: {
+  children?: number | string | [string, ReactElement] | ReactElement;
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: Function;
+}) {
+  if (loading) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        className="group h-8 px-4 rounded text-sm bg-red-400 text-zinc-950 whitespace-nowrap disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-700 disabled:text-zinc-200"
+      >
+        <span className="animate-pulse inline-block h-4 w-24 my-2 bg-red-300 group-disabled:bg-red-400"></span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!!disabled}
+      onClick={() => onClick?.()}
+      className="h-8 px-4 rounded text-sm bg-red-400 font-medium text-zinc-950 whitespace-nowrap hover:bg-red-300 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-700 disabled:text-zinc-200 disabled:font-normal"
+    >
+      {children}
+    </button>
+  );
+}
+
+export function ButtonBlue({
+  children,
+  disabled,
+  loading,
+  onClick,
+}: {
+  children?: number | string | [string, ReactElement] | ReactElement;
+  disabled?: boolean;
+  loading?: boolean;
+  onClick?: Function;
+}) {
+  if (loading) {
+    return (
+      <button
+        type="button"
+        disabled={disabled}
+        className="group h-8 px-4 rounded text-sm bg-cyan-400 text-zinc-950 whitespace-nowrap disabled:bg-inherit disabled:outline disabled:outline-1 -disabled:outline-offset-1 disabled:outline-cyan-500 disabled:text-cyan-500"
+      >
+        <span className="animate-pulse inline-block h-4 w-24 my-2 bg-cyan-300 group-disabled:bg-cyan-400"></span>
+      </button>
+    );
+  }
+
+  return (
+    <button
+      type="button"
+      disabled={!!disabled}
+      onClick={() => onClick?.()}
+      className="h-8 px-4 rounded text-sm bg-cyan-400 font-medium text-zinc-950 whitespace-nowrap hover:bg-cyan-300 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-cyan-500 disabled:text-cyan-500"
     >
       {children}
     </button>

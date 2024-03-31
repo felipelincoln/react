@@ -298,7 +298,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
           </div>
           {userOrders.length > 0 && (
             <div className="flex flex-col gap-4">
-              <div className="text-sm text-zinc-400">Listed</div>
+              <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
               <div className="flex flex-col flex-wrap gap-4">
                 {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
                   <ListedNFT
@@ -315,7 +315,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
           )}
 
           <div className="flex flex-col gap-4">
-            <div className="text-sm text-zinc-400">Unlisted</div>
+            <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokenIds.length})</div>
             <div className="grid grid-cols-3 gap-4">
               {userUnlistedTokenIds.map((tokenId) => (
                 <CardNFTSelectable
