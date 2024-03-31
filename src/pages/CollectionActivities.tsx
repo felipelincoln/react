@@ -16,6 +16,7 @@ import { Activity, Order, WithSignature } from '../packages/order/marketplacePro
 import { Navigate, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import { useAccount } from 'wagmi';
+import { shortAddress } from '../packages/utils';
 
 export function CollectionActivities() {
   const collection = useContext(CollectionContext);
@@ -24,7 +25,9 @@ export function CollectionActivities() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  const { data: activitiesResult } = useQuery<{ data: { activities: Activity[] } }>({
+  const { data: activitiesData, isLoading: ActivitiesIsLoading } = useQuery<{
+    data: { activities: Activity[] };
+  }>({
     queryKey: ['activity', filteredTokenIds.join('-')],
     enabled: filteredTokenIds.length > 0,
     queryFn: () =>
@@ -41,7 +44,7 @@ export function CollectionActivities() {
       }).then((res) => res.json()),
   });
 
-  const activities = activitiesResult?.data.activities.map((activity) => activity) || [];
+  const activities = activitiesData?.data.activities.map((activity) => activity) || [];
 
   return (
     <div className="flex flex-grow">
@@ -69,66 +72,15 @@ export function CollectionActivities() {
           ></ItemsNavigation>
         </div>
       </div>
-      <div className="flex-grow p-8">
-        <div className="flex h-8 gap-4 items-center">
-          <div>{activities.length} Results</div>
-          <AttributeTags
-            filteredAttributes={filteredAttributes}
-            setFilteredAttributes={setFilteredAttributes}
-          />
-        </div>
-        <div className="h-8"></div>
-
-        <table className="w-full">
-          <thead>
-            <tr className="*:font-normal text-sm text-zinc-400 text-left">
-              <th>Item</th>
-              <th>Payment</th>
-              <th>From</th>
-              <th>To</th>
-              <th>Time</th>
-            </tr>
-          </thead>
-          <tbody>
-            {activities.map((activity) => (
-              <tr key={activity.txHash} className="border-b-2 border-zinc-800 *:py-4 last:border-0">
-                <td className="align-top">
-                  <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
-                </td>
-                <td>
-                  <div className="flex flex-col gap-2">
-                    {activity.fulfillment.coin && (
-                      <ItemETH value={activity.fulfillment.coin.amount} />
-                    )}
-                    {activity.fulfillment.token.identifier.map((tokenId) => (
-                      <ItemNFT
-                        key={activity.txHash.concat(tokenId)}
-                        collection={collection}
-                        tokenId={tokenId}
-                      />
-                    ))}
-                  </div>
-                </td>
-                <td className="text-xs align-top">
-                  <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.offerer}`}>
-                    {activity.offerer == address ? 'You' : activity.offerer}
-                  </ExternalLink>
-                </td>
-                <td className="text-xs align-top">
-                  <ExternalLink href={`https://sepolia.etherscan.io/address/${activity.fulfiller}`}>
-                    {activity.fulfiller == address ? 'You' : activity.fulfiller}
-                  </ExternalLink>
-                </td>
-                <td className="text-xs align-top">
-                  <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
-                    {moment(Number(activity.createdAt)).fromNow()}
-                  </ExternalLink>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      {ActivitiesIsLoading ? (
+        <div className="mx-auto w-fit p-8">Loading...</div>
+      ) : (
+        <ActivitiesSection
+          activities={activities}
+          filteredAttributes={filteredAttributes}
+          setFilteredAttributes={setFilteredAttributes}
+        />
+      )}
     </div>
   );
 }
@@ -237,6 +189,77 @@ function AttributeTags(props: AttributeTagsProps) {
           Clear
         </a>
       )}
+    </div>
+  );
+}
+
+function ActivitiesSection({
+  activities,
+  filteredAttributes,
+  setFilteredAttributes,
+}: {
+  activities: Activity[];
+  filteredAttributes: { [attribute: string]: string };
+  setFilteredAttributes: (attributes: { [attribute: string]: string }) => void;
+}) {
+  const collection = useContext(CollectionContext);
+  const { address } = useAccount();
+  return (
+    <div className="flex-grow p-8">
+      <div className="flex h-8 gap-4 items-center">
+        <div>{activities.length} Results</div>
+        <AttributeTags
+          filteredAttributes={filteredAttributes}
+          setFilteredAttributes={setFilteredAttributes}
+        />
+      </div>
+      <div className="h-8"></div>
+
+      <table className="m-auto">
+        <thead>
+          <tr className="*:font-normal text-sm text-zinc-400 text-left">
+            <th>Item</th>
+            <th>Payment</th>
+            <th>From</th>
+            <th>To</th>
+            <th>Time</th>
+          </tr>
+        </thead>
+        <tbody>
+          {activities.map((activity) => (
+            <tr key={activity.txHash} className="border-b-2 border-zinc-800 *:py-4 last:border-0">
+              <td className="align-top pr-8">
+                <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+              </td>
+              <td className="pr-8">
+                <div className="flex flex-col gap-2">
+                  {activity.fulfillment.coin && (
+                    <ItemETH value={activity.fulfillment.coin.amount} />
+                  )}
+                  {activity.fulfillment.token.identifier.map((tokenId) => (
+                    <ItemNFT
+                      key={activity.txHash.concat(tokenId)}
+                      collection={collection}
+                      tokenId={tokenId}
+                    />
+                  ))}
+                </div>
+              </td>
+              <td className="text-xs align-top pr-8">
+                {activity.offerer == address ? 'You' : shortAddress(activity.offerer)}
+              </td>
+              <td className="text-xs align-top pr-8">
+                {activity.fulfiller == address ? 'You' : shortAddress(activity.fulfiller)}
+              </td>
+              <td className="text-xs align-top">
+                <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                  {moment(Number(activity.createdAt)).fromNow()}
+                </ExternalLink>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

@@ -62,7 +62,11 @@ export function OrderFulfill() {
   } = useFulfillOrder();
   const [pendingCounter, setPendingCounter] = useState(0);
 
-  const { data: ordersResult, isFetched: isOrderFetched } = useQuery<{
+  const {
+    data: ordersData,
+    isFetched: isOrderFetched,
+    isLoading: orderIsLoading,
+  } = useQuery<{
     data: { orders: WithSignature<Order>[] };
   }>({
     queryKey: ['order', tokenId],
@@ -77,7 +81,7 @@ export function OrderFulfill() {
       }).then((res) => res.json()),
   });
 
-  const order = ordersResult?.data.orders[0];
+  const order = ordersData?.data.orders[0];
   const orderTokenIds = order?.fulfillmentCriteria.token.identifier || [];
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
@@ -151,6 +155,10 @@ export function OrderFulfill() {
       selectedTokenIds,
       ...order,
     });
+  }
+
+  if (orderIsLoading) {
+    return <div className="mx-auto w-fit p-8">Loading...</div>;
   }
 
   return (

@@ -524,7 +524,7 @@ export function CardNFTSelectable({
   tokenId: string;
   selected?: boolean;
   disabled?: boolean;
-  onSelect: Function;
+  onSelect?: Function;
 }) {
   let cardClass = 'cursor-pointer';
 
@@ -539,7 +539,7 @@ export function CardNFTSelectable({
   return (
     <div
       className={`rounded w-24 bg-zinc-800 ${cardClass}`}
-      onClick={() => !disabled && onSelect()}
+      onClick={() => !disabled && onSelect?.()}
     >
       <img
         src={`/${collection.key}/${tokenId}.png`}

@@ -44,7 +44,7 @@ import {
   PriceTag,
 } from './Components';
 import { EthereumNetwork, config } from '../config';
-import { etherToString } from '../packages/utils';
+import { etherToString, shortAddress } from '../packages/utils';
 import moment from 'moment';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
@@ -412,9 +412,12 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                   );
 
                   return (
-                    <>
-                      <tr>
-                        <td className="text-sm text-zinc-400 pt-4 align-baseline">
+                    <tr
+                      key={activity.txHash}
+                      className="border-b-2 border-zinc-800 *:py-4 last:border-0"
+                    >
+                      <td className="align-top">
+                        <div className="flex flex-col gap-4 text-xs text-zinc-400">
                           <div className="relative">
                             {isNew && (
                               <div className="absolute bottom-1 -left-5 h-2 w-2 rounded-full bg-cyan-400"></div>
@@ -424,21 +427,14 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                               Item {isOfferer ? 'sold' : 'bought'}
                             </span>
                           </div>
-                        </td>
-                        <td className="text-xs text-zinc-400 pt-4 align-baseline">
+                          <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-4">
                           <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
                             {moment(Number(activity.createdAt)).fromNow()}
                           </ExternalLink>
-                        </td>
-                      </tr>
-                      <tr
-                        key={activity.txHash}
-                        className="border-b-2 border-zinc-800 *:py-4 last:border-0"
-                      >
-                        <td className="align-top">
-                          <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
-                        </td>
-                        <td>
                           <div className="flex flex-col gap-2">
                             {activity.fulfillment.coin && (
                               <ItemETH value={activity.fulfillment.coin.amount} />
@@ -451,9 +447,9 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                               />
                             ))}
                           </div>
-                        </td>
-                      </tr>
-                    </>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>
@@ -542,10 +538,10 @@ function UserButton({ onClick }: { onClick: Function }) {
 
   if (isConnected) {
     if (!address) throw new Error('Missing address');
-    let shortAddress = address.slice(0, 6) + '...' + address.slice(-4);
+
     return (
       <Button onClick={onClick}>
-        <span>{shortAddress}</span>
+        <span>{shortAddress(address)}</span>
       </Button>
     );
   }

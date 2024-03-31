@@ -256,7 +256,9 @@ function ItemsNavigation(props: {
   const collection = useContext(CollectionContext);
   const [showAttributes, setShowAttributes] = useState(false);
 
-  const { data: filteredTokenIds } = useQuery<{ data: { tokens: string[] } }>({
+  const { data: filteredTokenIds } = useQuery<{
+    data: { tokens: string[] };
+  }>({
     queryKey: ['tokens', props.filteredAttributes],
     queryFn: () =>
       fetch(`http://localhost:3000/tokens/${collection.key}`, {

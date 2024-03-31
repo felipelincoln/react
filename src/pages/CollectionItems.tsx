@@ -6,15 +6,15 @@ import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { useAccount, useBalance } from 'wagmi';
 
-type UseQueryOrdersResult = UseQueryResult<{ data: { orders: WithSignature<Order>[] } }>;
-
 export function CollectionItems() {
   const collection = useContext(CollectionContext);
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  const { data: ordersResult }: UseQueryOrdersResult = useQuery({
+  const { data: ordersData, isLoading: orderIsLoading } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+  }>({
     queryKey: ['order', filteredTokenIds.join('-')],
     enabled: !!collection && filteredTokenIds.length > 0,
     queryFn: () =>
@@ -27,7 +27,7 @@ export function CollectionItems() {
       }).then((res) => res.json()),
   });
 
-  const orders = ordersResult?.data.orders.map((order) => order) || [];
+  const orders = ordersData?.data.orders.map((order) => order) || [];
 
   return (
     <div className="flex flex-grow">
@@ -57,28 +57,32 @@ export function CollectionItems() {
           ></ItemsNavigation>
         </div>
       </div>
-      <div className="flex-grow p-8">
-        <div className="flex h-8 gap-4 items-center">
-          <div>{orders.length} Results</div>
-          <AttributeTags
-            filteredAttributes={filteredAttributes}
-            setFilteredAttributes={setFilteredAttributes}
-          />
+      {orderIsLoading ? (
+        <div className="w-fit p-8 mx-auto">Loading...</div>
+      ) : (
+        <div className="flex-grow p-8">
+          <div className="flex h-8 gap-4 items-center">
+            <div>{orders.length} Results</div>
+            <AttributeTags
+              filteredAttributes={filteredAttributes}
+              setFilteredAttributes={setFilteredAttributes}
+            />
+          </div>
+          <div className="flex flex-wrap justify-between gap-4 pt-8">
+            {orders.map(({ tokenId, fulfillmentCriteria }) => (
+              <div key={tokenId} className="">
+                <CardNFTOrder
+                  priceToken={fulfillmentCriteria.token.amount}
+                  priceEth={fulfillmentCriteria.coin?.amount}
+                  collection={collection}
+                  tokenId={tokenId}
+                ></CardNFTOrder>
+              </div>
+            ))}
+            <div className="flex-grow"></div>
+          </div>
         </div>
-        <div className="flex flex-wrap justify-between gap-4 pt-8">
-          {orders.map(({ tokenId, fulfillmentCriteria }) => (
-            <div key={tokenId} className="">
-              <CardNFTOrder
-                priceToken={fulfillmentCriteria.token.amount}
-                priceEth={fulfillmentCriteria.coin?.amount}
-                collection={collection}
-                tokenId={tokenId}
-              ></CardNFTOrder>
-            </div>
-          ))}
-          <div className="flex-grow"></div>
-        </div>
-      </div>
+      )}
     </div>
   );
 }
