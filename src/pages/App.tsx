@@ -310,7 +310,6 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
                     onClick={() => handleClickListedItem(tokenId)}
                   />
                 ))}
-                <Button>Cancel all listings</Button>
               </div>
             </div>
           )}

@@ -58,7 +58,7 @@ export function CollectionItems() {
         </div>
       </div>
       {orderIsLoading ? (
-        <div className="w-fit p-8 mx-auto">Loading...</div>
+        <div className="w-fit p-8">Loading...</div>
       ) : (
         <div className="flex-grow p-8">
           <div className="flex h-8 gap-4 items-center">

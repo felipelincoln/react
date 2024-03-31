@@ -73,7 +73,7 @@ export function CollectionActivities() {
         </div>
       </div>
       {ActivitiesIsLoading ? (
-        <div className="mx-auto w-fit p-8">Loading...</div>
+        <div className="w-fit p-8">Loading...</div>
       ) : (
         <ActivitiesSection
           activities={activities}

@@ -581,9 +581,12 @@ export function CardNFTOrder({
         <span className="leading-8">{`${collection.name} #${tokenId}`}</span>
       </div>
       <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-900">
-        <span className="leading-8 m-auto overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
+        {priceToken != '0' && (
+          <span className="leading-8 flex-grow text-center overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
+        )}
+
         {!!priceEth && (
-          <span className="leading-8 flex-grow text-right overflow-hidden text-ellipsis">
+          <span className="leading-8 flex-grow text-center overflow-hidden text-ellipsis">
             {etherToString(BigInt(priceEth))}
           </span>
         )}
