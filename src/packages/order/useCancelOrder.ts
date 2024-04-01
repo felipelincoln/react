@@ -1,28 +1,43 @@
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import {
   Order,
-  WithSelectedTokenIds,
-  WithSignature,
   marketplaceProtocolABI,
+  marketplaceProtocolCancelOrderArgs,
   marketplaceProtocolContractAddress,
   marketplaceProtocolEIP712Message,
-  marketplaceProtocolFulfillOrderArgs,
 } from './marketplaceProtocol';
-import { useContext } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { CollectionContext } from '../../pages/App';
 
 export function useCancelOrder() {
   const collection = useContext(CollectionContext);
   const { data: hash, writeContract, error: writeError } = useWriteContract();
   const { isSuccess, isFetching, error } = useWaitForTransactionReceipt({ hash });
+  const [args, setArgs] = useState<Order>();
+  const [sendWriteContract, setSendWriteContract] = useState(false);
+  const { data: counter }: { data?: bigint } = useReadContract({
+    address: marketplaceProtocolContractAddress(),
+    abi: marketplaceProtocolABI(),
+    functionName: 'getCounter',
+    args: !!args ? [args.offerer] : [],
+    query: { enabled: !!args },
+  });
 
-  function cancelOrder(args: WithSignature<Order>) {
-    writeContract({
-      abi: [...marketplaceProtocolABI(), ...collection.abi],
-      address: marketplaceProtocolContractAddress(),
-      functionName: 'cancel',
-      args: marketplaceProtocolEIP712Message(args), // TODO: fix
-    });
+  useEffect(() => {
+    if (!!args && sendWriteContract && counter !== undefined) {
+      setSendWriteContract(false);
+      writeContract({
+        abi: [...marketplaceProtocolABI(), ...collection.abi],
+        address: marketplaceProtocolContractAddress(),
+        functionName: 'cancel',
+        args: marketplaceProtocolCancelOrderArgs({ ...args, counter: counter.toString() }),
+      });
+    }
+  }, [!!args, sendWriteContract, counter]);
+
+  function cancelOrder(args: Order) {
+    setSendWriteContract(true);
+    setArgs(args);
   }
 
   return {

@@ -49,7 +49,7 @@ export function CollectionActivities() {
   return (
     <div className="flex flex-grow">
       <div className="w-80 h-full bg-zinc-800 p-8 flex-shrink-0 gap-8">
-        <div className="sticky top-32 flex flex-col gap-8">
+        <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <div className="flex gap-4">
               <img src={`/${collection.key}/thumbnail.png`} className="w-16 h-16 rounded" />

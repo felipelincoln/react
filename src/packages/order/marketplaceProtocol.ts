@@ -22,6 +22,7 @@ export interface Order {
 export type With_Id<t> = t & { _id: string };
 export type WithSignature<T> = T & { signature: string };
 export type WithSelectedTokenIds<T> = T & { selectedTokenIds: string[] };
+export type WithCounter<T> = T & { counter: string };
 
 export interface Activity {
   etype: string;
@@ -192,6 +193,18 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
   ];
 }
 
+function seaportCancelOrderArgs(order: WithCounter<Order>) {
+  const advancedOrder = seaportFulfillAdvancedOrderArgs({
+    ...order,
+    selectedTokenIds: [],
+    signature: '',
+  })[0][0] as any[];
+
+  advancedOrder[10] = [order.counter];
+
+  return [[advancedOrder]];
+}
+
 function seaportABI() {
   return seaportABIJson;
 }
@@ -216,6 +229,10 @@ export function marketplaceProtocolFulfillOrderArgs(
   args: WithSelectedTokenIds<WithSignature<Order>>,
 ) {
   return seaportFulfillAdvancedOrderArgs(args);
+}
+
+export function marketplaceProtocolCancelOrderArgs(args: WithCounter<Order>) {
+  return seaportCancelOrderArgs(args);
 }
 
 export function marketplaceProtocolABI() {

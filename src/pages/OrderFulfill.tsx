@@ -102,7 +102,6 @@ export function OrderFulfill() {
 
   useEffect(() => {
     if (isConnected && !userTokenIds) {
-      console.log('updating order tokens');
       setOrderTokenIdsSorted([]);
       return;
     }
