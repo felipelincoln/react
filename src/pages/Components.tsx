@@ -1,4 +1,4 @@
-import React, { ReactElement, useEffect } from 'react';
+import React, { ReactElement, useEffect, useState } from 'react';
 import { CollectionDetails } from '../collection/collections';
 import { useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
@@ -9,6 +9,9 @@ export function Components() {
     symbol: 'SEPRACCOOL',
     name: 'Raccools',
   } as CollectionDetails;
+  const [dialog, setDialog] = useState(false);
+  const [dialog2, setDialog2] = useState(false);
+
   return (
     <div className="p-20 bg-zinc-900 flex flex-row gap-6 flex-wrap">
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -117,6 +120,16 @@ export function Components() {
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <ListedNFT collection={collection} tokenId="15" tokenPrice="2" />
         <ListedNFT collection={collection} tokenId="95" tokenPrice="2" ethPrice="10000000" />
+      </div>
+      <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
+        <Button onClick={() => setDialog(!dialog)}>Dialog:Closeable</Button>
+        <Dialog open={dialog} setOpen={setDialog}>
+          <div>test</div>
+        </Dialog>
+        <Button onClick={() => setDialog2(!dialog2)}>Dialog</Button>
+        <Dialog open={dialog2}>
+          <div>test</div>
+        </Dialog>
       </div>
     </div>
   );
@@ -825,6 +838,38 @@ export function ListedNFT({
           {ethPrice && (
             <PriceTagClickable>{etherToString(BigInt(ethPrice), true)}</PriceTagClickable>
           )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function Dialog({
+  children,
+  open,
+  setOpen,
+}: {
+  open?: boolean;
+  children: ReactElement;
+  setOpen?: Function;
+}) {
+  return (
+    <div className={open ? '' : 'hidden'}>
+      <div className="w-full h-full absolute left-0 top-0 bg-zinc-950 opacity-85"></div>
+      <div className="w-full h-full absolute left-0 top-0 flex items-center justify-center">
+        <div className="w-96 bg-zinc-800 rounded">
+          <div className="flex justify-between">
+            <div className="font-medium pt-4 pl-4">Title</div>
+            {!!setOpen && (
+              <div className="cursor-pointer p-4" onClick={() => setOpen?.(!open)}>
+                X
+              </div>
+            )}
+          </div>
+          <div className="p-4 overflow-hidden text-ellipsis">
+            Your transaction is pending{' '}
+            <a>0x44d76aa5af788272d85062cb93948725aa37864819ed22445ab085db4643f21e</a>
+          </div>
         </div>
       </div>
     </div>
