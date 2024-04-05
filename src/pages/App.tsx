@@ -34,6 +34,7 @@ import {
   ActionButton,
   ActivityButton,
   Button,
+  ButtonAccordion,
   CardNFTSelectable,
   ExternalLink,
   IconNFT,
@@ -248,10 +249,12 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 
 function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
   const collection = useContext(CollectionContext);
-  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { address } = useAccount();
   const navigate = useNavigate();
   const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
+  const [showAccountDropdown, setShowAccountDropdown] = useState(false);
   const { data: userTokenIdsData } = useContext(UserTokenIdsContext);
   const { data: userOrdersData } = useContext(UserOrdersContext);
 
@@ -293,8 +296,23 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     <Tab hidden={!showTab}>
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
         <div className="p-8 flex flex-col gap-8">
-          <div className="overflow-x-hidden text-ellipsis font-medium">
-            <span className="text-sm">{address}</span>
+          <div className="bg-zinc-800 rounded">
+            <div className="font-medium">
+              <ButtonAccordion
+                closed={!showAccountDropdown}
+                onClick={() => setShowAccountDropdown(!showAccountDropdown)}
+              >
+                {address as string}
+              </ButtonAccordion>
+            </div>
+            <div className={!!showAccountDropdown ? '' : 'hidden'}>
+              <div className="p-4 flex flex-col gap-2 text-sm text-zinc-400">
+                <div className="cursor-pointer hover:text-zinc-200" onClick={() => disconnect()}>
+                  Disconnect
+                </div>
+                <div className="cursor-pointer hover:text-zinc-200">Cancel all orders (1)</div>
+              </div>
+            </div>
           </div>
           {userOrders.length > 0 && (
             <div className="flex flex-col gap-4">

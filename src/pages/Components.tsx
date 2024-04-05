@@ -556,7 +556,7 @@ export function ButtonAccordion({
       className="h-8 w-full px-4 rounded text-sm bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
     >
       <span className="flex justify-between items-center">
-        {children}
+        <span className="overflow-hidden text-ellipsis pr-4">{children}</span>
         <svg
           className="inline h-4 w-4 align-text-bottom box-content ml-auto"
           xmlns="http://www.w3.org/2000/svg"
