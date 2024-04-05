@@ -57,6 +57,7 @@ export function OrderFulfill() {
   const { data: userTokenIds, refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const { refetch: refetchUserActivities } = useContext(UserActivitiesContext);
+  const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
   const {
     data: fulfillOrderTxHash,
     fulfillOrder,
@@ -124,14 +125,14 @@ export function OrderFulfill() {
   }, [isOrderFetched, userTokenIds, isConnected]);
 
   useEffect(() => {
-    if (isFulfillConfirmed && !order) {
-      console.log('purchase confirmed.');
+    if ((isFulfillConfirmed || isCancelConfirmed) && !order) {
       refetchUserTokenIds();
       refetchUserBalance();
       refetchUserActivities();
+      refetchUserOrders();
       navigate(`/c/${collection.key}`);
     }
-  }, [isFulfillConfirmed, order]);
+  }, [isFulfillConfirmed, isCancelConfirmed, order]);
 
   useEffect(() => {
     if (isFulfillFetching || (isFulfillConfirmed && !!order)) {
