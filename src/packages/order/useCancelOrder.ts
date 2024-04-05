@@ -4,7 +4,6 @@ import {
   marketplaceProtocolABI,
   marketplaceProtocolCancelOrderArgs,
   marketplaceProtocolContractAddress,
-  marketplaceProtocolEIP712Message,
 } from './marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
 import { CollectionContext } from '../../pages/App';
