@@ -4,6 +4,7 @@ import {
   Button,
   ButtonRed,
   CardNFTSelectable,
+  Dialog,
   InputDisabledWithLabel,
   Paginator,
   TextBox,
@@ -183,6 +184,24 @@ export function OrderFulfill() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
+      <Dialog
+        open={pendingCounter > 0}
+        title={`${fulfillOrderTxHash ? 'Fulfill order' : 'Cancel order'}`}
+      >
+        <div className="overflow-hidden text-ellipsis">
+          Transaction is pending ({pendingCounter}s){' '}
+          {fulfillOrderTxHash && (
+            <a target="_blank" href={`https://sepolia.etherscan.io/tx/${fulfillOrderTxHash}`}>
+              {fulfillOrderTxHash}
+            </a>
+          )}
+          {cancelOrderTxHash && (
+            <a target="_blank" href={`https://sepolia.etherscan.io/tx/${cancelOrderTxHash}`}>
+              {cancelOrderTxHash}
+            </a>
+          )}
+        </div>
+      </Dialog>
       <div className="flex justify-between">
         <h1 className="pb-8">Fulfill order</h1>
         {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
@@ -248,21 +267,6 @@ export function OrderFulfill() {
               <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
                 Cancel
               </a>
-            </div>
-          )}
-          {pendingCounter > 0 && (
-            <div className="overflow-hidden text-ellipsis">
-              Transaction is pending ({pendingCounter}s){' '}
-              {fulfillOrderTxHash && (
-                <a target="_blank" href={`https://sepolia.etherscan.io/tx/${fulfillOrderTxHash}`}>
-                  {fulfillOrderTxHash}
-                </a>
-              )}
-              {cancelOrderTxHash && (
-                <a target="_blank" href={`https://sepolia.etherscan.io/tx/${cancelOrderTxHash}`}>
-                  {cancelOrderTxHash}
-                </a>
-              )}
             </div>
           )}
           {!!errorMessage && (

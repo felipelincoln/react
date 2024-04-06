@@ -36,6 +36,7 @@ import {
   Button,
   ButtonAccordion,
   CardNFTSelectable,
+  Dialog,
   ExternalLink,
   IconNFT,
   IconNFTLarge,
@@ -313,6 +314,16 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   return (
     <Tab hidden={!showTab}>
       <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
+        <Dialog open={pendingCounter > 0} title="Cancel all orders">
+          <div className="overflow-hidden text-ellipsis">
+            Transaction is pending ({pendingCounter}s){' '}
+            {cancelAllOrdersHash && (
+              <a target="_blank" href={`https://sepolia.etherscan.io/tx/${cancelAllOrdersHash}`}>
+                {cancelAllOrdersHash}
+              </a>
+            )}
+          </div>
+        </Dialog>
         <div className="p-8 flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <div className="overflow-x-hidden text-ellipsis font-medium">
@@ -325,21 +336,6 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
               {userOrders.length > 1 && (
                 <div className="hover:text-zinc-200" onClick={cancelAllOrders}>
                   Cancel all orders ({userOrders.length})
-                </div>
-              )}
-            </div>
-            <div>
-              {pendingCounter > 0 && (
-                <div className="overflow-hidden text-ellipsis">
-                  Transaction is pending ({pendingCounter}s){' '}
-                  {cancelAllOrdersHash && (
-                    <a
-                      target="_blank"
-                      href={`https://sepolia.etherscan.io/tx/${cancelAllOrdersHash}`}
-                    >
-                      {cancelAllOrdersHash}
-                    </a>
-                  )}
                 </div>
               )}
             </div>
@@ -509,8 +505,8 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
 }
 
 function Tab({ hidden, children }: { hidden: boolean; children: ReactElement | ReactElement[] }) {
-  const display = hidden ? 'translate-x-96' : 'z-40';
-  const containerZIndex = hidden ? '-z-50' : '';
+  const display = hidden ? 'translate-x-96' : 'z-10';
+  const containerZIndex = hidden ? '-z-20' : '';
 
   return (
     <div className={`absolute right-0 top-0 w-96 h-screen ${containerZIndex}`}>
@@ -570,7 +566,7 @@ function Navbar({
   }
 
   return (
-    <div className="fixed top-0 z-50 w-full bg-zinc-900">
+    <div className="fixed top-0 z-20 w-full bg-zinc-900">
       <div className="h-24 flex px-8 border-b-2 border-zinc-800">
         <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
         <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>

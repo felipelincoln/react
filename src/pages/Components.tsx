@@ -2,6 +2,7 @@ import React, { ReactElement, useEffect, useState } from 'react';
 import { CollectionDetails } from '../collection/collections';
 import { useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
+import ReactDOM from 'react-dom/client';
 
 export function Components() {
   const collection = {
@@ -123,11 +124,11 @@ export function Components() {
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Button onClick={() => setDialog(!dialog)}>Dialog:Closeable</Button>
-        <Dialog open={dialog} setOpen={setDialog}>
+        <Dialog open={dialog} setOpen={setDialog} title="Dialog">
           <div>test</div>
         </Dialog>
         <Button onClick={() => setDialog2(!dialog2)}>Dialog</Button>
-        <Dialog open={dialog2}>
+        <Dialog open={dialog2} title="Dialog">
           <div>test</div>
         </Dialog>
       </div>
@@ -848,28 +849,42 @@ export function Dialog({
   children,
   open,
   setOpen,
+  title,
 }: {
   open?: boolean;
+  title: string;
   children: ReactElement;
   setOpen?: Function;
 }) {
+  const root = document.getElementById('root');
+  const height = root?.scrollHeight;
+
+  useEffect(() => {
+    if (open) {
+      window.scrollTo(0, 0);
+    }
+  }, [open]);
+
+  function handleOpenDialog() {
+    setOpen?.(!open);
+  }
   return (
     <div className={open ? '' : 'hidden'}>
-      <div className="w-full h-full absolute left-0 top-0 bg-zinc-950 opacity-85"></div>
-      <div className="w-full h-full absolute left-0 top-0 flex items-center justify-center">
+      <div
+        style={{ height }}
+        className={`w-full fixed z-30 left-0 top-0 bg-zinc-950 opacity-85 ${open ? '' : 'hidden'}`}
+      ></div>
+      <div className="w-full h-full fixed z-40 left-0 top-0 flex items-center justify-center">
         <div className="w-96 bg-zinc-800 rounded">
           <div className="flex justify-between">
-            <div className="font-medium pt-4 pl-4">Title</div>
+            <div className="font-medium pt-4 pl-4">{title}</div>
             {!!setOpen && (
-              <div className="cursor-pointer p-4" onClick={() => setOpen?.(!open)}>
+              <div className="cursor-pointer p-4" onClick={handleOpenDialog}>
                 X
               </div>
             )}
           </div>
-          <div className="p-4 overflow-hidden text-ellipsis">
-            Your transaction is pending{' '}
-            <a>0x44d76aa5af788272d85062cb93948725aa37864819ed22445ab085db4643f21e</a>
-          </div>
+          <div className="p-4 overflow-hidden text-ellipsis">{children}</div>
         </div>
       </div>
     </div>
