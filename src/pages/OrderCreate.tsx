@@ -19,6 +19,7 @@ import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
+  UserAddressContext,
   UserOrdersContext,
   collectionLoader,
   collectionLoaderData,
@@ -26,7 +27,6 @@ import {
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
-import { useAccount } from 'wagmi';
 import { parseEther } from 'viem';
 import { useSignOrder } from '../packages/order';
 
@@ -50,7 +50,7 @@ export function OrderCreate() {
   const collection = useContext(CollectionContext);
   const { tokenId } = useLoaderData() as OrderCreateLoaderData;
   const navigate = useNavigate();
-  const { isConnected, address } = useAccount();
+  const { data: address } = useContext(UserAddressContext);
   const { signature, orderHash, signOrder } = useSignOrder();
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [acceptAny, setAcceptAny] = useState(false);

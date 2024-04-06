@@ -1,11 +1,11 @@
 import { useContext, useEffect, useState } from 'react';
-import { CollectionContext } from '../../pages/App';
-import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
+import { CollectionContext, UserAddressContext } from '../../pages/App';
+import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { marketplaceProtocolContractAddress } from './marketplaceProtocol';
 
 export function useCheckCollectionAllowance() {
   const collection = useContext(CollectionContext);
-  const { address } = useAccount();
+  const { data: address } = useContext(UserAddressContext);
   const [callWriteContract, setCallWriteContract] = useState(false);
   const { data: hash, writeContract } = useWriteContract();
   const { isSuccess: isConfirmed } = useWaitForTransactionReceipt({ hash });

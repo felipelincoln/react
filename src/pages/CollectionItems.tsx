@@ -4,7 +4,6 @@ import { Button, ButtonAccordion, ButtonLight, CardNFTOrder, Checkbox, Tag } fro
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
-import { useAccount, useBalance } from 'wagmi';
 
 export function CollectionItems() {
   const collection = useContext(CollectionContext);

@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from 'react';
-import { CollectionContext } from './App';
+import { CollectionContext, UserAddressContext } from './App';
 import {
   Button,
   ButtonAccordion,
@@ -15,12 +15,10 @@ import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { Activity, Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
 import moment from 'moment';
-import { useAccount } from 'wagmi';
 import { shortAddress } from '../packages/utils';
 
 export function CollectionActivities() {
   const collection = useContext(CollectionContext);
-  const { address } = useAccount();
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -203,7 +201,7 @@ function ActivitiesSection({
   setFilteredAttributes: (attributes: { [attribute: string]: string }) => void;
 }) {
   const collection = useContext(CollectionContext);
-  const { address } = useAccount();
+  const { data: address } = useContext(UserAddressContext);
   return (
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">

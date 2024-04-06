@@ -16,6 +16,7 @@ import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
   UserActivitiesContext,
+  UserAddressContext,
   UserBalanceContext,
   UserOrdersContext,
   UserTokenIdsContext,
@@ -26,7 +27,6 @@ import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { useFulfillOrder } from '../packages/order/useFulfillOrder';
-import { useAccount } from 'wagmi';
 import { useCancelOrder } from '../packages/order/useCancelOrder';
 import NotFoundPage from './NotFound';
 
@@ -50,7 +50,7 @@ export function OrderFulfill() {
   const collection = useContext(CollectionContext);
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
-  const { address: userAddress, isConnected } = useAccount();
+  const { data: userAddress } = useContext(UserAddressContext);
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
@@ -103,7 +103,7 @@ export function OrderFulfill() {
   const errorMessage = (fulfillOrderError || cancelOrderError)?.split('\n').slice(0, -1).join('\n');
 
   useEffect(() => {
-    if (isConnected && !userTokenIds) {
+    if (!!userAddress && !userTokenIds) {
       setOrderTokenIdsSorted([]);
       return;
     }
@@ -123,7 +123,7 @@ export function OrderFulfill() {
       }
     });
     setOrderTokenIdsSorted(orderTokenIdsCopy);
-  }, [isOrderFetched, userTokenIds, isConnected]);
+  }, [isOrderFetched, userTokenIds, userAddress]);
 
   useEffect(() => {
     if ((isFulfillConfirmed || isCancelConfirmed) && !order) {
