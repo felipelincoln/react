@@ -2,16 +2,11 @@ import { useMutation } from '@tanstack/react-query';
 import { sepolia } from 'viem/chains';
 import { useAccount, useSwitchChain } from 'wagmi';
 
-export function useCheckChain() {
+export function useValidateChain() {
   const { chainId } = useAccount();
   const { switchChainAsync } = useSwitchChain();
 
-  const {
-    mutate: checkChain,
-    data,
-    isPending,
-    error,
-  } = useMutation({
+  const { mutate, mutateAsync, isPending, error } = useMutation({
     mutationFn: async () => {
       if (chainId === sepolia.id) return chainId;
 
@@ -19,7 +14,7 @@ export function useCheckChain() {
     },
   });
 
-  const isValidChain = data === sepolia.id;
+  const isValidChain = chainId === sepolia.id;
 
-  return { checkChain, isValidChain, isPending, error };
+  return { switchChain: mutate, switchChainAsync: mutateAsync, isValidChain, isPending, error };
 }

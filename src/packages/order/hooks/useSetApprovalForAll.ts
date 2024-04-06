@@ -4,7 +4,7 @@ import { useContext } from 'react';
 import { CollectionContext, UserAddressContext } from '../../../pages/App';
 import { useMutation } from '@tanstack/react-query';
 
-export function useCheckCollectionApproval() {
+export function useSetApprovalForAll() {
   const collection = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
   const { data: hash, writeContractAsync } = useWriteContract();
@@ -26,7 +26,8 @@ export function useCheckCollectionApproval() {
   });
 
   const {
-    mutate: checkCollectionApproval,
+    mutate: setApprovalForAll,
+    mutateAsync: setApprovalForAllAsync,
     isPending: isPendingMutation,
     error: mutateError,
   } = useMutation({
@@ -48,5 +49,5 @@ export function useCheckCollectionApproval() {
   const isApprovedForAll = isPending ? undefined : isApprovedForAllData || isSetApprovalConfirmed;
   const error = mutateError || readError || waitError;
 
-  return { checkCollectionApproval, isApprovedForAll, isPending, error };
+  return { setApprovalForAll, setApprovalForAllAsync, isApprovedForAll, isPending, error };
 }

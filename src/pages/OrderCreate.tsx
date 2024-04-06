@@ -1,21 +1,18 @@
-import { UseQueryResult, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import {
   ActionButton,
   Button,
   ButtonAccordion,
-  ButtonLight,
   CardNFTSelectable,
   Checkbox,
+  Dialog,
   Input,
-  InputDisabledWithLabel,
   Paginator,
-  Tag,
   TagLight,
   TextBox,
-  TextBoxWithNFTs,
   Tootltip,
 } from './Components';
-import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
+import { Order } from '../packages/order/marketplaceProtocol';
 import { useContext, useEffect, useState } from 'react';
 import {
   CollectionContext,
@@ -25,10 +22,12 @@ import {
   collectionLoaderData,
 } from './App';
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
-import { etherToString } from '../packages/utils';
 import moment from 'moment';
 import { parseEther } from 'viem';
-import { useSignOrder } from '../packages/order';
+import { useGetOrderHash } from '../packages/order/hooks/useGetOrderHash';
+import { useValidateChain } from '../hooks/useValidateChain';
+import { useSetApprovalForAll } from '../packages/order/hooks/useSetApprovalForAll';
+import { useSignOrder } from '../packages/order/hooks/useSignOrder';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -47,11 +46,17 @@ export function OrderCreateLoader(loaderArgs: LoaderFunctionArgs): OrderCreateLo
 // TODO: loading skeleton
 
 export function OrderCreate() {
-  const collection = useContext(CollectionContext);
-  const { tokenId } = useLoaderData() as OrderCreateLoaderData;
   const navigate = useNavigate();
+  const { tokenId } = useLoaderData() as OrderCreateLoaderData;
+  const collection = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
-  const { signature, orderHash, signOrder } = useSignOrder();
+  const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
+  const { orderHash, getOrderHash } = useGetOrderHash();
+  const { isValidChain, switchChain } = useValidateChain();
+  const { isApprovedForAll, setApprovalForAll } = useSetApprovalForAll();
+  const { signature, signOrder } = useSignOrder();
+  const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [acceptAny, setAcceptAny] = useState(false);
   const [ethPrice, setEthPrice] = useState<string | undefined>(undefined);
@@ -62,7 +67,6 @@ export function OrderCreate() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
 
   const allTokenIds = collection.mintedTokens;
   const newOrder: Order = {
@@ -84,7 +88,7 @@ export function OrderCreate() {
     [expireDays],
   );
 
-  const { isSuccess, error, isFetching } = useQuery({
+  const { isSuccess } = useQuery({
     queryKey: ['order-create'],
     retry: false,
     queryFn: () =>
@@ -121,11 +125,23 @@ export function OrderCreate() {
   }
 
   function handleConfirm() {
-    signOrder(newOrder);
+    setOpenConfirmDialog(true);
   }
+
+  useEffect(() => {
+    if (!openConfirmDialog) return;
+    if (!isValidChain) switchChain();
+    if (isValidChain && !isApprovedForAll) setApprovalForAll();
+  }, [openConfirmDialog, isValidChain]);
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
+      <Dialog title="Create order" open={openConfirmDialog}>
+        <div>
+          {!isValidChain && <div>Confirm in your wallet to switch chain</div>}
+          {isValidChain && !isApprovedForAll && <div>Confirm in your wallet to set approval</div>}
+        </div>
+      </Dialog>
       <h1 className="pb-8">Create Order</h1>
       <div className="flex gap-12">
         <div style={{ width: 656 }} className="flex-grow">

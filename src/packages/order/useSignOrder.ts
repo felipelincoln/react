@@ -13,11 +13,10 @@ import {
 } from './marketplaceProtocol';
 import { useCheckCollectionAllowance } from './useCheckCollectionAllowance';
 import { useEffect, useState } from 'react';
-import { useCheckCollectionApproval } from './hooks/useCheckCollectionApproval';
 
 export function useSignOrder() {
   const { signTypedData, data: signature } = useSignTypedData();
-  const { isApprovedForAll, checkCollectionApproval, isPending } = useCheckCollectionApproval();
+  const { isApprovedForAll, setApprovalForAll } = useCheckCollectionAllowance();
   const [args, setArgs] = useState<Order>();
   const [callSignTypedData, setCallSignTypedData] = useState(false);
   const { data: orderHash }: { data?: `0x${string}` } = useReadContract({
@@ -42,7 +41,7 @@ export function useSignOrder() {
   function signOrder(args: Order) {
     setCallSignTypedData(true);
     setArgs(args);
-    checkCollectionApproval();
+    setApprovalForAll();
   }
 
   return { signature, orderHash, signOrder };
