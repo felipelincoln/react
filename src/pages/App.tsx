@@ -14,6 +14,7 @@ import {
   unstable_connector,
   useAccount,
   useBalance,
+  useChainId,
   useConnect,
   useDisconnect,
   useEnsAddress,
@@ -90,10 +91,9 @@ export function collectionLoader({ params }: LoaderFunctionArgs): collectionLoad
 
 export default function App({ children }: { children: ReactElement[] | ReactElement }) {
   const wagmiConfig = createConfig({
-    chains: [mainnet, sepolia],
+    chains: [sepolia],
     connectors: [injected()],
     transports: {
-      [mainnet.id]: fallback([unstable_connector(injected), http('http://localhost:3000/jsonrpc')]),
       [sepolia.id]: fallback([unstable_connector(injected), http('http://localhost:3000/jsonrpc')]),
     },
   });
@@ -111,136 +111,118 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
-  const { address, isConnected, isConnecting } = useAccount();
+  const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
+  const chainId = useChainId();
   const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
   const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
   const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
   const [userActivities, setUserActivities] = useState<With_Id<Activity>[] | undefined>(undefined);
-  const [userAddress, setUserAddress] = useState<string | undefined>(undefined);
+  const [userAddress, setUserAddress] = useState<`0x${string}` | undefined>(undefined);
   const [userEns, setUserEns] = useState<string | undefined>(undefined);
   const [showAccountTab, setShowAccountTab] = useState(false);
   const [showActivityTab, setShowActivityTab] = useState(false);
-  const {
-    data: userBalanceData,
-    refetch: userBalanceRefetch,
-    isFetched: userBalanceIsFetched,
-    isFetching: userBalanceIsFetching,
-  } = useBalance({
-    address,
-    query: { staleTime: Infinity },
+
+  const { data: userBalanceData, refetch: userBalanceRefetch } = useBalance({
+    address: userAddress,
   });
-  const {
-    data: userTokenIdsData,
-    refetch: userTokenIdsRefetch,
-    isFetched: userTokenIdsDataIsFetched,
-    isFetching: userTokenIdsDataIsFetching,
-  } = useQuery<{
+
+  const { data: userTokenIdsData, refetch: userTokenIdsRefetch } = useQuery<{
     data?: { tokens: string[] };
     error?: string;
   }>({
-    enabled: !!collection && !!address,
-    queryKey: ['eth_tokens_user'],
-    staleTime: Infinity,
+    enabled: !!userAddress && !!collection,
+    queryKey: ['eth_tokens_user', userAddress],
     queryFn: () =>
-      fetch(`http://localhost:3000/eth/tokens/${collection?.key}/${address}`).then((res) =>
+      fetch(`http://localhost:3000/eth/tokens/${collection?.key}/${userAddress}`).then((res) =>
         res.json(),
       ),
   });
-  const {
-    data: userOrdersData,
-    refetch: userOrdersRefetch,
-    isFetched: userOrdersIsFetched,
-    isFetching: userOrdersIsFetching,
-  } = useQuery<{
+
+  const { data: userOrdersData, refetch: userOrdersRefetch } = useQuery<{
     data: { orders: WithSignature<Order>[] };
     error?: string;
   }>({
-    queryKey: ['orders_list_user', userTokenIds?.join('-')],
-    staleTime: Infinity,
-    enabled: !!collection && !!address && (userTokenIds || []).length > 0,
+    queryKey: ['orders_list_user', userAddress, userTokenIds?.join('-')],
+    enabled: !!collection && !!userAddress && !!userTokenIds && userTokenIds.length > 0,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tokenIds: userTokenIds, offerer: address }, null, 2),
+        body: JSON.stringify({ tokenIds: userTokenIds, offerer: userAddress }, null, 2),
       }).then((res) => res.json()),
   });
 
-  const {
-    data: userActivitiesData,
-    refetch: userActivitiesRefetch,
-    isFetched: userActivitiesIsFetched,
-    isFetching: userActivitiesIsFetching,
-  } = useQuery<{ data: { activities: With_Id<Activity>[] }; error?: string }>({
-    queryKey: ['activities_list_user'],
-    staleTime: Infinity,
-    enabled: !!collection && !!address,
+  const { data: userActivitiesData, refetch: userActivitiesRefetch } = useQuery<{
+    data: { activities: With_Id<Activity>[] };
+    error?: string;
+  }>({
+    queryKey: ['activities_list_user', userAddress],
+    enabled: !!collection && !!userAddress,
     queryFn: () =>
       fetch(`http://localhost:3000/activities/list/${collection?.key}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ userAddress: address }, null, 2),
+        body: JSON.stringify({ address: userAddress }, null, 2),
       }).then((res) => res.json()),
   });
 
   useEffect(() => {
-    if (!!userBalanceData) {
-      console.log('updating user balance');
-      setUserBalance(userBalanceData?.value.toString());
-    }
-  }, [userBalanceData]);
-
-  useEffect(() => {
-    if (!userTokenIdsDataIsFetching && userTokenIdsDataIsFetched) {
-      console.log('updating user token ids');
-      setUserTokenIds(userTokenIdsData?.data?.tokens);
-    }
-  }, [userTokenIdsDataIsFetching]);
-
-  useEffect(() => {
-    if (!userOrdersIsFetching && userOrdersIsFetched) {
-      console.log('updating user orders');
-      setUserOrders(userOrdersData?.data?.orders);
-    }
-  }, [userOrdersIsFetching]);
-
-  useEffect(() => {
-    if (!userActivitiesIsFetching && userActivitiesIsFetched) {
-      console.log('updating user activities');
-      setUserActivities(userActivitiesData?.data?.activities);
-    }
-  }, [userActivitiesIsFetching]);
-
-  useEffect(() => {
-    if (!isConnected && !isConnecting) {
-      setShowAccountTab(false);
-      setShowActivityTab(false);
-    }
-  }, [isConnected, isConnecting]);
-
-  useEffect(() => {
-    if (!!address && address != userAddress) {
-      console.log('updating user address');
-      setUserAddress(address);
-    }
+    if (!address || address == userAddress) return;
+    console.log('-> updating user address', address);
+    setUserAddress(address);
   }, [address]);
 
   useEffect(() => {
-    if (ensName) {
-      setUserEns(ensName);
+    if (!userBalanceData) return;
+    console.log('-> updating user balance', userBalanceData?.value.toString());
+    setUserBalance(userBalanceData?.value.toString());
+  }, [userBalanceData]);
+
+  useEffect(() => {
+    if (!userTokenIdsData) return;
+    console.log('-> updating user token ids', userTokenIdsData?.data?.tokens);
+    setUserTokenIds(userTokenIdsData?.data?.tokens);
+  }, [userTokenIdsData]);
+
+  useEffect(() => {
+    if (!userOrdersData) return;
+    console.log('-> updating user orders', userOrdersData?.data?.orders);
+    setUserOrders(userOrdersData?.data?.orders);
+  }, [userOrdersData]);
+
+  useEffect(() => {
+    if (!userActivitiesData) return;
+    console.log('-> updating user activities', userActivitiesData?.data?.activities);
+    setUserActivities(userActivitiesData?.data?.activities);
+  }, [userActivitiesData]);
+
+  useEffect(() => {
+    if (!userAddress) {
+      setShowAccountTab(false);
+      setShowActivityTab(false);
     }
+  }, [userAddress]);
+
+  useEffect(() => {
+    if (!ensName) return;
+    console.log('-> updating user ens', ensName);
+    setUserEns(ensName);
   }, [ensName]);
 
   function disconnectUser() {
     disconnect();
     setUserAddress(undefined);
     setUserEns(undefined);
+    setUserTokenIds(undefined);
+    setUserBalance(undefined);
+    setUserOrders(undefined);
+    setUserActivities(undefined);
   }
 
   if (!collection) {
