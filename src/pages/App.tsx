@@ -98,7 +98,9 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
     },
   });
 
-  const queryClient = new QueryClient();
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { refetchOnWindowFocus: false } },
+  });
 
   return (
     <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
