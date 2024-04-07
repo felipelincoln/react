@@ -54,6 +54,8 @@ export function OrderFulfill() {
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
   const { data: userAddress } = useContext(UserAddressContext);
+  const [order, setOrder] = useState<WithSignature<Order> | undefined>();
+  const [isOrderDeleted, setIsOrderDeleted] = useState(false);
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
@@ -89,13 +91,15 @@ export function OrderFulfill() {
 
   const {
     data: ordersData,
+    isFetching: isOrderFetching,
     isFetched: isOrderFetched,
     isLoading: orderIsLoading,
   } = useQuery<{
     data: { orders: WithSignature<Order>[] };
   }>({
     queryKey: ['order', tokenId],
-    refetchInterval: isFulfillConfirmed || isCancelOrderConfirmed ? 1000 : false,
+    refetchInterval:
+      !isOrderDeleted && (isFulfillConfirmed || isCancelOrderConfirmed) ? 1000 : false,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/${collection.key}`, {
         method: 'POST',
@@ -106,7 +110,6 @@ export function OrderFulfill() {
       }).then((res) => res.json()),
   });
 
-  const order = ordersData?.data.orders[0];
   const orderTokenIds = order?.fulfillmentCriteria.token.identifier || [];
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
@@ -115,11 +118,27 @@ export function OrderFulfill() {
   const errorMessage = fulfillOrderError || switchChainError?.message || cancelOrderError?.message;
 
   useEffect(() => {
+    if (ordersData?.data.orders.length && !order) {
+      setOrder(ordersData.data.orders[0]);
+    }
+  }, [ordersData?.data.orders.length]);
+
+  useEffect(() => {
+    if (!!order && ordersData?.data.orders.length == 0) {
+      setIsOrderDeleted(true);
+    }
+  }, [ordersData?.data.orders.length, !!order]);
+
+  useEffect(() => {
+    refetchUserOrders();
+  }, [isOrderDeleted]);
+
+  useEffect(() => {
     if (!!userAddress && !userTokenIds) {
       setOrderTokenIdsSorted([]);
       return;
     }
-    if (!isOrderFetched) {
+    if (!order) {
       return;
     }
     const orderTokenIdsCopy = [...orderTokenIds];
@@ -135,7 +154,7 @@ export function OrderFulfill() {
       }
     });
     setOrderTokenIdsSorted(orderTokenIdsCopy);
-  }, [isOrderFetched, userTokenIds, userAddress]);
+  }, [!!order, userTokenIds, userAddress]);
 
   useEffect(() => {
     if (isFulfillFetching || (isFulfillConfirmed && !!order)) {
@@ -201,7 +220,7 @@ export function OrderFulfill() {
   }, [isValidChain, openConfirmDialog]);
 
   function dialogMessage() {
-    if (isCancelOrderConfirmed && !order) {
+    if (isOrderDeleted) {
       return (
         <div className="flex flex-col items-center gap-4">
           <div>Order canceled!</div>
@@ -213,18 +232,16 @@ export function OrderFulfill() {
     return (
       <div className="flex flex-col items-center gap-4">
         <SpinnerIcon />
-        {cancelOrderHash && !!order && <div>Cancel transaction is pending</div>}
+        {cancelOrderHash && ordersData?.data.orders.length && (
+          <div>Cancel transaction is pending</div>
+        )}
         {!cancelOrderHash && <div>Confirm in your wallet</div>}
       </div>
     );
   }
 
-  if (orderIsLoading) {
-    return <div className="mx-auto w-fit p-8">Loading...</div>;
-  }
-
   if (!order) {
-    return <NotFoundPage></NotFoundPage>;
+    return <div className="mx-auto w-fit p-8">Loading...</div>;
   }
 
   return (

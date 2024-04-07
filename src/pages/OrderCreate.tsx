@@ -173,8 +173,6 @@ export function OrderCreate() {
     setApprovalForAll();
   }, [isValidChain, openConfirmDialog]);
 
-  console.log({ counter });
-
   useEffect(() => {
     if (!isValidChain) return;
     if (!isApprovedForAll) return;
