@@ -54,7 +54,7 @@ export function OrderCreate() {
   const collection = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
-  const { orderHash, getOrderHash } = useGetOrderHash();
+  const { orderHash, counter, getOrderHash, isPending: isOrderHashPending } = useGetOrderHash();
   const {
     isValidChain,
     switchChain,
@@ -145,6 +145,7 @@ export function OrderCreate() {
 
   function handleConfirm() {
     setOpenConfirmDialog(true);
+    getOrderHash(newOrder);
   }
 
   useEffect(() => {
@@ -172,17 +173,19 @@ export function OrderCreate() {
     setApprovalForAll();
   }, [isValidChain, openConfirmDialog]);
 
+  console.log({ counter });
+
   useEffect(() => {
     if (!isValidChain) return;
     if (!isApprovedForAll) return;
     if (!openConfirmDialog) return;
     if (isSignOrderPending) return;
     if (!!signature) return;
+    if (!counter) return;
 
     console.log('-> requesting signature');
-    signOrder(newOrder);
-    getOrderHash(newOrder);
-  }, [isValidChain, isApprovedForAll || false, openConfirmDialog]);
+    signOrder({ ...newOrder, counter });
+  }, [counter, isValidChain, isApprovedForAll || false, openConfirmDialog]);
 
   function dialogMessage() {
     if (signature && orderHash) {

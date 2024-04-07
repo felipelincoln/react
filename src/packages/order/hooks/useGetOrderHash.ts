@@ -1,6 +1,7 @@
 import { useReadContract } from 'wagmi';
 import {
   Order,
+  WithCounter,
   marketplaceProtocolABI,
   marketplaceProtocolContractAddress,
   marketplaceProtocolEIP712Message,
@@ -9,6 +10,13 @@ import { useState } from 'react';
 
 export function useGetOrderHash() {
   const [order, setOrder] = useState<Order | undefined>();
+  const { data: counter, isFetching: isFetchingCounter } = useReadContract({
+    address: marketplaceProtocolContractAddress(),
+    abi: marketplaceProtocolABI(),
+    functionName: 'getCounter',
+    args: !!order ? [order.offerer] : [],
+    query: { enabled: !!order },
+  });
   const {
     data: orderHash,
     isFetching,
@@ -17,13 +25,22 @@ export function useGetOrderHash() {
     address: marketplaceProtocolContractAddress(),
     abi: marketplaceProtocolABI(),
     functionName: 'getOrderHash',
-    args: !!order ? [marketplaceProtocolEIP712Message(order)] : [],
-    query: { enabled: !!order },
+    args:
+      !!order && counter != undefined
+        ? [marketplaceProtocolEIP712Message({ ...order, counter: counter?.toString() })]
+        : [],
+    query: { enabled: counter != undefined },
   });
 
   function getOrderHash(args: Order) {
     setOrder(args);
   }
 
-  return { orderHash, getOrderHash, isPending: isFetching, error };
+  return {
+    counter: counter?.toString(),
+    orderHash,
+    getOrderHash,
+    isPending: isFetching || isFetchingCounter,
+    error,
+  };
 }

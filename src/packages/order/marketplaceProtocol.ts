@@ -102,7 +102,7 @@ function seaportEIP712Types() {
   };
 }
 
-function seaportEIP712Message(args: Order) {
+function seaportEIP712Message(args: WithCounter<Order>) {
   const ethConsideration = args.fulfillmentCriteria.coin && {
     itemType: '0',
     token: '0x0000000000000000000000000000000000000000',
@@ -146,15 +146,14 @@ function seaportEIP712Message(args: Order) {
     zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
     salt: '1000000001',
     conduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    counter: '0',
+    counter: args.counter,
   };
 }
 
 function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignature<Order>>) {
   const offer = [['2', order.token, order.tokenId, 1, 1]]; // itemType, token, identifierOrCriteria, startAmount, endAmount
 
-  const fulfillAdvancedOrderMessage = seaportEIP712Message(order);
-  //const offer = fulfillAdvancedOrderMessage.offer.map((obj) => Object.values(obj));;
+  const fulfillAdvancedOrderMessage = seaportEIP712Message({ ...order, counter: '' });
   const consideration = fulfillAdvancedOrderMessage.consideration.map((obj) => Object.values(obj));
 
   const orderParameters = [
@@ -221,7 +220,7 @@ export function marketplaceProtocolEIP712Default() {
   };
 }
 
-export function marketplaceProtocolEIP712Message(args: Order) {
+export function marketplaceProtocolEIP712Message(args: WithCounter<Order>) {
   return seaportEIP712Message(args);
 }
 
