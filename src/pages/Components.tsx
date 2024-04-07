@@ -877,7 +877,7 @@ export function Dialog({
       <div className="w-full h-full fixed z-40 left-0 top-0 flex items-center justify-center">
         <div className="w-96 bg-zinc-800 rounded">
           <div className="flex justify-between">
-            <div className="font-medium pt-4 pl-4">{title}</div>
+            <div className="font-medium text-lg pt-4 pl-4">{title}</div>
             {!!setOpen && (
               <div className="cursor-pointer p-4" onClick={handleOpenDialog}>
                 X

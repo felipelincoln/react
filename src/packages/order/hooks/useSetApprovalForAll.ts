@@ -49,5 +49,5 @@ export function useSetApprovalForAll() {
   const isApprovedForAll = isPending ? undefined : isApprovedForAllData || isSetApprovalConfirmed;
   const error = mutateError || readError || waitError;
 
-  return { setApprovalForAll, setApprovalForAllAsync, isApprovedForAll, isPending, error };
+  return { hash, setApprovalForAll, setApprovalForAllAsync, isApprovedForAll, isPending, error };
 }

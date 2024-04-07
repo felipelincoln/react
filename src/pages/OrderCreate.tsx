@@ -3,10 +3,12 @@ import {
   ActionButton,
   Button,
   ButtonAccordion,
+  ButtonLight,
   CardNFTSelectable,
   Checkbox,
   Dialog,
   Input,
+  ItemNFT,
   Paginator,
   TagLight,
   TextBox,
@@ -52,9 +54,25 @@ export function OrderCreate() {
   const { data: address } = useContext(UserAddressContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
   const { orderHash, getOrderHash } = useGetOrderHash();
-  const { isValidChain, switchChain } = useValidateChain();
-  const { isApprovedForAll, setApprovalForAll } = useSetApprovalForAll();
-  const { signature, signOrder } = useSignOrder();
+  const {
+    isValidChain,
+    switchChain,
+    isPending: isSwitchChainPending,
+    error: switchChainError,
+  } = useValidateChain();
+  const {
+    hash,
+    isApprovedForAll,
+    setApprovalForAll,
+    isPending: isSetApprovalPending,
+    error: setApprovalError,
+  } = useSetApprovalForAll();
+  const {
+    signature,
+    signOrder,
+    isPending: isSignOrderPending,
+    error: signOrderError,
+  } = useSignOrder();
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
@@ -89,7 +107,7 @@ export function OrderCreate() {
   );
 
   const { isSuccess } = useQuery({
-    queryKey: ['order-create'],
+    queryKey: ['order_create'],
     retry: false,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/create/`, {
@@ -106,12 +124,12 @@ export function OrderCreate() {
   useEffect(() => {
     if (isSuccess) {
       refetchUserOrders();
-      navigate(`/c/${collection.key}`);
     }
   }, [isSuccess]);
 
   const canConfirmOrder = true;
-  const errorMessage = undefined;
+  const errorMessage =
+    switchChainError?.message || setApprovalError?.message || signOrderError?.message;
   const orderExpireTimestamp = moment().add(expireDays, 'days');
 
   function handleSelectToken(tokenId: string) {
@@ -129,17 +147,109 @@ export function OrderCreate() {
   }
 
   useEffect(() => {
+    if (!errorMessage) return;
+
+    setOpenConfirmDialog(false);
+  }, [errorMessage]);
+
+  useEffect(() => {
     if (!openConfirmDialog) return;
-    if (!isValidChain) switchChain();
-    if (isValidChain && !isApprovedForAll) setApprovalForAll();
-  }, [openConfirmDialog, isValidChain]);
+    if (isSwitchChainPending) return;
+    if (isValidChain) return;
+
+    console.log('-> switching chain');
+    switchChain();
+  }, [openConfirmDialog]);
+
+  useEffect(() => {
+    if (!isValidChain) return;
+    if (!openConfirmDialog) return;
+    if (isSetApprovalPending) return;
+    if (isApprovedForAll) return;
+
+    console.log('-> sending approval transaction');
+    setApprovalForAll();
+  }, [isValidChain, openConfirmDialog]);
+
+  useEffect(() => {
+    if (!isValidChain) return;
+    if (!isApprovedForAll) return;
+    if (!openConfirmDialog) return;
+    if (isSignOrderPending) return;
+    if (!!signature) return;
+
+    console.log('-> requesting signature');
+    signOrder(newOrder);
+    getOrderHash(newOrder);
+  }, [isApprovedForAll || false, openConfirmDialog]);
+
+  function dialogMessage() {
+    if (signature && orderHash) {
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div>Order created!</div>
+          <ButtonLight onClick={() => navigate(`/c/${collection.key}`)}>Ok</ButtonLight>
+        </div>
+      );
+    }
+    if (isSignOrderPending) return <div>Confirm in your wallet</div>;
+    if (hash) return <div>Approval transaction is pending</div>;
+    return <div>Confirm in your wallet</div>;
+  }
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <Dialog title="Create order" open={openConfirmDialog}>
-        <div>
-          {!isValidChain && <div>Confirm in your wallet to switch chain</div>}
-          {isValidChain && !isApprovedForAll && <div>Confirm in your wallet to set approval</div>}
+        <div className="flex flex-col items-center gap-4">
+          <div>
+            <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
+          </div>
+          {(!signature || !orderHash) && (
+            <svg
+              className="animate-spin text-zinc-200"
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="32"
+              height="32"
+              color="#ffffff"
+              fill="none"
+            >
+              <path d="M12 3V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path d="M12 18V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M21 12L18 12"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path d="M6 12L3 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              <path
+                d="M18.3635 5.63672L16.2422 7.75804"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M7.75706 16.2422L5.63574 18.3635"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M18.3635 18.3635L16.2422 16.2422"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+              <path
+                d="M7.75706 7.75804L5.63574 5.63672"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+              />
+            </svg>
+          )}
+          {dialogMessage()}
         </div>
       </Dialog>
       <h1 className="pb-8">Create Order</h1>
