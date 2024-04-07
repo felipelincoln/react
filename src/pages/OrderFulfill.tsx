@@ -28,10 +28,12 @@ import {
 import { LoaderFunctionArgs, useLoaderData, useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import moment from 'moment';
-import { useFulfillOrder } from '../packages/order/useFulfillOrder';
 import NotFoundPage from './NotFound';
 import { useCancelOrder } from '../packages/order/hooks/useCancelOrder';
 import { useValidateChain } from '../hooks/useValidateChain';
+import { useFulfillOrder } from '../packages/order/hooks/useFulfillOrder';
+import { useSetApprovalForAll } from '../packages/order/hooks/useSetApprovalForAll';
+import { useGetOrderHash } from '../packages/order/hooks/useGetOrderHash';
 
 interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -64,11 +66,13 @@ export function OrderFulfill() {
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const { refetch: refetchUserActivities } = useContext(UserActivitiesContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
+
+  const { orderHash, counter, getOrderHash } = useGetOrderHash();
   const {
-    data: fulfillOrderTxHash,
+    hash: fulfillOrderHash,
     fulfillOrder,
-    isSuccess: isFulfillConfirmed,
-    isFetching: isFulfillFetching,
+    isConfirmed: isFulfillConfirmed,
+    isPending: isFulfillPending,
     error: fulfillOrderError,
   } = useFulfillOrder();
 
@@ -79,22 +83,22 @@ export function OrderFulfill() {
     error: switchChainError,
   } = useValidateChain();
   const {
+    error: setApprovalForAllError,
+    isPending: IsSetApprovalForAllPending,
+    setApprovalForAll,
+    isApprovedForAll,
+  } = useSetApprovalForAll();
+  const {
     hash: cancelOrderHash,
     isConfirmed: isCancelOrderConfirmed,
     isPending: isCancelOrderPending,
     cancelOrder,
     error: cancelOrderError,
   } = useCancelOrder();
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
 
-  const [pendingCounter, setPendingCounter] = useState(0);
-
-  const {
-    data: ordersData,
-    isFetching: isOrderFetching,
-    isFetched: isOrderFetched,
-    isLoading: orderIsLoading,
-  } = useQuery<{
+  const { data: ordersData } = useQuery<{
     data: { orders: WithSignature<Order>[] };
   }>({
     queryKey: ['order', tokenId],
@@ -115,7 +119,8 @@ export function OrderFulfill() {
   const orderEndTimeMs = Number(order?.endTime) * 1000;
   const isOrderOwner = order?.offerer === userAddress;
   const canConfirmOrder = selectedTokenIds.length == orderTokenAmount && !isOrderOwner;
-  const errorMessage = fulfillOrderError || switchChainError?.message || cancelOrderError?.message;
+  const errorMessage =
+    fulfillOrderError?.message || switchChainError?.message || cancelOrderError?.message;
 
   useEffect(() => {
     if (ordersData?.data.orders.length && !order) {
@@ -130,6 +135,9 @@ export function OrderFulfill() {
   }, [ordersData?.data.orders.length, !!order]);
 
   useEffect(() => {
+    refetchUserTokenIds();
+    refetchUserBalance();
+    refetchUserActivities();
     refetchUserOrders();
   }, [isOrderDeleted]);
 
@@ -156,12 +164,6 @@ export function OrderFulfill() {
     setOrderTokenIdsSorted(orderTokenIdsCopy);
   }, [!!order, userTokenIds, userAddress]);
 
-  useEffect(() => {
-    if (isFulfillFetching || (isFulfillConfirmed && !!order)) {
-      setTimeout(() => setPendingCounter(pendingCounter + 1), 1000);
-    }
-  }, [isFulfillFetching, isFulfillConfirmed, pendingCounter, order]);
-
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...selectedTokenIds];
     if (tokenIds.includes(tokenId)) {
@@ -179,18 +181,10 @@ export function OrderFulfill() {
   }
 
   function handleConfirm() {
-    if (!order) {
-      return;
-    }
+    if (!order) return;
 
-    fulfillOrder({
-      selectedTokenIds,
-      ...order,
-    });
-  }
-
-  function handleCancelOrder() {
     setOpenConfirmDialog(true);
+    getOrderHash(order);
   }
 
   useEffect(() => {
@@ -209,17 +203,79 @@ export function OrderFulfill() {
   }, [openConfirmDialog]);
 
   useEffect(() => {
-    if (!order) return;
     if (!isValidChain) return;
     if (!openConfirmDialog) return;
+    if (IsSetApprovalForAllPending) return;
+    if (isApprovedForAll) return;
+
+    console.log('-> sending approval transaction');
+    setApprovalForAll();
+  }, [isValidChain, openConfirmDialog]);
+
+  useEffect(() => {
+    if (!order) return;
+    if (!isValidChain) return;
+    if (!isApprovedForAll) return;
+    if (!openConfirmDialog) return;
+    if (isFulfillPending) return;
+    if (!!fulfillOrderHash) return;
+
+    console.log('-> sending fulfill transaction');
+    fulfillOrder({ ...order, selectedTokenIds });
+  }, [isValidChain, isApprovedForAll || false, openConfirmDialog]);
+
+  function confirmDialogMessage() {
+    if (isOrderDeleted) {
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div>Item purchased!</div>
+          <ButtonLight onClick={() => navigate(`/c/${collection.key}`)}>Ok</ButtonLight>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <SpinnerIcon />
+        {fulfillOrderHash && ordersData?.data.orders.length && (
+          <div>Purchase transaction is pending</div>
+        )}
+        {!fulfillOrderHash && <div>Confirm in your wallet</div>}
+      </div>
+    );
+  }
+
+  function handleCancelOrder() {
+    setOpenCancelDialog(true);
+  }
+
+  useEffect(() => {
+    if (!errorMessage) return;
+
+    setOpenCancelDialog(false);
+  }, [errorMessage]);
+
+  useEffect(() => {
+    if (!openCancelDialog) return;
+    if (isSwitchChainPending) return;
+    if (isValidChain) return;
+
+    console.log('-> switching chain');
+    switchChain();
+  }, [openCancelDialog]);
+
+  useEffect(() => {
+    if (!order) return;
+    if (!isValidChain) return;
+    if (!openCancelDialog) return;
     if (isCancelOrderPending) return;
     if (!!isCancelOrderConfirmed) return;
 
     console.log('-> sending cancel transaction');
     cancelOrder(order);
-  }, [isValidChain, openConfirmDialog]);
+  }, [isValidChain, openCancelDialog]);
 
-  function dialogMessage() {
+  function cancelDialogMessage() {
     if (isOrderDeleted) {
       return (
         <div className="flex flex-col items-center gap-4">
@@ -246,10 +302,16 @@ export function OrderFulfill() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <Dialog title="Cancel order" open={openConfirmDialog}>
+      <Dialog title="Cancel order" open={openCancelDialog}>
         <div className="flex flex-col items-center gap-4">
           <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
-          {dialogMessage()}
+          {cancelDialogMessage()}
+        </div>
+      </Dialog>
+      <Dialog title="Purchase item" open={openConfirmDialog}>
+        <div className="flex flex-col items-center gap-4">
+          <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
+          {confirmDialogMessage()}
         </div>
       </Dialog>
       <div className="flex justify-between">
@@ -309,16 +371,14 @@ export function OrderFulfill() {
             <div>Order expires</div>
             <TextBox>{moment(orderEndTimeMs).fromNow()}</TextBox>
           </div>
-          {pendingCounter == 0 && (
-            <div className="flex items-center">
-              <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
-                Confirm
-              </ActionButton>
-              <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
-                Cancel
-              </a>
-            </div>
-          )}
+          <div className="flex items-center">
+            <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
+              Confirm
+            </ActionButton>
+            <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
+              Cancel
+            </a>
+          </div>
           {!!errorMessage && (
             <div className="overflow-hidden text-ellipsis red">{errorMessage}</div>
           )}

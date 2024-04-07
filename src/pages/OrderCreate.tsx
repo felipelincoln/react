@@ -54,7 +54,7 @@ export function OrderCreate() {
   const collection = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
-  const { orderHash, counter, getOrderHash, isPending: isOrderHashPending } = useGetOrderHash();
+  const { orderHash, counter, getOrderHash } = useGetOrderHash();
   const {
     isValidChain,
     switchChain,
