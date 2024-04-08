@@ -116,10 +116,9 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
   const { collection } = useLoaderData() as collectionLoaderData;
-  const { address } = useAccount();
+  const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
-  const chainId = useChainId();
   const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
   const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
   const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
@@ -178,10 +177,11 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   });
 
   useEffect(() => {
+    if (!isConnected) return;
     if (!address || address == userAddress) return;
     console.log('-> updating user address', address);
-    setUserAddress(address);
-  }, [address]);
+    setUserAddress(address.toLowerCase() as `0x${string}`);
+  }, [address, isConnected]);
 
   useEffect(() => {
     if (!userBalanceData) return;
