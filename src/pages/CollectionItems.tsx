@@ -67,7 +67,7 @@ export function CollectionItems() {
               setFilteredAttributes={setFilteredAttributes}
             />
           </div>
-          <div className="flex flex-wrap justify-between gap-4 pt-8">
+          <div className="flex flex-wrap gap-4 pt-8">
             {orders.map(({ tokenId, fulfillmentCriteria }) => (
               <div key={tokenId} className="">
                 <CardNFTOrder

@@ -106,7 +106,7 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
   });
 
   return (
-    <WagmiProvider config={wagmiConfig} reconnectOnMount={true}>
+    <WagmiProvider config={wagmiConfig}>
       <QueryClientProvider client={queryClient}>
         <AppContextProvider>{children}</AppContextProvider>
       </QueryClientProvider>
