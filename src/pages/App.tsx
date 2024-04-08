@@ -36,6 +36,7 @@ import {
   ActivityButton,
   Button,
   ButtonAccordion,
+  ButtonLight,
   CardNFTSelectable,
   Dialog,
   ExternalLink,
@@ -45,11 +46,13 @@ import {
   ItemNFT,
   ListedNFT,
   PriceTag,
+  SpinnerIcon,
 } from './Components';
 import { EthereumNetwork, config } from '../config';
 import { etherToString, shortAddress } from '../packages/utils';
 import moment from 'moment';
-import { useCancelAllOrders } from '../packages/order/useCancelAllOrders';
+import { useCancelAllOrders } from '../packages/order/hooks/useCancelAllOrders';
+import { useValidateChain } from '../hooks/useValidateChain';
 
 export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
 export const UserAddressContext = createContext<{ data: string | undefined; disconnect: Function }>(
@@ -267,34 +270,47 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
   const collection = useContext(CollectionContext);
   const { data: address, disconnect } = useContext(UserAddressContext);
-  const { data: ensName } = useContext(UserENSContext);
-  const navigate = useNavigate();
-  const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
-  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
-  const [pendingCounter, setPendingCounter] = useState(0);
   const { data: userTokenIdsData } = useContext(UserTokenIdsContext);
   const { data: userOrdersData, refetch: refetchUserOrders } = useContext(UserOrdersContext);
+  const { data: ensName } = useContext(UserENSContext);
+  const navigate = useNavigate();
+  const [isUserOrdersDeleted, setIsUserOrdersDeleted] = useState<boolean>(false);
+  const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
+  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const {
-    data: cancelAllOrdersHash,
+    hash: cancelAllOrdersHash,
+    error: cancelAllOrdersError,
     cancelAllOrders,
-    isSuccess: isCancelAllOrdersConfirmed,
-    isFetching: isCancelAllOrdersFetching,
+    isPending: isCancelAllOrdersPending,
+    isConfirmed: isCancelAllOrdersConfirmed,
   } = useCancelAllOrders();
+  const {
+    isValidChain,
+    switchChain,
+    isPending: isSwitchChainPending,
+    error: switchChainError,
+  } = useValidateChain();
+  const { data: userOrdersQuery } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+    error?: string;
+  }>({
+    queryKey: ['orders_list_user_refetch'],
+    enabled: isCancelAllOrdersConfirmed && !isUserOrdersDeleted,
+    refetchInterval: 1000,
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds: userTokenIds, offerer: address }, null, 2),
+      }).then((res) => res.json()),
+  });
 
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
   const userTokenIds = userTokenIdsData || [];
   const userOrders = userOrdersData || [];
-
-  useEffect(() => {
-    if (isCancelAllOrdersConfirmed && userOrders.length === 0) {
-      setPendingCounter(0);
-    }
-
-    if (isCancelAllOrdersFetching || (isCancelAllOrdersConfirmed && userOrders.length > 0)) {
-      if (isCancelAllOrdersConfirmed) refetchUserOrders();
-      setTimeout(() => setPendingCounter(pendingCounter + 1), 1000);
-    }
-  }, [isCancelAllOrdersFetching, isCancelAllOrdersConfirmed, pendingCounter, userOrders.length]);
 
   useEffect(() => {
     if (selectedTokenId) {
@@ -322,21 +338,75 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     navigate(`/c/${collection.key}/order/fulfill/${tokenId}`);
   }
 
+  function handleCancelAllOrders() {
+    setOpenCancelDialog(true);
+  }
+
+  useEffect(() => {
+    if (!cancelAllOrdersError && !switchChainError) return;
+
+    setOpenCancelDialog(false);
+  }, [!!cancelAllOrdersError, !!switchChainError]);
+
+  useEffect(() => {
+    if (!openCancelDialog) return;
+    if (isSwitchChainPending) return;
+    if (isValidChain) return;
+
+    console.log('-> switching chain');
+    switchChain();
+  }, [openCancelDialog]);
+
+  useEffect(() => {
+    if (!isValidChain) return;
+    if (!openCancelDialog) return;
+    if (isCancelAllOrdersPending) return;
+    if (!!isCancelAllOrdersConfirmed) return;
+
+    console.log('-> sending cancel transaction');
+    cancelAllOrders();
+  }, [isValidChain, openCancelDialog]);
+
+  useEffect(() => {
+    if (!isCancelAllOrdersConfirmed) return;
+    if (userOrdersQuery?.data.orders.length === 0) {
+      setIsUserOrdersDeleted(true);
+      return;
+    }
+  }, [userOrdersQuery?.data.orders.length]);
+
+  useEffect(() => {
+    if (!isUserOrdersDeleted) return;
+    refetchUserOrders();
+  }, [isUserOrdersDeleted]);
+
+  function cancelDialogMessage() {
+    if (isUserOrdersDeleted) {
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div>All orders have been canceled!</div>
+          <ButtonLight onClick={() => setOpenCancelDialog(false)}>Ok</ButtonLight>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <SpinnerIcon />
+        {cancelAllOrdersHash && !isUserOrdersDeleted && <div>Transaction is pending...</div>}
+        {!cancelAllOrdersHash && <div>Confirm in your wallet</div>}
+      </div>
+    );
+  }
+
   const userUnlistedTokenIds = userTokenIds.filter(
     (tokenId) => !userOrders.find((order) => order.tokenId === tokenId),
   );
 
   return (
     <>
-      <Dialog open={pendingCounter > 0} title="Cancel all orders">
-        <div className="overflow-hidden text-ellipsis">
-          Transaction is pending ({pendingCounter}s){' '}
-          {cancelAllOrdersHash && (
-            <a target="_blank" href={`https://sepolia.etherscan.io/tx/${cancelAllOrdersHash}`}>
-              {cancelAllOrdersHash}
-            </a>
-          )}
-        </div>
+      <Dialog title="Cancel all orders" open={openCancelDialog}>
+        <div className="flex flex-col items-center gap-4">{cancelDialogMessage()}</div>
       </Dialog>
       <Tab hidden={!showTab}>
         <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
@@ -350,7 +420,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
                   Disconnect
                 </div>
                 {userOrders.length > 1 && (
-                  <div className="hover:text-zinc-200" onClick={cancelAllOrders}>
+                  <div className="hover:text-zinc-200" onClick={() => handleCancelAllOrders()}>
                     Cancel all orders ({userOrders.length})
                   </div>
                 )}

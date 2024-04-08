@@ -199,7 +199,7 @@ export function OrderCreate() {
       <div className="flex flex-col items-center gap-4">
         <SpinnerIcon />
         {isSignOrderPending && <div>Confirm in your wallet</div>}
-        {hash && !isSignOrderPending && <div>Approval transaction is pending</div>}
+        {hash && !isSignOrderPending && <div>Approval transaction is pending...</div>}
         {!hash && !isSignOrderPending && <div>Confirm in your wallet</div>}
       </div>
     );

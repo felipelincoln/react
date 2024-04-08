@@ -238,7 +238,7 @@ export function OrderFulfill() {
       <div className="flex flex-col items-center gap-4">
         <SpinnerIcon />
         {fulfillOrderHash && ordersData?.data.orders.length && (
-          <div>Purchase transaction is pending</div>
+          <div>Purchase transaction is pending...</div>
         )}
         {!fulfillOrderHash && <div>Confirm in your wallet</div>}
       </div>
@@ -288,9 +288,7 @@ export function OrderFulfill() {
     return (
       <div className="flex flex-col items-center gap-4">
         <SpinnerIcon />
-        {cancelOrderHash && ordersData?.data.orders.length && (
-          <div>Cancel transaction is pending</div>
-        )}
+        {cancelOrderHash && ordersData?.data.orders.length && <div>Transaction is pending...</div>}
         {!cancelOrderHash && <div>Confirm in your wallet</div>}
       </div>
     );
