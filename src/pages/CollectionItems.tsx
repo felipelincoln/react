@@ -1,12 +1,21 @@
-import { useContext, useEffect, useState } from 'react';
-import { CollectionContext, UserBalanceContext } from './App';
+import { useContext, useEffect, useMemo, useState } from 'react';
+import {
+  CollectionContext,
+  UserAddressContext,
+  UserBalanceContext,
+  UserTokenIdsContext,
+} from './App';
 import { Button, ButtonAccordion, ButtonLight, CardNFTOrder, Checkbox, Tag } from './Components';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
 import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
+import { userCanFulfillOrder } from '../packages/utils';
 
 export function CollectionItems() {
   const collection = useContext(CollectionContext);
+  const userTokenIds = useContext(UserTokenIdsContext);
+  const userBalance = useContext(UserBalanceContext);
+  const userAddress = useContext(UserAddressContext);
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
@@ -26,7 +35,53 @@ export function CollectionItems() {
       }).then((res) => res.json()),
   });
 
-  const orders = ordersData?.data.orders.map((order) => order) || [];
+  const orders = useMemo(() => {
+    if (!ordersData) return undefined;
+    if (!userAddress.data) return undefined;
+    if (!userTokenIds.data) return undefined;
+    if (!userBalance.data) return undefined;
+
+    const ordersCopy = [...ordersData.data.orders];
+    ordersCopy.sort((a, b) => {
+      const tokenPriceA = Number(a.fulfillmentCriteria.token.amount);
+      const tokenPriceB = Number(b.fulfillmentCriteria.token.amount);
+      const coinPriceA = BigInt(a.fulfillmentCriteria.coin?.amount || '0');
+      const coinPriceB = BigInt(b.fulfillmentCriteria.coin?.amount || '0');
+
+      const userCanFulfillA = userCanFulfillOrder(
+        a,
+        userTokenIds.data,
+        userBalance.data,
+        userAddress.data,
+      );
+      const userCanFulfillB = userCanFulfillOrder(
+        b,
+        userTokenIds.data,
+        userBalance.data,
+        userAddress.data,
+      );
+
+      if (userCanFulfillA && !userCanFulfillB) {
+        return -1;
+      } else if (!userCanFulfillA && userCanFulfillB) {
+        return 1;
+      }
+
+      if (tokenPriceA !== tokenPriceB) {
+        return tokenPriceA - tokenPriceB;
+      }
+
+      if (coinPriceA !== coinPriceB) {
+        return coinPriceA < coinPriceB ? -1 : 1;
+      }
+
+      return 0;
+    });
+
+    console.log('-> sorting feed');
+
+    return ordersCopy;
+  }, [ordersData, userTokenIds.data, userBalance.data, userAddress.data]);
 
   return (
     <div className="flex flex-grow">
@@ -56,7 +111,7 @@ export function CollectionItems() {
           ></ItemsNavigation>
         </div>
       </div>
-      {orderIsLoading ? (
+      {!orders ? (
         <div className="w-fit p-8">Loading...</div>
       ) : (
         <div className="flex-grow p-8">
@@ -68,13 +123,19 @@ export function CollectionItems() {
             />
           </div>
           <div className="flex flex-wrap gap-4 pt-8">
-            {orders.map(({ tokenId, fulfillmentCriteria }) => (
-              <div key={tokenId} className="">
+            {orders.map((order) => (
+              <div key={order.tokenId} className="">
                 <CardNFTOrder
-                  priceToken={fulfillmentCriteria.token.amount}
-                  priceEth={fulfillmentCriteria.coin?.amount}
+                  priceToken={order.fulfillmentCriteria.token.amount}
+                  priceEth={order.fulfillmentCriteria.coin?.amount}
                   collection={collection}
-                  tokenId={tokenId}
+                  tokenId={order.tokenId}
+                  canFullfill={userCanFulfillOrder(
+                    order,
+                    userTokenIds.data,
+                    userBalance.data,
+                    userAddress.data,
+                  )}
                 ></CardNFTOrder>
               </div>
             ))}

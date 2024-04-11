@@ -178,7 +178,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 
   useEffect(() => {
     if (!isConnected) return;
-    if (!address || address == userAddress) return;
+    if (!address || address.toLowerCase() == userAddress) return;
     console.log('-> updating user address', address);
     setUserAddress(address.toLowerCase() as `0x${string}`);
   }, [address, isConnected]);

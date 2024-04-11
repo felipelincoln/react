@@ -652,38 +652,34 @@ export function CardNFTOrder({
   tokenId,
   priceToken,
   priceEth,
+  canFullfill,
 }: {
   collection: CollectionDetails;
   tokenId: string;
   priceToken: string;
   priceEth?: string;
+  canFullfill?: boolean;
 }) {
   const navigate = useNavigate();
   return (
     <div
-      className="group cursor-pointer"
+      className="w-48 h-full group cursor-pointer bg-zinc-800 rounded"
       onClick={() => navigate(`/c/${collection.key}/order/fulfill/${tokenId}`)}
     >
-      <div className="w-48 h-48 rounded-t overflow-hidden">
+      <div className="px-4 py-2 text-sm flex justify-between items-center">
+        <span className="h-6 text-base">{tokenId}</span>
+        {canFullfill && <PriceTagClickable>Buy</PriceTagClickable>}
+      </div>
+      <div className="h-48 rounded overflow-hidden">
         <img
           src={`/${collection.key}/${tokenId}.png`}
-          className="w-48 h-48 rounded-t group-hover:scale-110 transition bg-zinc-700"
+          className="h-48 group-hover:scale-110 transition bg-zinc-700"
           draggable="false"
         />
       </div>
-      <div className="h-8 w-48 text-center text-zinc-200 bg-zinc-800">
-        <span className="leading-8">{`${collection.name} #${tokenId}`}</span>
-      </div>
-      <div className="h-8 w-48 text-nowrap rounded-b text-xs font-bold px-4 flex justify-between gap-2 bg-zinc-800 group-hover:bg-cyan-400 group-hover:text-zinc-900">
-        {priceToken != '0' && (
-          <span className="leading-8 flex-grow text-center overflow-hidden text-ellipsis">{`${priceToken} ${collection.symbol}`}</span>
-        )}
-
-        {!!priceEth && (
-          <span className="leading-8 flex-grow text-center overflow-hidden text-ellipsis">
-            {etherToString(BigInt(priceEth))}
-          </span>
-        )}
+      <div className="px-4 py-2 text-sm flex flex-wrap gap-2">
+        {priceToken != '0' && <PriceTag>{`${priceToken} ${collection.symbol}`}</PriceTag>}
+        {!!priceEth && <PriceTag>{etherToString(BigInt(priceEth))}</PriceTag>}
       </div>
     </div>
   );
