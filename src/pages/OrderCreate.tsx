@@ -75,7 +75,6 @@ export function OrderCreate() {
     error: signOrderError,
   } = useSignOrder();
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [acceptAny, setAcceptAny] = useState(false);
   const [ethPrice, setEthPrice] = useState<string | undefined>(undefined);
@@ -107,7 +106,11 @@ export function OrderCreate() {
     [expireDays],
   );
 
-  const { isSuccess } = useQuery({
+  const {
+    isSuccess,
+    error: createOrderError,
+    data,
+  } = useQuery({
     queryKey: ['order_create'],
     retry: false,
     queryFn: () =>
@@ -116,7 +119,10 @@ export function OrderCreate() {
         body: JSON.stringify({ order: { ...newOrder, signature, orderHash } }, null, 2),
         headers: { 'Content-Type': 'application/json' },
       }).then(async (response) => {
-        if (!response.ok) return Promise.reject(await response.json());
+        if (!response.ok) {
+          const { error } = await response.json();
+          return Promise.reject({ message: error });
+        }
         return response.json();
       }),
     enabled: !!signature && !!orderHash,
@@ -130,7 +136,10 @@ export function OrderCreate() {
 
   const canConfirmOrder = true;
   const errorMessage =
-    switchChainError?.message || setApprovalError?.message || signOrderError?.message;
+    switchChainError?.message ||
+    setApprovalError?.message ||
+    signOrderError?.message ||
+    createOrderError?.message;
   const orderExpireTimestamp = moment().add(expireDays, 'days');
 
   function handleSelectToken(tokenId: string) {
@@ -185,8 +194,33 @@ export function OrderCreate() {
     signOrder({ ...newOrder, counter });
   }, [counter, isValidChain, isApprovedForAll || false, openConfirmDialog]);
 
+  function handleUserInputEthPrice(input: string) {
+    const validator = /^\d{0,4}(?:\.\d{0,18})?$/;
+    const sanitizedInput = input.replace(',', '.').match(validator)?.[0] || '';
+
+    if (sanitizedInput == '' && input != '') return;
+    setEthPrice(sanitizedInput);
+  }
+
+  function handleUserInputTokenPrice(input: string) {
+    const validator = /^\d{0,4}$/;
+    const sanitizedInput = input.match(validator)?.[0] || '';
+
+    if (sanitizedInput == '' && input != '') return;
+    setTokenPrice(Number(sanitizedInput));
+  }
+
+  function handleUserInputExpireDays(input: string) {
+    const validator = /^\d*$/;
+    const sanitizedInput = input.match(validator)?.[0] || '';
+
+    if (sanitizedInput == '' && input != '') return;
+    if (Number(sanitizedInput) > 30 || Number(sanitizedInput) < 1) return;
+    setExpireDays(Number(sanitizedInput));
+  }
+
   function dialogMessage() {
-    if (signature && orderHash) {
+    if (signature && orderHash && isSuccess) {
       return (
         <div className="flex flex-col items-center gap-4">
           <div>Order created!</div>
@@ -219,14 +253,18 @@ export function OrderCreate() {
           <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-4 *:text-sm">
             <div>
               <span>ETH price</span>
-              <Input type="text" onChange={(e) => setEthPrice(e.target.value)} />
+              <Input
+                type="text"
+                onChange={(e) => handleUserInputEthPrice(e.target.value)}
+                value={ethPrice || ''}
+              />
             </div>
             <div>
               <span>{collection.symbol} price</span>
               <Input
                 type="number"
                 value={tokenPrice}
-                onChange={(e) => setTokenPrice(Number(e.target.value))}
+                onChange={(e) => handleUserInputTokenPrice(e.target.value)}
               />
             </div>
             <div>
@@ -234,7 +272,7 @@ export function OrderCreate() {
               <Input
                 value={expireDays}
                 type="number"
-                onChange={(e) => setExpireDays(Number(e.target.value))}
+                onChange={(e) => handleUserInputExpireDays(e.target.value)}
               />
             </div>
             <div>

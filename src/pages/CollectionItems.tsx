@@ -37,9 +37,9 @@ export function CollectionItems() {
 
   const orders = useMemo(() => {
     if (!ordersData) return undefined;
-    if (!userAddress.data) return undefined;
-    if (!userTokenIds.data) return undefined;
-    if (!userBalance.data) return undefined;
+    if (!userAddress.data) return ordersData.data.orders;
+    if (!userTokenIds.data) return ordersData.data.orders;
+    if (!userBalance.data) return ordersData.data.orders;
 
     const ordersCopy = [...ordersData.data.orders];
     ordersCopy.sort((a, b) => {
