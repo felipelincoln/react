@@ -92,6 +92,7 @@ export function OrderCreate() {
     token: collection.address,
     offerer: address || '',
     endTime: orderEndTime,
+    salt: '101', // TODO:
     fulfillmentCriteria: {
       coin: ethPrice ? { amount: parseEther(ethPrice).toString() } : undefined,
       token: {

@@ -2,11 +2,16 @@ import MerkleTree from 'merkletreejs';
 import { keccak256, toHex } from 'viem';
 import seaportABIJson from './contractAbi/seaport.abi.json';
 import { config } from '../../config';
+import { OrderCreate } from '../../pages/OrderCreate';
 
 export interface Order {
   token: string;
   tokenId: string;
   offerer: string;
+  fee?: {
+    recipient: string;
+    amount: string;
+  };
   fulfillmentCriteria: {
     coin?: {
       amount: string;
@@ -17,6 +22,7 @@ export interface Order {
     };
   };
   endTime: string;
+  salt: string;
 }
 
 export type With_Id<t> = t & { _id: string };
@@ -60,12 +66,24 @@ function merkleTree(data: string[]) {
   return { root, proof };
 }
 
-function seaportEIP712Domain() {
+function seaport() {
   return {
     name: 'Seaport',
     version: '1.5',
+    contract: '0x00000000000000adc04c56bf30ac9d3c0aaf14dc' as `0x${string}`,
+    zone: '0x0000000000000000000000000000000000000000',
+    zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    conduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    startTime: '0',
+  };
+}
+
+function seaportEIP712Domain() {
+  return {
+    name: seaport().name,
+    version: seaport().version,
     chainId: Number(config.ethereumNetwork),
-    verifyingContract: '0x00000000000000adc04c56bf30ac9d3c0aaf14dc' as `0x${string}`,
+    verifyingContract: seaport().contract,
   };
 }
 
@@ -103,7 +121,7 @@ function seaportEIP712Types() {
 }
 
 function seaportEIP712Message(args: WithCounter<Order>) {
-  const ethConsideration = args.fulfillmentCriteria.coin && {
+  const ethConsideration = !!args.fulfillmentCriteria.coin && {
     itemType: '0',
     token: '0x0000000000000000000000000000000000000000',
     identifierOrCriteria: '0',
@@ -121,15 +139,25 @@ function seaportEIP712Message(args: WithCounter<Order>) {
     recipient: args.offerer,
   };
 
-  let ethConsiderationList = !!ethConsideration ? [ethConsideration] : [];
-  let tokenConsiderationList = Array.from(
+  const marketplaceFeeConsideration = !!args.fee && {
+    itemType: '0',
+    token: '0x0000000000000000000000000000000000000000',
+    identifierOrCriteria: '0',
+    startAmount: args.fee.amount,
+    endAmount: args.fee.amount,
+    recipient: args.fee.recipient,
+  };
+
+  const ethConsiderationList = !!ethConsideration ? [ethConsideration] : [];
+  const feeConsiderationList = !!marketplaceFeeConsideration ? [marketplaceFeeConsideration] : [];
+  const tokenConsiderationList = Array.from(
     { length: Number(args.fulfillmentCriteria.token.amount) },
     () => tokenConsideration,
   );
 
   return {
     offerer: args.offerer,
-    zone: '0x0000000000000000000000000000000000000000',
+    zone: seaport().zone,
     offer: [
       {
         itemType: '2',
@@ -139,13 +167,13 @@ function seaportEIP712Message(args: WithCounter<Order>) {
         endAmount: '1',
       },
     ],
-    consideration: [...ethConsiderationList, ...tokenConsiderationList],
+    consideration: [...ethConsiderationList, ...feeConsiderationList, ...tokenConsiderationList],
     orderType: '0',
-    startTime: '1700000000',
+    startTime: seaport().startTime,
     endTime: args.endTime,
-    zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    salt: '1000000001',
-    conduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    zoneHash: seaport().zoneHash,
+    salt: args.salt,
+    conduitKey: seaport().conduitKey,
     counter: args.counter,
   };
 }
@@ -158,15 +186,15 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
 
   const orderParameters = [
     order.offerer,
-    '0x0000000000000000000000000000000000000000', // zone,
+    seaport().zone, // zone,
     offer,
     consideration,
     '0', // order type
-    '1700000000', // startTime
+    seaport().startTime, // startTime
     order.endTime,
-    '0x0000000000000000000000000000000000000000000000000000000000000000', // zoneHash
-    '1000000001', // salt
-    '0x0000000000000000000000000000000000000000000000000000000000000000', // conduitKey
+    seaport().zoneHash, // zoneHash
+    order.salt, // salt
+    seaport().conduitKey, // conduitKey
     consideration.length,
   ];
 
@@ -187,7 +215,7 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
   return [
     advancedOrder,
     criteriaResolvers,
-    '0x0000000000000000000000000000000000000000000000000000000000000000', // conduitKey
+    seaport().conduitKey, // conduitKey
     '0x0000000000000000000000000000000000000000', // recipientAddress (TODO: what is this?)
   ];
 }
@@ -209,7 +237,7 @@ function seaportABI() {
 }
 
 function seaportContractAddress() {
-  return '0x00000000000000ADc04C56Bf30aC9d3c0aAF14dC';
+  return seaport().contract;
 }
 
 export function marketplaceProtocolEIP712Default() {
