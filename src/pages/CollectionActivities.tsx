@@ -213,51 +213,53 @@ function ActivitiesSection({
       </div>
       <div className="h-8"></div>
 
-      <table className="m-auto">
-        <thead>
-          <tr className="*:font-normal text-sm text-zinc-400 text-left">
-            <th>Item</th>
-            <th>Payment</th>
-            <th>From</th>
-            <th>To</th>
-            <th>Time</th>
-          </tr>
-        </thead>
-        <tbody>
-          {activities.map((activity) => (
-            <tr key={activity.txHash} className="border-b-2 border-zinc-800 *:py-4 last:border-0">
-              <td className="align-top pr-8">
-                <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
-              </td>
-              <td className="pr-8">
-                <div className="flex flex-col gap-2">
-                  {activity.fulfillment.coin && (
-                    <ItemETH value={activity.fulfillment.coin.amount} />
-                  )}
-                  {activity.fulfillment.token.identifier.map((tokenId) => (
-                    <ItemNFT
-                      key={activity.txHash.concat(tokenId)}
-                      collection={collection}
-                      tokenId={tokenId}
-                    />
-                  ))}
-                </div>
-              </td>
-              <td className="text-xs align-top pr-8">
-                {activity.offerer == address ? 'You' : shortAddress(activity.offerer)}
-              </td>
-              <td className="text-xs align-top pr-8">
-                {activity.fulfiller == address ? 'You' : shortAddress(activity.fulfiller)}
-              </td>
-              <td className="text-xs align-top">
-                <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
-                  {moment(Number(activity.createdAt)).fromNow()}
-                </ExternalLink>
-              </td>
+      {activities.length > 0 && (
+        <table className="m-auto">
+          <thead>
+            <tr className="*:font-normal text-sm text-zinc-400 text-left">
+              <th>Item</th>
+              <th>Payment</th>
+              <th>From</th>
+              <th>To</th>
+              <th>Time</th>
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {activities.map((activity) => (
+              <tr key={activity.txHash} className="border-b-2 border-zinc-800 *:py-4 last:border-0">
+                <td className="align-top pr-8">
+                  <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                </td>
+                <td className="pr-8">
+                  <div className="flex flex-col gap-2">
+                    {activity.fulfillment.coin && (
+                      <ItemETH value={activity.fulfillment.coin.amount} />
+                    )}
+                    {activity.fulfillment.token.identifier.map((tokenId) => (
+                      <ItemNFT
+                        key={activity.txHash.concat(tokenId)}
+                        collection={collection}
+                        tokenId={tokenId}
+                      />
+                    ))}
+                  </div>
+                </td>
+                <td className="text-xs align-top pr-8">
+                  {activity.offerer == address ? 'You' : shortAddress(activity.offerer)}
+                </td>
+                <td className="text-xs align-top pr-8">
+                  {activity.fulfiller == address ? 'You' : shortAddress(activity.fulfiller)}
+                </td>
+                <td className="text-xs align-top">
+                  <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                    {moment(Number(activity.createdAt)).fromNow()}
+                  </ExternalLink>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 }

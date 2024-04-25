@@ -31,6 +31,7 @@ import { useGetOrderHash } from '../packages/order/hooks/useGetOrderHash';
 import { useValidateChain } from '../hooks/useValidateChain';
 import { useSetApprovalForAll } from '../packages/order/hooks/useSetApprovalForAll';
 import { useSignOrder } from '../packages/order/hooks/useSignOrder';
+import { getRandomInt } from '../packages/utils';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -45,8 +46,6 @@ export function OrderCreateLoader(loaderArgs: LoaderFunctionArgs): OrderCreateLo
 
 // TODO: handle tx revert
 // TODO: handle tx replace
-// TODO: handle not enough ETH
-// TODO: loading skeleton
 
 export function OrderCreate() {
   const navigate = useNavigate();
@@ -92,7 +91,7 @@ export function OrderCreate() {
     token: collection.address,
     offerer: address || '',
     endTime: orderEndTime,
-    salt: '101', // TODO:
+    salt: getRandomInt().toString(),
     fulfillmentCriteria: {
       coin: ethPrice ? { amount: parseEther(ethPrice).toString() } : undefined,
       token: {

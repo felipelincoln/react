@@ -1,16 +1,5 @@
 import { formatEther } from 'viem';
 import { Order } from './order/marketplaceProtocol';
-import { UserTokenIdsContext } from '../pages/App';
-
-interface FulfillmentCriteria {
-  coin?: {
-    amount: string;
-  };
-  token: {
-    amount: string;
-    identifier: string[];
-  };
-}
 
 export function etherToString(ether = 0n, truncate = true) {
   let formatted = formatEther(ether);
@@ -66,4 +55,8 @@ export function userCanFulfillOrder(
   }
 
   return true;
+}
+
+export function getRandomInt() {
+  return Math.floor(Math.random() * Number.MAX_SAFE_INTEGER) + 1;
 }
