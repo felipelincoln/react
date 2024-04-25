@@ -298,6 +298,9 @@ export function OrderFulfill() {
     return <div className="mx-auto w-fit p-8">Loading...</div>;
   }
 
+  const totalAmount =
+    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
+
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <Dialog title="Cancel order" open={openCancelDialog}>
@@ -353,12 +356,14 @@ export function OrderFulfill() {
           </div>
           <div className="flex flex-col gap-4">
             <div>You pay</div>
-            {order?.fulfillmentCriteria.coin?.amount && (
-              <TextBox>{`${etherToString(
-                BigInt(order?.fulfillmentCriteria.coin?.amount),
-                false,
-              )}`}</TextBox>
-            )}
+            <div>
+              {totalAmount > 0 && <TextBox>{`${etherToString(totalAmount, false)}`}</TextBox>}
+              {order?.fee && (
+                <div className="text-zinc-400 text-xs pt-1 pl-4">
+                  fee: {etherToString(BigInt(order?.fee?.amount), false)}
+                </div>
+              )}
+            </div>
             <TextBoxWithNFTs
               value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
               collection={collection}
