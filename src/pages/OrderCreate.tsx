@@ -32,6 +32,7 @@ import { useValidateChain } from '../hooks/useValidateChain';
 import { useSetApprovalForAll } from '../packages/order/hooks/useSetApprovalForAll';
 import { useSignOrder } from '../packages/order/hooks/useSignOrder';
 import { getRandomInt } from '../packages/utils';
+import { config } from '../config';
 
 interface OrderCreateLoaderData extends collectionLoaderData {
   tokenId: string;
@@ -84,6 +85,7 @@ export function OrderCreate() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
+  const [orderSalt] = useState(getRandomInt().toString());
 
   const allTokenIds = collection.mintedTokens;
   const newOrder: Order = {
@@ -91,7 +93,8 @@ export function OrderCreate() {
     token: collection.address,
     offerer: address || '',
     endTime: orderEndTime,
-    salt: getRandomInt().toString(),
+    salt: orderSalt,
+    fee: config.fee,
     fulfillmentCriteria: {
       coin: ethPrice ? { amount: parseEther(ethPrice).toString() } : undefined,
       token: {

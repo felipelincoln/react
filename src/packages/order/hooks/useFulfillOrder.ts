@@ -31,7 +31,8 @@ export function useFulfillOrder() {
         address: marketplaceProtocolContractAddress(),
         functionName: 'fulfillAdvancedOrder',
         args: marketplaceProtocolFulfillOrderArgs(order),
-        value: BigInt(order.fulfillmentCriteria.coin?.amount || '0'),
+        value:
+          BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
       });
     },
   });

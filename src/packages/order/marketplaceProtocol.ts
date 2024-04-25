@@ -201,12 +201,13 @@ function seaportFulfillAdvancedOrderArgs(order: WithSelectedTokenIds<WithSignatu
   const advancedOrder = [orderParameters, 1, 1, order.signature, '0x'];
 
   const hasEthConsideration = !!order.fulfillmentCriteria.coin;
+  const hasFeeCondition = !!order.fee;
 
   const criteriaResolvers = order.selectedTokenIds.map((tokenId, itemIndex) => {
     return [
       0, // order index
       1, // side (offer | consideration)
-      itemIndex + Number(hasEthConsideration), // item index
+      itemIndex + Number(hasEthConsideration) + Number(hasFeeCondition), // item index
       tokenId,
       merkleTree(order.fulfillmentCriteria.token.identifier).proof(tokenId),
     ];
