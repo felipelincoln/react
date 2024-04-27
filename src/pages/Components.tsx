@@ -1,15 +1,9 @@
 import React, { ReactElement, useEffect, useState } from 'react';
-import { CollectionDetails } from '../collection/collections';
 import { useNavigate } from 'react-router-dom';
 import { etherToString } from '../packages/utils';
 import ReactDOM from 'react-dom/client';
 
 export function Components() {
-  const collection = {
-    key: 'sep-raccools',
-    symbol: 'SEPRACCOOL',
-    name: 'Raccools',
-  } as CollectionDetails;
   const [dialog, setDialog] = useState(false);
   const [dialog2, setDialog2] = useState(false);
 
@@ -55,7 +49,7 @@ export function Components() {
         <ActivityButton />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <IconNFT collection={collection} tokenId="55" />
+        <IconNFT src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1" />
         <IconEth />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
@@ -75,17 +69,47 @@ export function Components() {
         <a className="default">anchor.default</a>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <ItemNFT collection={collection} tokenId="60" />
+        <ItemNFT
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={60}
+        />
         <ItemETH value="20000000000000000" />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" />
-        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" selected />
-        <CardNFTSelectable onSelect={() => {}} collection={collection} tokenId="62" disabled />
+        <CardNFTSelectable
+          onSelect={() => {}}
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={62}
+        />
+        <CardNFTSelectable
+          onSelect={() => {}}
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={62}
+          selected
+        />
+        <CardNFTSelectable
+          onSelect={() => {}}
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={62}
+          disabled
+        />
       </div>
       <div className="flex flex-row h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <CardNFTOrder collection={collection} tokenId="33" priceToken="1" />
-        <CardNFTOrder collection={collection} tokenId="94" priceToken="1" priceEth="2" />
+        <CardNFTOrder
+          contract=""
+          symbol="RACCOOL"
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={33}
+          priceToken="1"
+        />
+        <CardNFTOrder
+          contract=""
+          symbol="RACCOOL"
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={94}
+          priceToken="1"
+          priceEth="2"
+        />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Input type="text" value={'Input'} />
@@ -99,8 +123,8 @@ export function Components() {
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <TextBoxWithNFTs
-          collection={collection}
-          tokenIds={['1', '10', '100']}
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenIds={[1, 10, 100]}
           value="TextBoxWithNFTs"
         />
       </div>
@@ -119,8 +143,21 @@ export function Components() {
         ></Paginator>
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
-        <ListedNFT collection={collection} tokenId="15" tokenPrice="2" />
-        <ListedNFT collection={collection} tokenId="95" tokenPrice="2" ethPrice="10000000" />
+        <ListedNFT
+          name="Raccools"
+          symbol="RACCOOL"
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={15}
+          tokenPrice="2"
+        />
+        <ListedNFT
+          name="Raccools"
+          symbol="RACCOOL"
+          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
+          tokenId={95}
+          tokenPrice="2"
+          ethPrice="10000000"
+        />
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <Button onClick={() => setDialog(!dialog)}>Dialog:Closeable</Button>
@@ -432,36 +469,12 @@ export function IconEth() {
   );
 }
 
-export function IconNFT({
-  collection,
-  tokenId,
-}: {
-  collection: CollectionDetails;
-  tokenId: string;
-}) {
-  return (
-    <img
-      src={`/${collection.key}/${tokenId}.png`}
-      draggable="false"
-      className="w-10 h-10 rounded"
-    />
-  );
+export function IconNFT({ src }: { src: string }) {
+  return <img src={src} draggable="false" className="w-10 h-10 rounded" />;
 }
 
-export function IconNFTLarge({
-  collection,
-  tokenId,
-}: {
-  collection: CollectionDetails;
-  tokenId: string;
-}) {
-  return (
-    <img
-      src={`/${collection.key}/${tokenId}.png`}
-      draggable="false"
-      className="w-12 h-12 rounded"
-    />
-  );
+export function IconNFTLarge({ src }: { src: string }) {
+  return <img src={src} draggable="false" className="w-12 h-12 rounded" />;
 }
 
 export function Checkbox({
@@ -583,16 +596,10 @@ export function ButtonAccordion({
   );
 }
 
-export function ItemNFT({
-  collection,
-  tokenId,
-}: {
-  collection: CollectionDetails;
-  tokenId: string;
-}) {
+export function ItemNFT({ src, tokenId }: { src: string; tokenId: number }) {
   return (
     <div className="flex gap-2">
-      <IconNFT collection={collection} tokenId={tokenId} />
+      <IconNFT src={src} />
       <PriceTag>{`# ${tokenId}`}</PriceTag>
     </div>
   );
@@ -608,14 +615,14 @@ export function ItemETH({ value }: { value: string }) {
 }
 
 export function CardNFTSelectable({
-  collection,
+  src,
   tokenId,
   selected,
   disabled,
   onSelect,
 }: {
-  collection: CollectionDetails;
-  tokenId: string;
+  src: string;
+  tokenId: number;
   selected?: boolean;
   disabled?: boolean;
   onSelect?: Function;
@@ -635,11 +642,7 @@ export function CardNFTSelectable({
       className={`rounded w-24 bg-zinc-800 ${cardClass}`}
       onClick={() => !disabled && onSelect?.()}
     >
-      <img
-        src={`/${collection.key}/${tokenId}.png`}
-        draggable="false"
-        className="w-24 h-24 rounded-t"
-      />
+      <img src={src} draggable="false" className="w-24 h-24 rounded-t" />
       <div className="h-6 w-24 text-sm text-center text-zinc-200 bg-zinc-800 rounded-b">
         <span className="leading-6">{tokenId}</span>
       </div>
@@ -648,14 +651,18 @@ export function CardNFTSelectable({
 }
 
 export function CardNFTOrder({
-  collection,
+  contract,
   tokenId,
+  symbol,
+  src,
   priceToken,
   priceEth,
   canFullfill,
 }: {
-  collection: CollectionDetails;
-  tokenId: string;
+  contract: string;
+  tokenId: number;
+  symbol: string;
+  src: string;
   priceToken: string;
   priceEth?: string;
   canFullfill?: boolean;
@@ -664,7 +671,7 @@ export function CardNFTOrder({
   return (
     <div
       className="w-48 h-full group cursor-pointer bg-zinc-800 rounded"
-      onClick={() => navigate(`/c/${collection.key}/order/fulfill/${tokenId}`)}
+      onClick={() => navigate(`/c/${contract}/order/fulfill/${tokenId}`)}
     >
       <div className="px-4 py-2 text-sm flex justify-between items-center">
         <span className="h-6 text-base">{tokenId}</span>
@@ -672,13 +679,13 @@ export function CardNFTOrder({
       </div>
       <div className="h-48 rounded overflow-hidden">
         <img
-          src={`/${collection.key}/${tokenId}.png`}
+          src={src}
           className="h-48 group-hover:scale-110 transition bg-zinc-700"
           draggable="false"
         />
       </div>
       <div className="px-4 py-2 text-sm flex flex-wrap gap-2">
-        {priceToken != '0' && <PriceTag>{`${priceToken} ${collection.symbol}`}</PriceTag>}
+        {priceToken != '0' && <PriceTag>{`${priceToken} ${symbol}`}</PriceTag>}
         {!!priceEth && <PriceTag>{etherToString(BigInt(priceEth))}</PriceTag>}
       </div>
     </div>
@@ -733,12 +740,12 @@ export function TextBox({ children }: { children?: string | ReactElement }) {
 
 export function TextBoxWithNFTs({
   value,
-  collection,
+  src,
   tokenIds,
 }: {
   value: string;
-  collection: CollectionDetails;
-  tokenIds: string[];
+  src: string;
+  tokenIds: number[];
 }) {
   const textBoxRounded = tokenIds.length > 0 ? 'rounded-t' : 'rounded';
 
@@ -754,7 +761,7 @@ export function TextBoxWithNFTs({
         <div className="px-4 py-2 grid grid-cols-2 gap-x-4 gap-y-2 rounded-b border border-t-0 border-zinc-700">
           {tokenIds.map((tokenId) => (
             <div key={tokenId} className="">
-              <ItemNFT collection={collection} tokenId={tokenId} />
+              <ItemNFT src={src} tokenId={tokenId} />
             </div>
           ))}
         </div>
@@ -814,24 +821,28 @@ export function Paginator({
 
 export function ListedNFT({
   tokenId,
-  collection,
+  symbol,
+  name,
+  src,
   onClick,
   tokenPrice,
   ethPrice,
 }: {
-  tokenId: string;
-  collection: CollectionDetails;
+  tokenId: number;
+  symbol: string;
+  name: string;
+  src: string;
   tokenPrice: string;
   ethPrice?: string;
   onClick?: Function;
 }) {
   return (
     <div className="flex gap-2 items-end cursor-pointer" onClick={() => onClick?.()}>
-      <IconNFTLarge collection={collection} tokenId={tokenId} />
+      <IconNFTLarge src={src} />
       <div className="flex-grow max-w-64 overflow-hidden">
-        <div>{`${collection.name} #${tokenId}`}</div>
+        <div>{`${name} #${tokenId}`}</div>
         <div className="flex gap-2 *:max-w-28 *:overflow-x-hidden *:text-ellipsis">
-          <PriceTagClickable>{`${tokenPrice} ${collection.symbol}`}</PriceTagClickable>
+          <PriceTagClickable>{`${tokenPrice} ${symbol}`}</PriceTagClickable>
           {ethPrice && (
             <PriceTagClickable>{etherToString(BigInt(ethPrice), true)}</PriceTagClickable>
           )}

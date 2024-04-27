@@ -24,7 +24,7 @@ export function shortAddress(address: string): string {
 
 export function userCanFulfillOrder(
   order: Order,
-  userTokenIds: string[] | undefined,
+  userTokenIds: number[] | undefined,
   userBalance: string | undefined,
   userAddress: string | undefined,
 ) {
@@ -47,7 +47,7 @@ export function userCanFulfillOrder(
 
   let userTokensInOrderCriteria = 0;
   userTokens.forEach((token) => {
-    tokensCriteria.identifier.includes(token) && userTokensInOrderCriteria++;
+    tokensCriteria.identifier.includes(token.toString()) && userTokensInOrderCriteria++;
   });
 
   if (userTokensInOrderCriteria < Number(tokensCriteria.amount)) {

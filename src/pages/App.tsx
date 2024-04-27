@@ -54,12 +54,23 @@ import moment from 'moment';
 import { useCancelAllOrders } from '../packages/order/hooks/useCancelAllOrders';
 import { useValidateChain } from '../hooks/useValidateChain';
 
-export const CollectionContext = createContext<CollectionDetails>(defaultCollection);
+interface Collection {
+  name: string;
+  symbol: string;
+  image: string;
+  contract: string;
+  totalSupply: string;
+  attributeSummary: Record<string, { attribute: string; options: Record<string, string> }>;
+}
+
+export const CollectionContext = createContext<{ data: Collection | undefined }>({
+  data: undefined,
+});
 export const UserAddressContext = createContext<{ data: string | undefined; disconnect: Function }>(
   { data: undefined, disconnect: () => {} },
 );
 export const UserENSContext = createContext<{ data: string | undefined }>({ data: undefined });
-export const UserTokenIdsContext = createContext<{ data: string[] | undefined; refetch: Function }>(
+export const UserTokenIdsContext = createContext<{ data: number[] | undefined; refetch: Function }>(
   { data: undefined, refetch: () => {} },
 );
 export const UserBalanceContext = createContext<{ data: string | undefined; refetch: Function }>({
@@ -82,14 +93,13 @@ export const UserActivitiesContext = createContext<{
 });
 
 export interface collectionLoaderData {
-  collection: CollectionDetails | undefined;
+  contract: string;
 }
 
 export function collectionLoader({ params }: LoaderFunctionArgs): collectionLoaderData {
-  const collectionSlug = params.collectionName!;
-  const collection = supportedCollections[collectionSlug];
+  const contract = params.contract!;
 
-  return { collection };
+  return { contract };
 }
 
 export default function App({ children }: { children: ReactElement[] | ReactElement }) {
@@ -115,12 +125,12 @@ export default function App({ children }: { children: ReactElement[] | ReactElem
 }
 
 function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
-  const { collection } = useLoaderData() as collectionLoaderData;
+  const { contract } = useLoaderData() as collectionLoaderData;
   const { address, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
   const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
-  const [userTokenIds, setUserTokenIds] = useState<string[] | undefined>(undefined);
+  const [userTokenIds, setUserTokenIds] = useState<number[] | undefined>(undefined);
   const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
   const [userActivities, setUserActivities] = useState<With_Id<Activity>[] | undefined>(undefined);
   const [userAddress, setUserAddress] = useState<`0x${string}` | undefined>(undefined);
@@ -132,14 +142,24 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     address: userAddress,
   });
 
+  const { data: collectionData } = useQuery<{
+    data?: { collection: Collection; isReady: boolean };
+    error?: string;
+  }>({
+    queryKey: ['collection', contract],
+    queryFn: () => fetch(`http://localhost:3000/collection/${contract}/`).then((res) => res.json()),
+  });
+
+  const collection = collectionData?.data?.collection;
+
   const { data: userTokenIdsData, refetch: userTokenIdsRefetch } = useQuery<{
-    data?: { tokens: string[] };
+    data?: { tokens: number[] };
     error?: string;
   }>({
     enabled: !!userAddress && !!collection,
     queryKey: ['eth_tokens_user', userAddress],
     queryFn: () =>
-      fetch(`http://localhost:3000/eth/tokens/${collection?.key}/${userAddress}`).then((res) =>
+      fetch(`http://localhost:3000/eth/tokens/${collection?.contract}/${userAddress}`).then((res) =>
         res.json(),
       ),
   });
@@ -151,7 +171,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     queryKey: ['orders_list_user', userAddress, userTokenIds?.join('-')],
     enabled: !!collection && !!userAddress && !!userTokenIds && userTokenIds.length > 0,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -161,13 +181,13 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   });
 
   const { data: userActivitiesData, refetch: userActivitiesRefetch } = useQuery<{
-    data: { activities: With_Id<Activity>[] };
+    data?: { activities: With_Id<Activity>[] };
     error?: string;
   }>({
     queryKey: ['activities_list_user', userAddress],
     enabled: !!collection && !!userAddress,
     queryFn: () =>
-      fetch(`http://localhost:3000/activities/list/${collection?.key}`, {
+      fetch(`http://localhost:3000/activities/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -191,6 +211,12 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 
   useEffect(() => {
     if (!userTokenIdsData) return;
+    if (userTokenIdsData.error) {
+      console.log('-> updating user token ids', []);
+      setUserTokenIds([]);
+      return;
+    }
+
     console.log('-> updating user token ids', userTokenIdsData?.data?.tokens);
     setUserTokenIds(userTokenIdsData?.data?.tokens);
   }, [userTokenIdsData]);
@@ -230,12 +256,16 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     setUserActivities(undefined);
   }
 
+  if (!collectionData) {
+    return <div>Loading...</div>;
+  }
+
   if (!collection) {
-    return <NotFoundPage></NotFoundPage>;
+    return <NotFoundPage />;
   }
 
   return (
-    <CollectionContext.Provider value={collection}>
+    <CollectionContext.Provider value={{ data: collection }}>
       <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch: userTokenIdsRefetch }}>
         <UserBalanceContext.Provider value={{ data: userBalance, refetch: userBalanceRefetch }}>
           <UserOrdersContext.Provider value={{ data: userOrders, refetch: userOrdersRefetch }}>
@@ -268,15 +298,15 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 }
 
 function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const { data: address, disconnect } = useContext(UserAddressContext);
   const { data: userTokenIdsData } = useContext(UserTokenIdsContext);
   const { data: userOrdersData, refetch: refetchUserOrders } = useContext(UserOrdersContext);
   const { data: ensName } = useContext(UserENSContext);
   const navigate = useNavigate();
   const [isUserOrdersDeleted, setIsUserOrdersDeleted] = useState<boolean>(false);
-  const [selectedTokenId, setSelectedTokenId] = useState<string | undefined>();
-  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<string | undefined>();
+  const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>();
+  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>();
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const {
     hash: cancelAllOrdersHash,
@@ -299,7 +329,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     enabled: isCancelAllOrdersConfirmed && !isUserOrdersDeleted,
     refetchInterval: 1000,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -318,7 +348,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     }
   }, [selectedTokenId]);
 
-  function handleSelectToken(tokenId: string) {
+  function handleSelectToken(tokenId: number) {
     if (selectedTokenId === tokenId) {
       setSelectedTokenId(undefined);
       return;
@@ -329,13 +359,13 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   function handleClickListItem() {
     setShowTab(false);
     setSelectedTokenId(undefined);
-    navigate(`/c/${collection.key}/order/create/${selectedTokenId}`);
+    navigate(`/c/${collection?.contract}/order/create/${selectedTokenId}`);
   }
 
   function handleClickListedItem(tokenId: string) {
     setShowTab(false);
     setSelectedTokenId(undefined);
-    navigate(`/c/${collection.key}/order/fulfill/${tokenId}`);
+    navigate(`/c/${collection?.contract}/order/fulfill/${tokenId}`);
   }
 
   function handleCancelAllOrders() {
@@ -400,8 +430,12 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
   }
 
   const userUnlistedTokenIds = userTokenIds.filter(
-    (tokenId) => !userOrders.find((order) => order.tokenId === tokenId),
+    (tokenId) => !userOrders.find((order) => order.tokenId === tokenId.toString()),
   );
+
+  if (!collection) {
+    return <></>;
+  }
 
   return (
     <>
@@ -432,8 +466,10 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
                 <div className="flex flex-col flex-wrap gap-4">
                   {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
                     <ListedNFT
-                      tokenId={tokenId}
-                      collection={collection}
+                      tokenId={Number(tokenId)}
+                      name={collection.name}
+                      symbol={collection.symbol}
+                      src=""
                       key={tokenId}
                       tokenPrice={fulfillmentCriteria.token.amount}
                       ethPrice={fulfillmentCriteria.coin?.amount}
@@ -450,7 +486,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
                 {userUnlistedTokenIds.map((tokenId) => (
                   <CardNFTSelectable
                     key={tokenId}
-                    collection={collection}
+                    src=""
                     selected={selectedTokenId === tokenId}
                     onSelect={() => handleSelectToken(tokenId)}
                     tokenId={tokenId}
@@ -464,7 +500,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
         <div
           className={`fixed bottom-0 right-0 px-8 py-4 w-96 bg-zinc-800 flex gap-4 transition ease-in-out delay-0 ${displayListButton}`}
         >
-          <Button disabled>{`${collection.name} #${
+          <Button disabled>{`${collection?.name} #${
             selectedTokenId || lastSelectedTokenId
           }`}</Button>
           <ActionButton onClick={handleClickListItem}>List Item</ActionButton>
@@ -475,7 +511,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
 }
 
 function ActivityTab({ showTab }: { showTab: boolean }) {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const [userNotificationsCache, setuserNotificationsCache] = useState(0);
   const { data: address } = useContext(UserAddressContext);
   const { refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
@@ -487,16 +523,17 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
     isFetching: userNotificationsIsFetching,
     isFetched: userNotificationsIsFetched,
   } = useQuery<{
-    data: { notifications: With_Id<Notification>[] };
+    data?: { notifications: With_Id<Notification>[] };
+    error?: string;
   }>({
     queryKey: ['notifications_list_user'],
     enabled: !!address,
     queryFn: () =>
-      fetch(`http://localhost:3000/notifications/list/${collection.key}/${address}`).then((res) =>
-        res.json(),
+      fetch(`http://localhost:3000/notifications/list/${collection?.contract}/${address}`).then(
+        (res) => res.json(),
       ),
   });
-  const userNotifications = userNotificationsData?.data.notifications || [];
+  const userNotifications = userNotificationsData?.data?.notifications || [];
 
   useEffect(() => {
     if (!userNotificationsIsFetching && userNotificationsIsFetched) {
@@ -559,7 +596,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                               Item {isOfferer ? 'sold' : 'bought'}
                             </span>
                           </div>
-                          <ItemNFT collection={collection} tokenId={activity.tokenId}></ItemNFT>
+                          <ItemNFT src="" tokenId={Number(activity.tokenId)}></ItemNFT>
                         </div>
                       </td>
                       <td>
@@ -574,8 +611,8 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                             {activity.fulfillment.token.identifier.map((tokenId) => (
                               <ItemNFT
                                 key={activity.txHash.concat(tokenId)}
-                                collection={collection}
-                                tokenId={tokenId}
+                                src=""
+                                tokenId={Number(tokenId)}
                               />
                             ))}
                           </div>
@@ -615,27 +652,28 @@ function Navbar({
   onClickAccount: Function;
   onClickActivity: Function;
 }) {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const { data: userTokenIds } = useContext(UserTokenIdsContext);
   const { data: userBalance } = useContext(UserBalanceContext);
   const { data: userAddress } = useContext(UserAddressContext);
   const { data: userNotificationsData } = useQuery<{
-    data: { notifications: With_Id<Notification>[] };
+    data?: { notifications: With_Id<Notification>[] };
+    error?: string;
   }>({
     queryKey: ['notifications_list_user'],
     enabled: !!userAddress,
     refetchInterval: 12_000,
     queryFn: () =>
-      fetch(`http://localhost:3000/notifications/list/${collection.key}/${userAddress}`).then(
+      fetch(`http://localhost:3000/notifications/list/${collection?.contract}/${userAddress}`).then(
         (res) => res.json(),
       ),
   });
 
-  const userNotifications = userNotificationsData?.data.notifications || [];
+  const userNotifications = userNotificationsData?.data?.notifications || [];
 
   let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (!!userAddress) {
-    let userTokens = `${userTokenIds?.length} ${collection.symbol}`;
+    let userTokens = `${userTokenIds?.length} ${collection?.symbol}`;
     let userEth = etherToString(BigInt(userBalance || '0'));
 
     buttons = [

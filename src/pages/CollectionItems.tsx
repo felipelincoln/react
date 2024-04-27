@@ -11,8 +11,15 @@ import { Order, WithSignature } from '../packages/order/marketplaceProtocol';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { userCanFulfillOrder } from '../packages/utils';
 
+interface Token {
+  collection_id: string;
+  tokenId: number;
+  image?: string;
+  attributes: Record<string, string>;
+}
+
 export function CollectionItems() {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const userTokenIds = useContext(UserTokenIdsContext);
   const userBalance = useContext(UserBalanceContext);
   const userAddress = useContext(UserAddressContext);
@@ -20,13 +27,16 @@ export function CollectionItems() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  const { data: ordersData, isLoading: orderIsLoading } = useQuery<{
-    data: { orders: WithSignature<Order>[] };
+  console.log({ filteredTokenIds });
+
+  const { data: ordersData, isLoading: ordersIsLoading } = useQuery<{
+    data?: { orders: WithSignature<Order>[] };
+    error?: string;
   }>({
     queryKey: ['order', filteredTokenIds.join('-')],
     enabled: !!collection && filteredTokenIds.length > 0,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/${collection?.key}`, {
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -36,7 +46,7 @@ export function CollectionItems() {
   });
 
   const orders = useMemo(() => {
-    if (!ordersData) return undefined;
+    if (!ordersData || !ordersData.data) return [];
     if (!userAddress.data) return ordersData.data.orders;
     if (!userTokenIds.data) return ordersData.data.orders;
     if (!userBalance.data) return ordersData.data.orders;
@@ -83,22 +93,28 @@ export function CollectionItems() {
     return ordersCopy;
   }, [ordersData, userTokenIds.data, userBalance.data, userAddress.data]);
 
+  if (!collection) {
+    return <></>;
+  }
+
+  const ordersError = ordersData?.error;
+
   return (
     <div className="flex flex-grow">
       <div className="w-80 bg-zinc-800 p-8 flex-shrink-0 gap-8">
         <div className="flex flex-col gap-8">
           <div className="flex flex-col gap-4">
             <div className="flex gap-4">
-              <img src={`/${collection.key}/thumbnail.png`} className="w-16 h-16 rounded" />
+              <img src={collection.image} className="w-16 h-16 rounded" />
               <div>
                 <div className="text-lg font-medium">{collection.name}</div>
-                <div className="text-sm text-zinc-400">{collection.mintedTokens.length} items</div>
+                <div className="text-sm text-zinc-400">{collection.totalSupply} items</div>
               </div>
             </div>
 
             <div className="flex gap-2 *:flex-grow">
               <ButtonLight disabled>Items</ButtonLight>
-              <ButtonLight onClick={() => navigate(`/c/${collection.key}/activity`)}>
+              <ButtonLight onClick={() => navigate(`/c/${collection.contract}/activity`)}>
                 Activity
               </ButtonLight>
             </div>
@@ -111,7 +127,7 @@ export function CollectionItems() {
           ></ItemsNavigation>
         </div>
       </div>
-      {!orders ? (
+      {ordersIsLoading && !ordersError ? (
         <div className="w-fit p-8">Loading...</div>
       ) : (
         <div className="flex-grow p-8">
@@ -128,8 +144,10 @@ export function CollectionItems() {
                 <CardNFTOrder
                   priceToken={order.fulfillmentCriteria.token.amount}
                   priceEth={order.fulfillmentCriteria.coin?.amount}
-                  collection={collection}
-                  tokenId={order.tokenId}
+                  contract={collection.contract}
+                  symbol={collection.symbol}
+                  src=""
+                  tokenId={Number(order.tokenId)}
                   canFullfill={userCanFulfillOrder(
                     order,
                     userTokenIds.data,
@@ -147,8 +165,6 @@ export function CollectionItems() {
   );
 }
 
-type UseQueryTokensResult = UseQueryResult<{ data: { tokens: string[] } }>;
-
 interface ItemsNavigationProps {
   onAttributeSelect?: Function;
   filteredAttributes: { [attribute: string]: string };
@@ -157,13 +173,14 @@ interface ItemsNavigationProps {
 }
 
 function ItemsNavigation(props: ItemsNavigationProps) {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const [openAttribute, setOpenAttribute] = useState<string | undefined>(undefined);
 
-  const { data: filteredTokenIds }: UseQueryTokensResult = useQuery({
+  const { data: filteredTokenIds } = useQuery<{ data?: { tokens: Token[]; error?: string } }>({
     queryKey: ['tokens', props.filteredAttributes],
+    enabled: !!collection,
     queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection.key}`, {
+      fetch(`http://localhost:3000/tokens/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -172,38 +189,42 @@ function ItemsNavigation(props: ItemsNavigationProps) {
       }).then((res) => res.json()),
   });
 
-  const tokenIds = filteredTokenIds?.data.tokens ?? [];
-  useEffect(() => props.setFilteredTokenIds(tokenIds), [tokenIds.join('-')]);
+  const tokenIds = filteredTokenIds?.data?.tokens ?? [];
+  useEffect(() => props.setFilteredTokenIds(tokenIds.map((t) => t.tokenId)), [tokenIds.join('-')]);
+
+  if (!collection) {
+    return <></>;
+  }
 
   return (
     <div>
       <div className="font-medium pb-4">Attributes</div>
       <div className="flex flex-col">
-        {Object.keys(collection.attributes).map((attr, index) => (
-          <div key={index}>
+        {Object.entries(collection.attributeSummary).map(([key, value]) => (
+          <div key={key}>
             <ButtonAccordion
-              closed={openAttribute != attr}
-              onClick={() => setOpenAttribute(openAttribute == attr ? undefined : attr)}
+              closed={openAttribute != key}
+              onClick={() => setOpenAttribute(openAttribute == key ? undefined : key)}
             >
-              {attr}
+              {value.attribute}
             </ButtonAccordion>
-            {openAttribute == attr && (
+            {openAttribute == key && (
               <div className="flex flex-col gap-2 px-4 py-2">
-                {collection.attributes[attr].map((val, index) => (
+                {Object.entries(value.options).map(([optionKey, optionValue]) => (
                   <Checkbox
-                    key={index}
-                    label={val}
-                    checked={props.filteredAttributes[attr] === val}
+                    key={optionKey}
+                    label={optionValue}
+                    checked={props.filteredAttributes[key] === optionKey}
                     onClick={() => {
-                      if (props.filteredAttributes[attr] === val) {
+                      if (props.filteredAttributes[key] === optionKey) {
                         const selectedFiltersCopy = { ...props.filteredAttributes };
-                        delete selectedFiltersCopy[attr];
+                        delete selectedFiltersCopy[key];
                         props.setFilteredAttributes(selectedFiltersCopy);
                         props.onAttributeSelect?.();
                       } else {
                         props.setFilteredAttributes({
                           ...props.filteredAttributes,
-                          [attr]: val,
+                          [key]: optionKey,
                         });
                         props.onAttributeSelect?.();
                       }
@@ -226,19 +247,22 @@ interface AttributeTagsProps {
 }
 
 function AttributeTags(props: AttributeTagsProps) {
+  const { data: collection } = useContext(CollectionContext);
   return (
     <div className="flex gap-4 items-center">
-      {Object.keys(props.filteredAttributes).map((attributeName) => (
+      {Object.keys(props.filteredAttributes).map((key) => (
         <Tag
-          key={`${attributeName}-${props.filteredAttributes[attributeName]}`}
+          key={`${key}-${props.filteredAttributes[key]}`}
           onClick={() => {
             const filteredAttributesCopy = { ...props.filteredAttributes };
-            delete filteredAttributesCopy[attributeName];
+            delete filteredAttributesCopy[key];
             props.setFilteredAttributes(filteredAttributesCopy);
             props.onAttributeSelect?.();
           }}
         >
-          {`${attributeName}: ${props.filteredAttributes[attributeName]}`}
+          {`${collection?.attributeSummary[key].attribute}: ${
+            collection?.attributeSummary[key].options[props.filteredAttributes[key]]
+          }`}
         </Tag>
       ))}
       {Object.keys(props.filteredAttributes).length > 0 && (

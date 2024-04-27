@@ -23,7 +23,7 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
   },
   {
-    path: '/c/:collectionName',
+    path: '/c/:contract',
     element: (
       <App>
         <CollectionItems></CollectionItems>
@@ -32,7 +32,7 @@ const router = createBrowserRouter([
     loader: collectionLoader,
   },
   {
-    path: '/c/:collectionName/activity',
+    path: '/c/:contract/activity',
     element: (
       <App>
         <CollectionActivities></CollectionActivities>
