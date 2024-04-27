@@ -24,22 +24,22 @@ export function CollectionItems() {
   const userBalance = useContext(UserBalanceContext);
   const userAddress = useContext(UserAddressContext);
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
-  const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
+  const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
   const navigate = useNavigate();
 
   const { data: ordersData, isLoading: ordersIsLoading } = useQuery<{
     data?: { orders: WithSignature<Order>[] };
     error?: string;
   }>({
-    queryKey: ['order', filteredTokenIds.join('-')],
-    enabled: !!collection && filteredTokenIds.length > 0,
+    queryKey: ['order', filteredTokens.map((t) => t.tokenId).join('-')],
+    enabled: !!collection && filteredTokens.length > 0,
     queryFn: () =>
       fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tokenIds: filteredTokenIds }, null, 0),
+        body: JSON.stringify({ tokenIds: filteredTokens.map((t) => t.tokenId) }, null, 0),
       }).then((res) => res.json()),
   });
 
@@ -97,6 +97,7 @@ export function CollectionItems() {
   }
 
   const ordersError = ordersData?.error;
+  const tokenImage = Object.fromEntries(filteredTokens.map((t) => [t.tokenId, t.image]));
 
   return (
     <div className="flex flex-grow">
@@ -122,7 +123,7 @@ export function CollectionItems() {
           <ItemsNavigation
             filteredAttributes={filteredAttributes}
             setFilteredAttributes={setFilteredAttributes}
-            setFilteredTokenIds={setFilteredTokenIds}
+            setFilteredTokens={setFilteredTokens}
           ></ItemsNavigation>
         </div>
       </div>
@@ -145,7 +146,7 @@ export function CollectionItems() {
                   priceEth={order.fulfillmentCriteria.coin?.amount}
                   contract={collection.contract}
                   symbol={collection.symbol}
-                  src=""
+                  src={tokenImage[order.tokenId]}
                   tokenId={Number(order.tokenId)}
                   canFullfill={userCanFulfillOrder(
                     order,
@@ -168,7 +169,7 @@ interface ItemsNavigationProps {
   onAttributeSelect?: Function;
   filteredAttributes: { [attribute: string]: string };
   setFilteredAttributes: Function;
-  setFilteredTokenIds: Function;
+  setFilteredTokens: Function;
 }
 
 function ItemsNavigation(props: ItemsNavigationProps) {
@@ -188,8 +189,8 @@ function ItemsNavigation(props: ItemsNavigationProps) {
       }).then((res) => res.json()),
   });
 
-  const tokenIds = filteredTokenIds?.data?.tokens ?? [];
-  useEffect(() => props.setFilteredTokenIds(tokenIds.map((t) => t.tokenId)), [tokenIds.join('-')]);
+  const tokens = filteredTokenIds?.data?.tokens ?? [];
+  useEffect(() => props.setFilteredTokens(tokens), [tokens.map((t) => t.tokenId).join('-')]);
 
   if (!collection) {
     return <></>;

@@ -443,9 +443,11 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     );
   }
 
-  const userUnlistedTokenIds = userTokens.filter(
+  const userUnlistedTokens = userTokens.filter(
     ({ tokenId }) => !userOrders.find((order) => order.tokenId === tokenId.toString()),
   );
+
+  const userTokenImage = Object.fromEntries(userTokens.map((t) => [t.tokenId, t.image]));
 
   if (!collection) {
     return <></>;
@@ -483,7 +485,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
                       tokenId={Number(tokenId)}
                       name={collection.name}
                       symbol={collection.symbol}
-                      src=""
+                      src={userTokenImage[tokenId]}
                       key={tokenId}
                       tokenPrice={fulfillmentCriteria.token.amount}
                       ethPrice={fulfillmentCriteria.coin?.amount}
@@ -495,9 +497,9 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
             )}
 
             <div className="flex flex-col gap-4">
-              <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokenIds.length})</div>
+              <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokens.length})</div>
               <div className="grid grid-cols-3 gap-4">
-                {userUnlistedTokenIds.map(({ tokenId, image }) => (
+                {userUnlistedTokens.map(({ tokenId, image }) => (
                   <CardNFTSelectable
                     key={tokenId}
                     src={image}
