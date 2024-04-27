@@ -138,7 +138,7 @@ export function OrderCreate() {
     queryFn: () =>
       fetch(`http://localhost:3000/orders/create/`, {
         method: 'POST',
-        body: JSON.stringify({ order: { ...newOrder, signature, orderHash } }, null, 2),
+        body: JSON.stringify({ order: { ...newOrder, signature, orderHash } }, null, 0),
         headers: { 'Content-Type': 'application/json' },
       }).then(async (response) => {
         if (!response.ok) {
@@ -417,7 +417,7 @@ function ItemsNavigation(props: {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filters: props.filteredAttributes }, null, 2),
+        body: JSON.stringify({ filters: props.filteredAttributes }, null, 0),
       }).then((res) => res.json()),
   });
 

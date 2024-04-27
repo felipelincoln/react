@@ -44,7 +44,7 @@ export function CollectionActivities() {
         body: JSON.stringify(
           { collection: collection?.contract, tokenIds: filteredTokenIds },
           null,
-          2,
+          0,
         ),
       }).then((res) => res.json()),
   });
@@ -112,7 +112,7 @@ function ItemsNavigation(props: ItemsNavigationProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filters: props.filteredAttributes }, null, 2),
+        body: JSON.stringify({ filters: props.filteredAttributes }, null, 0),
       }).then((res) => res.json()),
   });
 

@@ -27,8 +27,6 @@ export function CollectionItems() {
   const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
   const navigate = useNavigate();
 
-  console.log({ filteredTokenIds });
-
   const { data: ordersData, isLoading: ordersIsLoading } = useQuery<{
     data?: { orders: WithSignature<Order>[] };
     error?: string;
@@ -41,7 +39,7 @@ export function CollectionItems() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tokenIds: filteredTokenIds }, null, 2),
+        body: JSON.stringify({ tokenIds: filteredTokenIds }, null, 0),
       }).then((res) => res.json()),
   });
 
@@ -186,7 +184,7 @@ function ItemsNavigation(props: ItemsNavigationProps) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ filters: props.filteredAttributes }, null, 2),
+        body: JSON.stringify({ filters: props.filteredAttributes }, null, 0),
       }).then((res) => res.json()),
   });
 

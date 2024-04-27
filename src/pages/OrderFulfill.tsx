@@ -110,7 +110,7 @@ export function OrderFulfill() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ collection: collection?.contract, tokenIds: [tokenId] }, null, 2),
+        body: JSON.stringify({ collection: collection?.contract, tokenIds: [tokenId] }, null, 0),
       }).then((res) => res.json()),
   });
 

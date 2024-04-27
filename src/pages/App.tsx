@@ -186,7 +186,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tokenIds: userTokenIds, offerer: userAddress }, null, 2),
+        body: JSON.stringify({ tokenIds: userTokenIds, offerer: userAddress }, null, 0),
       }).then((res) => res.json()),
   });
 
@@ -202,7 +202,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address: userAddress }, null, 2),
+        body: JSON.stringify({ address: userAddress }, null, 0),
       }).then((res) => res.json()),
   });
 
@@ -347,7 +347,7 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
         body: JSON.stringify(
           { tokenIds: userTokens.map((t) => t.tokenId), offerer: address },
           null,
-          2,
+          0,
         ),
       }).then((res) => res.json()),
   });
@@ -574,7 +574,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ notificationIds: userNotifications.map((n) => n._id) }, null, 2),
+        body: JSON.stringify({ notificationIds: userNotifications.map((n) => n._id) }, null, 0),
       }).then((res) => res.json()),
   });
 
