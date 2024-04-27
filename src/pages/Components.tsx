@@ -469,11 +469,11 @@ export function IconEth() {
   );
 }
 
-export function IconNFT({ src }: { src: string }) {
+export function IconNFT({ src }: { src?: string }) {
   return <img src={src} draggable="false" className="w-10 h-10 rounded" />;
 }
 
-export function IconNFTLarge({ src }: { src: string }) {
+export function IconNFTLarge({ src }: { src?: string }) {
   return <img src={src} draggable="false" className="w-12 h-12 rounded" />;
 }
 
@@ -596,7 +596,7 @@ export function ButtonAccordion({
   );
 }
 
-export function ItemNFT({ src, tokenId }: { src: string; tokenId: number }) {
+export function ItemNFT({ src, tokenId }: { src?: string; tokenId: number }) {
   return (
     <div className="flex gap-2">
       <IconNFT src={src} />
@@ -621,7 +621,7 @@ export function CardNFTSelectable({
   disabled,
   onSelect,
 }: {
-  src: string;
+  src?: string;
   tokenId: number;
   selected?: boolean;
   disabled?: boolean;
@@ -662,7 +662,7 @@ export function CardNFTOrder({
   contract: string;
   tokenId: number;
   symbol: string;
-  src: string;
+  src?: string;
   priceToken: string;
   priceEth?: string;
   canFullfill?: boolean;
@@ -744,7 +744,7 @@ export function TextBoxWithNFTs({
   tokenIds,
 }: {
   value: string;
-  src: string;
+  src?: string;
   tokenIds: number[];
 }) {
   const textBoxRounded = tokenIds.length > 0 ? 'rounded-t' : 'rounded';
@@ -831,7 +831,7 @@ export function ListedNFT({
   tokenId: number;
   symbol: string;
   name: string;
-  src: string;
+  src?: string;
   tokenPrice: string;
   ethPrice?: string;
   onClick?: Function;

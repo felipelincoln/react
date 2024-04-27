@@ -63,6 +63,13 @@ interface Collection {
   attributeSummary: Record<string, { attribute: string; options: Record<string, string> }>;
 }
 
+interface Token {
+  collection_id: string;
+  tokenId: number;
+  image?: string;
+  attributes: Record<string, string>;
+}
+
 export const CollectionContext = createContext<{ data: Collection | undefined }>({
   data: undefined,
 });
@@ -70,9 +77,10 @@ export const UserAddressContext = createContext<{ data: string | undefined; disc
   { data: undefined, disconnect: () => {} },
 );
 export const UserENSContext = createContext<{ data: string | undefined }>({ data: undefined });
-export const UserTokenIdsContext = createContext<{ data: number[] | undefined; refetch: Function }>(
-  { data: undefined, refetch: () => {} },
-);
+export const UserTokensContext = createContext<{ data: Token[] | undefined; refetch: Function }>({
+  data: undefined,
+  refetch: () => {},
+});
 export const UserBalanceContext = createContext<{ data: string | undefined; refetch: Function }>({
   data: undefined,
   refetch: () => {},
@@ -130,7 +138,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
   const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
-  const [userTokenIds, setUserTokenIds] = useState<number[] | undefined>(undefined);
+  const [userTokens, setUserTokens] = useState<Token[] | undefined>(undefined);
   const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
   const [userActivities, setUserActivities] = useState<With_Id<Activity>[] | undefined>(undefined);
   const [userAddress, setUserAddress] = useState<`0x${string}` | undefined>(undefined);
@@ -153,7 +161,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
   const collection = collectionData?.data?.collection;
 
   const { data: userTokenIdsData, refetch: userTokenIdsRefetch } = useQuery<{
-    data?: { tokens: number[] };
+    data?: { tokens: Token[] };
     error?: string;
   }>({
     enabled: !!userAddress && !!collection,
@@ -163,6 +171,8 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
         res.json(),
       ),
   });
+
+  const userTokenIds = userTokens?.map((t) => t.tokenId);
 
   const { data: userOrdersData, refetch: userOrdersRefetch } = useQuery<{
     data: { orders: WithSignature<Order>[] };
@@ -213,12 +223,12 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     if (!userTokenIdsData) return;
     if (userTokenIdsData.error) {
       console.log('-> updating user token ids', []);
-      setUserTokenIds([]);
+      setUserTokens([]);
       return;
     }
 
     console.log('-> updating user token ids', userTokenIdsData?.data?.tokens);
-    setUserTokenIds(userTokenIdsData?.data?.tokens);
+    setUserTokens(userTokenIdsData?.data?.tokens);
   }, [userTokenIdsData]);
 
   useEffect(() => {
@@ -250,7 +260,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
     disconnect();
     setUserAddress(undefined);
     setUserEns(undefined);
-    setUserTokenIds(undefined);
+    setUserTokens(undefined);
     setUserBalance(undefined);
     setUserOrders(undefined);
     setUserActivities(undefined);
@@ -266,7 +276,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 
   return (
     <CollectionContext.Provider value={{ data: collection }}>
-      <UserTokenIdsContext.Provider value={{ data: userTokenIds, refetch: userTokenIdsRefetch }}>
+      <UserTokensContext.Provider value={{ data: userTokens, refetch: userTokenIdsRefetch }}>
         <UserBalanceContext.Provider value={{ data: userBalance, refetch: userBalanceRefetch }}>
           <UserOrdersContext.Provider value={{ data: userOrders, refetch: userOrdersRefetch }}>
             <UserAddressContext.Provider value={{ data: userAddress, disconnect: disconnectUser }}>
@@ -292,7 +302,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
             </UserAddressContext.Provider>
           </UserOrdersContext.Provider>
         </UserBalanceContext.Provider>
-      </UserTokenIdsContext.Provider>
+      </UserTokensContext.Provider>
     </CollectionContext.Provider>
   );
 }
@@ -300,7 +310,7 @@ function AppContextProvider({ children }: { children: ReactElement[] | ReactElem
 function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
   const { data: collection } = useContext(CollectionContext);
   const { data: address, disconnect } = useContext(UserAddressContext);
-  const { data: userTokenIdsData } = useContext(UserTokenIdsContext);
+  const { data: userTokensData } = useContext(UserTokensContext);
   const { data: userOrdersData, refetch: refetchUserOrders } = useContext(UserOrdersContext);
   const { data: ensName } = useContext(UserENSContext);
   const navigate = useNavigate();
@@ -334,12 +344,16 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ tokenIds: userTokenIds, offerer: address }, null, 2),
+        body: JSON.stringify(
+          { tokenIds: userTokens.map((t) => t.tokenId), offerer: address },
+          null,
+          2,
+        ),
       }).then((res) => res.json()),
   });
 
   const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
-  const userTokenIds = userTokenIdsData || [];
+  const userTokens = userTokensData || [];
   const userOrders = userOrdersData || [];
 
   useEffect(() => {
@@ -429,8 +443,8 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
     );
   }
 
-  const userUnlistedTokenIds = userTokenIds.filter(
-    (tokenId) => !userOrders.find((order) => order.tokenId === tokenId.toString()),
+  const userUnlistedTokenIds = userTokens.filter(
+    ({ tokenId }) => !userOrders.find((order) => order.tokenId === tokenId.toString()),
   );
 
   if (!collection) {
@@ -483,10 +497,10 @@ function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Fun
             <div className="flex flex-col gap-4">
               <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokenIds.length})</div>
               <div className="grid grid-cols-3 gap-4">
-                {userUnlistedTokenIds.map((tokenId) => (
+                {userUnlistedTokenIds.map(({ tokenId, image }) => (
                   <CardNFTSelectable
                     key={tokenId}
-                    src=""
+                    src={image}
                     selected={selectedTokenId === tokenId}
                     onSelect={() => handleSelectToken(tokenId)}
                     tokenId={tokenId}
@@ -514,7 +528,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   const { data: collection } = useContext(CollectionContext);
   const [userNotificationsCache, setuserNotificationsCache] = useState(0);
   const { data: address } = useContext(UserAddressContext);
-  const { refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
+  const { refetch: refetchUserTokens } = useContext(UserTokensContext);
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const { refetch: refetchUserActivities, data: userActivitiesData } =
     useContext(UserActivitiesContext);
@@ -544,7 +558,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
   useEffect(() => {
     if (userNotificationsCache > 0) {
       console.log('new notification');
-      refetchUserTokenIds();
+      refetchUserTokens();
       refetchUserBalance();
       refetchUserActivities();
     }
@@ -653,7 +667,7 @@ function Navbar({
   onClickActivity: Function;
 }) {
   const { data: collection } = useContext(CollectionContext);
-  const { data: userTokenIds } = useContext(UserTokenIdsContext);
+  const { data: userTokens } = useContext(UserTokensContext);
   const { data: userBalance } = useContext(UserBalanceContext);
   const { data: userAddress } = useContext(UserAddressContext);
   const { data: userNotificationsData } = useQuery<{
@@ -673,12 +687,12 @@ function Navbar({
 
   let buttons = [<UserButton key="1" onClick={onClickAccount} />];
   if (!!userAddress) {
-    let userTokens = `${userTokenIds?.length} ${collection?.symbol}`;
+    let userTokensBalance = `${userTokens?.length} ${collection?.symbol}`;
     let userEth = etherToString(BigInt(userBalance || '0'));
 
     buttons = [
-      <Button key="2" disabled loading={!userTokenIds}>
-        <span>{userTokens}</span>
+      <Button key="2" disabled loading={!userTokens}>
+        <span>{userTokensBalance}</span>
       </Button>,
       <Button key="3" disabled loading={!userBalance}>
         <span>{userEth}</span>

@@ -3,7 +3,7 @@ import {
   CollectionContext,
   UserAddressContext,
   UserBalanceContext,
-  UserTokenIdsContext,
+  UserTokensContext,
 } from './App';
 import { Button, ButtonAccordion, ButtonLight, CardNFTOrder, Checkbox, Tag } from './Components';
 import { UseQueryResult, useQuery } from '@tanstack/react-query';
@@ -20,7 +20,7 @@ interface Token {
 
 export function CollectionItems() {
   const { data: collection } = useContext(CollectionContext);
-  const userTokenIds = useContext(UserTokenIdsContext);
+  const userTokens = useContext(UserTokensContext);
   const userBalance = useContext(UserBalanceContext);
   const userAddress = useContext(UserAddressContext);
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
@@ -48,8 +48,9 @@ export function CollectionItems() {
   const orders = useMemo(() => {
     if (!ordersData || !ordersData.data) return [];
     if (!userAddress.data) return ordersData.data.orders;
-    if (!userTokenIds.data) return ordersData.data.orders;
+    if (!userTokens.data) return ordersData.data.orders;
     if (!userBalance.data) return ordersData.data.orders;
+    const userTokenIds = userTokens.data.map((t) => t.tokenId);
 
     const ordersCopy = [...ordersData.data.orders];
     ordersCopy.sort((a, b) => {
@@ -60,13 +61,13 @@ export function CollectionItems() {
 
       const userCanFulfillA = userCanFulfillOrder(
         a,
-        userTokenIds.data,
+        userTokenIds,
         userBalance.data,
         userAddress.data,
       );
       const userCanFulfillB = userCanFulfillOrder(
         b,
-        userTokenIds.data,
+        userTokenIds,
         userBalance.data,
         userAddress.data,
       );
@@ -91,7 +92,7 @@ export function CollectionItems() {
     console.log('-> sorting feed');
 
     return ordersCopy;
-  }, [ordersData, userTokenIds.data, userBalance.data, userAddress.data]);
+  }, [ordersData, userTokens.data, userBalance.data, userAddress.data]);
 
   if (!collection) {
     return <></>;
@@ -150,7 +151,7 @@ export function CollectionItems() {
                   tokenId={Number(order.tokenId)}
                   canFullfill={userCanFulfillOrder(
                     order,
-                    userTokenIds.data,
+                    userTokens.data?.map((t) => t.tokenId),
                     userBalance.data,
                     userAddress.data,
                   )}

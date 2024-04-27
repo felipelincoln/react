@@ -21,7 +21,7 @@ import {
   UserAddressContext,
   UserBalanceContext,
   UserOrdersContext,
-  UserTokenIdsContext,
+  UserTokensContext,
   collectionLoader,
   collectionLoaderData,
 } from './App';
@@ -52,7 +52,7 @@ export function OrderFulfillLoader(loaderArgs: LoaderFunctionArgs): OrderFulfill
 // TODO: loading skeleton
 
 export function OrderFulfill() {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const { tokenId } = useLoaderData() as OrderFulfillLoaderData;
   const navigate = useNavigate();
   const { data: userAddress } = useContext(UserAddressContext);
@@ -62,7 +62,7 @@ export function OrderFulfill() {
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
-  const { data: userTokenIds, refetch: refetchUserTokenIds } = useContext(UserTokenIdsContext);
+  const { data: userTokens, refetch: refetchUserTokens } = useContext(UserTokensContext);
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const { refetch: refetchUserActivities } = useContext(UserActivitiesContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
@@ -105,12 +105,12 @@ export function OrderFulfill() {
     refetchInterval:
       !isOrderDeleted && (isFulfillConfirmed || isCancelOrderConfirmed) ? 1000 : false,
     queryFn: () =>
-      fetch(`http://localhost:3000/orders/list/${collection.key}`, {
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ collection: collection.address, tokenIds: [tokenId] }, null, 2),
+        body: JSON.stringify({ collection: collection?.contract, tokenIds: [tokenId] }, null, 2),
       }).then((res) => res.json()),
   });
 
@@ -135,14 +135,14 @@ export function OrderFulfill() {
   }, [ordersData?.data.orders.length, !!order]);
 
   useEffect(() => {
-    refetchUserTokenIds();
+    refetchUserTokens();
     refetchUserBalance();
     refetchUserActivities();
     refetchUserOrders();
   }, [isOrderDeleted]);
 
   useEffect(() => {
-    if (!!userAddress && !userTokenIds) {
+    if (!!userAddress && !userTokens) {
       setOrderTokenIdsSorted([]);
       return;
     }
@@ -151,8 +151,8 @@ export function OrderFulfill() {
     }
     const orderTokenIdsCopy = [...orderTokenIds];
     orderTokenIdsCopy.sort((a, b) => {
-      const aIsUserToken = (userTokenIds || []).includes(a);
-      const bIsUserToken = (userTokenIds || []).includes(b);
+      const aIsUserToken = (userTokens || []).includes(a);
+      const bIsUserToken = (userTokens || []).includes(b);
       if (aIsUserToken && !bIsUserToken) {
         return -1;
       } else if (!aIsUserToken && bIsUserToken) {
@@ -162,7 +162,7 @@ export function OrderFulfill() {
       }
     });
     setOrderTokenIdsSorted(orderTokenIdsCopy);
-  }, [!!order, userTokenIds, userAddress]);
+  }, [!!order, userTokens, userAddress]);
 
   function handleSelectToken(tokenId: string) {
     let tokenIds = [...selectedTokenIds];
@@ -337,7 +337,7 @@ export function OrderFulfill() {
                   collection={collection}
                   onSelect={() => handleSelectToken(tokenId)}
                   selected={selectedTokenIds.includes(tokenId)}
-                  disabled={!userTokenIds?.includes(tokenId)}
+                  disabled={!userTokens?.includes(tokenId)}
                 />
               ))}
           </div>
