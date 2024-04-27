@@ -806,15 +806,49 @@ export function Paginator({
 }) {
   const pages = Array.from({ length: Math.ceil(items.length / itemsPerPage) }, (_, index) => index);
   const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+  const lastPage = pages.length - 1;
   useEffect(() => setItems(paginatedItems), [items.length, page]);
+  const n = 4;
 
   return (
-    <div className="flex gap-2">
-      {pages.map((pageNumber) => (
-        <Button key={pageNumber} disabled={pageNumber == page} onClick={() => setPage(pageNumber)}>
-          {pageNumber + 1}
+    <div className="flex justify-between">
+      {page == n && (
+        <Button key={0} onClick={() => setPage(0)}>
+          {1}
         </Button>
-      ))}
+      )}
+
+      {page > n && (
+        <div key={0} className="flex gap-2">
+          <Button onClick={() => setPage(0)}>{1}</Button>
+        </div>
+      )}
+      <div className="flex gap-2">
+        {pages.map(
+          (pageNumber) =>
+            pageNumber < page + n &&
+            pageNumber > page - n && (
+              <Button
+                key={pageNumber}
+                disabled={pageNumber == page}
+                onClick={() => setPage(pageNumber)}
+              >
+                {pageNumber + 1}
+              </Button>
+            ),
+        )}
+      </div>
+      {page == lastPage - n && (
+        <Button key={lastPage} onClick={() => setPage(lastPage)}>
+          {lastPage + 1}
+        </Button>
+      )}
+
+      {page < lastPage - n && (
+        <div key={lastPage} className="flex gap-2">
+          <Button onClick={() => setPage(lastPage)}>{lastPage + 1}</Button>
+        </div>
+      )}
     </div>
   );
 }

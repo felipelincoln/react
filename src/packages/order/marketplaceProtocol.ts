@@ -66,14 +66,18 @@ function merkleTree(data: string[]) {
   return { root, proof };
 }
 
+export function seaportConduit() {
+  return '0x1e0049783f008a0085193e00003d00cd54003c71' as `0x${string}`;
+}
+
 function seaport() {
   return {
     name: 'Seaport',
-    version: '1.5',
-    contract: '0x00000000000000adc04c56bf30ac9d3c0aaf14dc' as `0x${string}`,
-    zone: '0x0000000000000000000000000000000000000000',
+    version: '1.6',
+    contract: '0x0000000000000068F116a894984e2DB1123eB395' as `0x${string}`,
+    zone: '0x004C00500000aD104D7DBd00e3ae0A5C00560C00',
     zoneHash: '0x0000000000000000000000000000000000000000000000000000000000000000',
-    conduitKey: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    conduitKey: '0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000',
     startTime: '0',
   };
 }

@@ -21,6 +21,7 @@ import {
   CollectionContext,
   UserAddressContext,
   UserOrdersContext,
+  UserTokensContext,
   collectionLoader,
   collectionLoaderData,
 } from './App';
@@ -33,16 +34,30 @@ import { useSetApprovalForAll } from '../packages/order/hooks/useSetApprovalForA
 import { useSignOrder } from '../packages/order/hooks/useSignOrder';
 import { getRandomInt } from '../packages/utils';
 import { config } from '../config';
+import NotFoundPage from './NotFound';
+
+const ITEMS_PER_PAGE = 36;
 
 interface OrderCreateLoaderData extends collectionLoaderData {
-  tokenId: string;
+  tokenId: number;
+}
+
+interface Token {
+  collection_id: string;
+  tokenId: number;
+  image?: string;
+  attributes: Record<string, string>;
 }
 
 export function OrderCreateLoader(loaderArgs: LoaderFunctionArgs): OrderCreateLoaderData {
   const collectionLoaderResult = collectionLoader(loaderArgs);
-  const tokenId = loaderArgs.params.tokenId!;
+  const tokenId = Number(loaderArgs.params.tokenId!);
 
   return { tokenId, ...collectionLoaderResult };
+}
+
+function range(start: number, end: number) {
+  return Array.from({ length: end }, (_, index) => String(index + start));
 }
 
 // TODO: handle tx revert
@@ -51,7 +66,8 @@ export function OrderCreateLoader(loaderArgs: LoaderFunctionArgs): OrderCreateLo
 export function OrderCreate() {
   const navigate = useNavigate();
   const { tokenId } = useLoaderData() as OrderCreateLoaderData;
-  const collection = useContext(CollectionContext);
+  const { data: userTokens } = useContext(UserTokensContext);
+  const { data: collection } = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
   const { orderHash, counter, getOrderHash } = useGetOrderHash();
@@ -67,7 +83,7 @@ export function OrderCreate() {
     setApprovalForAll,
     isPending: isSetApprovalPending,
     error: setApprovalError,
-  } = useSetApprovalForAll();
+  } = useSetApprovalForAll({ contract: collection?.contract as `0x${string}` });
   const {
     signature,
     signOrder,
@@ -75,22 +91,23 @@ export function OrderCreate() {
     error: signOrderError,
   } = useSignOrder();
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
-  const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
+  const [selectedTokens, setSelectedTokens] = useState<Token[]>([]);
   const [acceptAny, setAcceptAny] = useState(false);
   const [ethPrice, setEthPrice] = useState<string | undefined>(undefined);
   const [tokenPrice, setTokenPrice] = useState(1);
   const [expireDays, setExpireDays] = useState(1);
   const [orderEndTime, setOrderEndTime] = useState('');
   const [filteredAttributes, setFilteredAttributes] = useState<{ [attribute: string]: string }>({});
-  const [filteredTokenIds, setFilteredTokenIds] = useState<string[]>([]);
-  const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
+  const [filteredTokens, setFilteredTokens] = useState<Token[]>([]);
+  const [paginatedTokens, setPaginatedTokens] = useState<Token[]>([]);
   const [tokensPage, setTokensPage] = useState(0);
   const [orderSalt] = useState(getRandomInt().toString());
 
-  const allTokenIds = collection.mintedTokens;
+  const token = userTokens?.find((t) => t.tokenId == tokenId);
+
   const newOrder: Order = {
-    tokenId,
-    token: collection.address,
+    tokenId: tokenId.toString(),
+    token: collection?.contract || '', // TODO:
     offerer: address || '',
     endTime: orderEndTime,
     salt: orderSalt,
@@ -99,7 +116,9 @@ export function OrderCreate() {
       coin: ethPrice ? { amount: parseEther(ethPrice).toString() } : undefined,
       token: {
         amount: tokenPrice.toString(),
-        identifier: acceptAny ? allTokenIds : selectedTokenIds,
+        identifier: acceptAny
+          ? range(0, Number(collection?.totalSupply))
+          : selectedTokens.map((t) => t.tokenId.toString()),
       },
     },
   };
@@ -145,14 +164,14 @@ export function OrderCreate() {
     createOrderError?.message;
   const orderExpireTimestamp = moment().add(expireDays, 'days');
 
-  function handleSelectToken(tokenId: string) {
-    let tokenIds = [...selectedTokenIds];
-    if (tokenIds.includes(tokenId)) {
-      tokenIds = tokenIds.filter((id) => id != tokenId);
+  function handleSelectToken(token: Token) {
+    let tokens = [...selectedTokens];
+    if (tokens.includes(token)) {
+      tokens = tokens.filter((t) => t.tokenId != token.tokenId);
     } else {
-      tokenIds.push(tokenId);
+      tokens.push(token);
     }
-    setSelectedTokenIds(tokenIds);
+    setSelectedTokens(tokens);
   }
 
   function handleConfirm() {
@@ -227,7 +246,7 @@ export function OrderCreate() {
       return (
         <div className="flex flex-col items-center gap-4">
           <div>Order created!</div>
-          <ButtonLight onClick={() => navigate(`/c/${collection.key}`)}>Ok</ButtonLight>
+          <ButtonLight onClick={() => navigate(`/c/${collection?.contract}`)}>Ok</ButtonLight>
         </div>
       );
     }
@@ -242,11 +261,15 @@ export function OrderCreate() {
     );
   }
 
+  if (!token) {
+    return <NotFoundPage></NotFoundPage>;
+  }
+
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <Dialog title="Create order" open={openConfirmDialog}>
         <div className="flex flex-col items-center gap-4">
-          <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
+          <img className="rounded w-56 h-5w-56" src={token.image} />
           {dialogMessage()}
         </div>
       </Dialog>
@@ -263,7 +286,7 @@ export function OrderCreate() {
               />
             </div>
             <div>
-              <span>{collection.symbol} price</span>
+              <span>{collection?.symbol} price</span>
               <Input
                 type="number"
                 value={tokenPrice}
@@ -284,9 +307,9 @@ export function OrderCreate() {
                 <Tootltip>Selected items will be used to fulfill this order</Tootltip>
               </span>
               <div className="flex gap-2">
-                <Input disabled type="text" value={acceptAny ? '-' : selectedTokenIds.length} />
-                {selectedTokenIds.length > 0 && !acceptAny && (
-                  <Button onClick={() => setSelectedTokenIds([])}>Clear</Button>
+                <Input disabled type="text" value={acceptAny ? '-' : selectedTokens.length} />
+                {selectedTokens.length > 0 && !acceptAny && (
+                  <Button onClick={() => setSelectedTokens([])}>Clear</Button>
                 )}
               </div>
               <Checkbox
@@ -301,55 +324,53 @@ export function OrderCreate() {
               <ItemsNavigation
                 filteredAttributes={filteredAttributes}
                 setFilteredAttributes={setFilteredAttributes}
-                setFilteredTokenIds={setFilteredTokenIds}
+                setFilteredTokens={setFilteredTokens}
                 onAttributeSelect={() => setTokensPage(0)}
               ></ItemsNavigation>
               <div className="flex h-8 gap-4 items-center justify-between">
-                <div>{filteredTokenIds.length} Results</div>
+                <div>{filteredTokens.length} Results</div>
                 <Button
                   onClick={() => {
-                    setSelectedTokenIds(
-                      Array.from(new Set([...filteredTokenIds, ...selectedTokenIds])),
-                    );
+                    setSelectedTokens(Array.from(new Set([...filteredTokens, ...selectedTokens])));
                   }}
                 >
                   Select all
                 </Button>
               </div>
               <div className="flex flex-wrap gap-4">
-                {paginatedTokenIds.map((tokenId) => (
+                {paginatedTokens.map((token) => (
                   <CardNFTSelectable
-                    key={tokenId}
-                    tokenId={tokenId}
-                    collection={collection}
-                    onSelect={() => handleSelectToken(tokenId)}
-                    selected={selectedTokenIds.includes(tokenId)}
+                    key={token.tokenId}
+                    tokenId={Number(token.tokenId)}
+                    src={token.image}
+                    onSelect={() => handleSelectToken(token)}
+                    selected={selectedTokens.includes(token)}
                   />
                 ))}
               </div>
               <Paginator
-                items={filteredTokenIds}
+                items={filteredTokens}
                 page={tokensPage}
-                setItems={setPaginatedTokenIds}
+                setItems={setPaginatedTokens}
                 setPage={setTokensPage}
-                itemsPerPage={18}
+                itemsPerPage={ITEMS_PER_PAGE}
               />
             </div>
           )}
         </div>
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 text-sm bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img className="rounded w-40 h-40 mx-auto" src={`/${collection.key}/${tokenId}.png`} />
-            <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+            <img className="rounded w-40 h-40 mx-auto" src={token.image} />
+            <div className="text-center text-base leading-8">{`${collection?.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
             <div>You receive</div>
             {ethPrice && <TextBox>{`${ethPrice} ETH`}</TextBox>}
             <TextBox>
               <span className="flex justify-between">
-                <span className="flex-grow">{`${tokenPrice} ${collection.symbol}`}</span>
+                <span className="flex-grow">{`${tokenPrice} ${collection?.symbol}`}</span>
                 <span className="font-sans text-zinc-400">
-                  {acceptAny ? 'any' : `${selectedTokenIds.length} selected`}
+                  {acceptAny ? 'any' : `${selectedTokens.length} selected`}
                 </span>
               </span>
             </TextBox>
@@ -362,7 +383,7 @@ export function OrderCreate() {
             <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
               Confirm
             </ActionButton>
-            <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
+            <a className="default mx-8" onClick={() => navigate(`/c/${collection?.contract}`)}>
               Cancel
             </a>
           </div>
@@ -379,17 +400,19 @@ function ItemsNavigation(props: {
   onAttributeSelect?: Function;
   filteredAttributes: { [attribute: string]: string };
   setFilteredAttributes: Function;
-  setFilteredTokenIds: Function;
+  setFilteredTokens: Function;
 }) {
-  const collection = useContext(CollectionContext);
+  const { data: collection } = useContext(CollectionContext);
   const [showAttributes, setShowAttributes] = useState(false);
 
   const { data: filteredTokenIds } = useQuery<{
-    data: { tokens: string[] };
+    data?: { tokens: Token[]; count: number; limit?: number; skip?: number };
+    error?: string;
   }>({
     queryKey: ['tokens', props.filteredAttributes],
+    enabled: !!collection,
     queryFn: () =>
-      fetch(`http://localhost:3000/tokens/${collection.key}`, {
+      fetch(`http://localhost:3000/tokens/${collection?.contract}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -398,8 +421,12 @@ function ItemsNavigation(props: {
       }).then((res) => res.json()),
   });
 
-  const tokenIds = filteredTokenIds?.data.tokens ?? [];
-  useEffect(() => props.setFilteredTokenIds(tokenIds), [tokenIds.join('-')]);
+  const tokens = filteredTokenIds?.data?.tokens ?? [];
+  useEffect(() => props.setFilteredTokens(tokens), [tokens.map((t) => t.tokenId).join('-')]);
+
+  if (!collection) {
+    return <></>;
+  }
 
   return (
     <div className="bg-zinc-800 rounded px-8 py-4 flex flex-col gap-4">
@@ -421,25 +448,25 @@ function ItemsNavigation(props: {
       </div>
       {showAttributes && (
         <div className="flex justify-between h-96 pr-8 gap-4 overflow-x-scroll">
-          {Object.keys(collection.attributes).map((attr, index) => (
-            <div key={index}>
+          {Object.entries(collection.attributeSummary).map(([key, value]) => (
+            <div key={key}>
               <div className="flex flex-col gap-2 pb-4 relative">
-                <div className="sticky left-0 top-0 pb-2 bg-zinc-800">{attr}</div>
-                {collection.attributes[attr].map((val, index) => (
+                <div className="sticky left-0 top-0 pb-2 bg-zinc-800">{value.attribute}</div>
+                {Object.entries(value.options).map(([optionKey, optionValue]) => (
                   <Checkbox
-                    key={index}
-                    label={val}
-                    checked={props.filteredAttributes[attr] === val}
+                    key={optionKey}
+                    label={optionValue}
+                    checked={props.filteredAttributes[key] === optionKey}
                     onClick={() => {
-                      if (props.filteredAttributes[attr] === val) {
+                      if (props.filteredAttributes[key] === optionKey) {
                         const selectedFiltersCopy = { ...props.filteredAttributes };
-                        delete selectedFiltersCopy[attr];
+                        delete selectedFiltersCopy[key];
                         props.setFilteredAttributes(selectedFiltersCopy);
                         props.onAttributeSelect?.();
                       } else {
                         props.setFilteredAttributes({
                           ...props.filteredAttributes,
-                          [attr]: val,
+                          [key]: optionKey,
                         });
                         props.onAttributeSelect?.();
                       }
@@ -462,19 +489,23 @@ interface AttributeTagsProps {
 }
 
 function AttributeTags(props: AttributeTagsProps) {
+  const { data: collection } = useContext(CollectionContext);
+
   return (
     <div className="flex flex-wrap gap-4 items-center">
-      {Object.keys(props.filteredAttributes).map((attributeName) => (
+      {Object.keys(props.filteredAttributes).map((key) => (
         <TagLight
-          key={`${attributeName}-${props.filteredAttributes[attributeName]}`}
+          key={`${key}-${props.filteredAttributes[key]}`}
           onClick={() => {
             const filteredAttributesCopy = { ...props.filteredAttributes };
-            delete filteredAttributesCopy[attributeName];
+            delete filteredAttributesCopy[key];
             props.setFilteredAttributes(filteredAttributesCopy);
             props.onAttributeSelect?.();
           }}
         >
-          {`${attributeName}: ${props.filteredAttributes[attributeName]}`}
+          {`${collection?.attributeSummary[key].attribute}: ${
+            collection?.attributeSummary[key].options[props.filteredAttributes[key]]
+          }`}
         </TagLight>
       ))}
       {Object.keys(props.filteredAttributes).length > 0 && (

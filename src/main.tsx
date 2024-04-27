@@ -41,7 +41,7 @@ const router = createBrowserRouter([
     loader: collectionLoader,
   },
   {
-    path: '/c/:collectionName/order/create/:tokenId',
+    path: '/c/:contract/order/create/:tokenId',
     element: (
       <App>
         <OrderCreate></OrderCreate>
@@ -50,7 +50,7 @@ const router = createBrowserRouter([
     loader: OrderCreateLoader,
   },
   {
-    path: '/c/:collectionName/order/fulfill/:tokenId',
+    path: '/c/:contract/order/fulfill/:tokenId',
     element: (
       <App>
         <OrderFulfill></OrderFulfill>

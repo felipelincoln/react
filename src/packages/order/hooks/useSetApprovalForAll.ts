@@ -1,10 +1,11 @@
 import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { marketplaceProtocolContractAddress } from '../marketplaceProtocol';
+import { marketplaceProtocolContractAddress, seaportConduit } from '../marketplaceProtocol';
 import { useContext } from 'react';
 import { CollectionContext, UserAddressContext } from '../../../pages/App';
 import { useMutation } from '@tanstack/react-query';
+import erc721abi from '../contractAbi/erc721.abi.json';
 
-export function useSetApprovalForAll() {
+export function useSetApprovalForAll({ contract }: { contract?: `0x${string}` }) {
   const collection = useContext(CollectionContext);
   const { data: address } = useContext(UserAddressContext);
   const { data: hash, writeContractAsync } = useWriteContract();
@@ -19,10 +20,10 @@ export function useSetApprovalForAll() {
     isFetching: isApprovedForAllFetching,
     error: readError,
   } = useReadContract({
-    address: collection.address,
-    abi: collection.abi,
+    address: contract || '0x',
+    abi: erc721abi,
     functionName: 'isApprovedForAll',
-    args: [address, marketplaceProtocolContractAddress()],
+    args: [address, seaportConduit()],
   });
 
   const {
@@ -31,16 +32,15 @@ export function useSetApprovalForAll() {
     isPending: isPendingMutation,
     error: mutateError,
   } = useMutation({
-    meta: { abacaba: true },
     mutationFn: async () => {
       if (isApprovedForAllData == undefined) return;
       if (isApprovedForAllData) return;
 
       return await writeContractAsync({
-        address: collection.address,
-        abi: collection.abi,
+        address: contract || '0x',
+        abi: erc721abi,
         functionName: 'setApprovalForAll',
-        args: [marketplaceProtocolContractAddress(), true],
+        args: [seaportConduit(), true],
       });
     },
   });
