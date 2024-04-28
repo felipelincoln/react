@@ -39,6 +39,13 @@ interface OrderFulfillLoaderData extends collectionLoaderData {
   tokenId: string;
 }
 
+interface Token {
+  collection_id: string;
+  tokenId: number;
+  image?: string;
+  attributes: Record<string, string>;
+}
+
 export function OrderFulfillLoader(loaderArgs: LoaderFunctionArgs): OrderFulfillLoaderData {
   const collectionLoaderResult = collectionLoader(loaderArgs);
   const tokenId = loaderArgs.params.tokenId!;
@@ -61,11 +68,17 @@ export function OrderFulfill() {
   const [orderTokenIdsSorted, setOrderTokenIdsSorted] = useState<string[]>([]);
   const [selectedTokenIds, setSelectedTokenIds] = useState<string[]>([]);
   const [paginatedTokenIds, setPaginatedTokenIds] = useState<string[]>([]);
+  const [allTokenIds, setAllTokenIds] = useState<string[]>([]);
+  const [tokenImages, setTokenImages] = useState<Record<string, string | undefined>>({});
   const [tokensPage, setTokensPage] = useState(0);
   const { data: userTokens, refetch: refetchUserTokens } = useContext(UserTokensContext);
   const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
   const { refetch: refetchUserActivities } = useContext(UserActivitiesContext);
   const { refetch: refetchUserOrders } = useContext(UserOrdersContext);
+
+  useEffect(() => {
+    setAllTokenIds(Array.from(new Set([tokenId, ...selectedTokenIds, ...paginatedTokenIds])));
+  }, [tokenId, selectedTokenIds.join('-'), paginatedTokenIds.join('-')]);
 
   const { orderHash, counter, getOrderHash } = useGetOrderHash();
   const {
@@ -87,7 +100,7 @@ export function OrderFulfill() {
     isPending: IsSetApprovalForAllPending,
     setApprovalForAll,
     isApprovedForAll,
-  } = useSetApprovalForAll();
+  } = useSetApprovalForAll({ contract: collection?.contract as `0x${string}` });
   const {
     hash: cancelOrderHash,
     isConfirmed: isCancelOrderConfirmed,
@@ -97,6 +110,29 @@ export function OrderFulfill() {
   } = useCancelOrder();
   const [openCancelDialog, setOpenCancelDialog] = useState(false);
   const [openConfirmDialog, setOpenConfirmDialog] = useState(false);
+
+  const { data: allTokensData } = useQuery<{
+    data?: { tokens: Token[]; count: number; limit?: number; skip?: number };
+    error?: string;
+  }>({
+    queryKey: ['tokens', allTokenIds.join('-')],
+    enabled: !!collection,
+    queryFn: () =>
+      fetch(`http://localhost:3000/tokens/${collection?.contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds: allTokenIds.map((t) => Number(t)), filters: {} }, null, 0),
+      }).then((res) => res.json()),
+  });
+
+  useEffect(() => {
+    const tokenImages_ = Object.fromEntries(
+      allTokensData?.data?.tokens.map((t) => [t.tokenId, t.image]) || [],
+    );
+    setTokenImages(tokenImages_);
+  }, [allTokensData?.data?.tokens.map((t) => t.tokenId).join('-')]);
 
   const { data: ordersData } = useQuery<{
     data: { orders: WithSignature<Order>[] };
@@ -110,7 +146,11 @@ export function OrderFulfill() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ collection: collection?.contract, tokenIds: [tokenId] }, null, 0),
+        body: JSON.stringify(
+          { collection: collection?.contract, tokenIds: [Number(tokenId)] },
+          null,
+          0,
+        ),
       }).then((res) => res.json()),
   });
 
@@ -118,7 +158,7 @@ export function OrderFulfill() {
   const orderTokenAmount = Number(order?.fulfillmentCriteria.token.amount) || 0;
   const orderEndTimeMs = Number(order?.endTime) * 1000;
   const isOrderOwner = order?.offerer === userAddress;
-  const canConfirmOrder = selectedTokenIds.length == orderTokenAmount && !isOrderOwner;
+  const canConfirmOrder = selectedTokenIds.length == orderTokenAmount; // && !isOrderOwner;
   const errorMessage =
     fulfillOrderError?.message || switchChainError?.message || cancelOrderError?.message;
 
@@ -151,8 +191,8 @@ export function OrderFulfill() {
     }
     const orderTokenIdsCopy = [...orderTokenIds];
     orderTokenIdsCopy.sort((a, b) => {
-      const aIsUserToken = (userTokens || []).includes(a);
-      const bIsUserToken = (userTokens || []).includes(b);
+      const aIsUserToken = (userTokenIds || []).includes(Number(a));
+      const bIsUserToken = (userTokenIds || []).includes(Number(b));
       if (aIsUserToken && !bIsUserToken) {
         return -1;
       } else if (!aIsUserToken && bIsUserToken) {
@@ -229,7 +269,7 @@ export function OrderFulfill() {
       return (
         <div className="flex flex-col items-center gap-4">
           <div>Item purchased!</div>
-          <ButtonLight onClick={() => navigate(`/c/${collection.key}`)}>Ok</ButtonLight>
+          <ButtonLight onClick={() => navigate(`/c/${collection?.contract}`)}>Ok</ButtonLight>
         </div>
       );
     }
@@ -280,7 +320,7 @@ export function OrderFulfill() {
       return (
         <div className="flex flex-col items-center gap-4">
           <div>Order canceled!</div>
-          <ButtonLight onClick={() => navigate(`/c/${collection.key}`)}>Ok</ButtonLight>
+          <ButtonLight onClick={() => navigate(`/c/${collection?.contract}`)}>Ok</ButtonLight>
         </div>
       );
     }
@@ -301,17 +341,19 @@ export function OrderFulfill() {
   const totalAmount =
     BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
 
+  const userTokenIds = userTokens?.map((t) => t.tokenId);
+
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <Dialog title="Cancel order" open={openCancelDialog}>
         <div className="flex flex-col items-center gap-4">
-          <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
+          <img className="rounded w-56 h-5w-56" src={tokenImages[tokenId]} />
           {cancelDialogMessage()}
         </div>
       </Dialog>
       <Dialog title="Purchase item" open={openConfirmDialog}>
         <div className="flex flex-col items-center gap-4">
-          <img className="rounded w-56 h-5w-56" src={`/${collection.key}/${tokenId}.png`} />
+          <img className="rounded w-56 h-5w-56" src={tokenImages[tokenId]} />
           {confirmDialogMessage()}
         </div>
       </Dialog>
@@ -319,7 +361,7 @@ export function OrderFulfill() {
         <h1 className="pb-8">Fulfill order</h1>
         {isOrderOwner && <ButtonRed onClick={handleCancelOrder}>Cancel listing</ButtonRed>}
       </div>
-      <div className="flex">
+      <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
           <div>
             <span className="flex items-center gap-4 pb-4">
@@ -333,11 +375,11 @@ export function OrderFulfill() {
               paginatedTokenIds.map((tokenId) => (
                 <CardNFTSelectable
                   key={tokenId}
-                  tokenId={tokenId}
-                  collection={collection}
+                  tokenId={Number(tokenId)}
+                  src={tokenImages[tokenId]}
                   onSelect={() => handleSelectToken(tokenId)}
                   selected={selectedTokenIds.includes(tokenId)}
-                  disabled={!userTokens?.includes(tokenId)}
+                  disabled={!userTokenIds?.includes(Number(tokenId))}
                 />
               ))}
           </div>
@@ -351,8 +393,8 @@ export function OrderFulfill() {
         </div>
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img className="rounded w-40 h-40 mx-auto" src={`/${collection.key}/${tokenId}.png`} />
-            <div className="text-center leading-8">{`${collection.name} #${tokenId}`}</div>
+            <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+            <div className="text-center leading-8">{`${collection?.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
             <div>You pay</div>
@@ -365,9 +407,8 @@ export function OrderFulfill() {
               )}
             </div>
             <TextBoxWithNFTs
-              value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
-              collection={collection}
-              tokenIds={selectedTokenIds}
+              value={`${order?.fulfillmentCriteria.token.amount} ${collection?.symbol}`}
+              tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
             />
           </div>
           <div className="flex flex-col gap-4">
@@ -378,7 +419,7 @@ export function OrderFulfill() {
             <ActionButton disabled={!canConfirmOrder} onClick={() => handleConfirm()}>
               Confirm
             </ActionButton>
-            <a className="default mx-8" onClick={() => navigate(`/c/${collection.key}`)}>
+            <a className="default mx-8" onClick={() => navigate(`/c/${collection?.contract}`)}>
               Cancel
             </a>
           </div>

@@ -123,8 +123,16 @@ export function Components() {
       </div>
       <div className="flex flex-col h-fit gap-2 border-2 border-dashed border-purple-600 rounded p-4">
         <TextBoxWithNFTs
-          src="https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1"
-          tokenIds={[1, 10, 100]}
+          tokens={[
+            [
+              1,
+              'https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1',
+            ],
+            [
+              10,
+              'https://i.seadn.io/gcs/files/829ed29f7da5b111f87add29cc6539ce.png?auto=format&dpr=1',
+            ],
+          ]}
           value="TextBoxWithNFTs"
         />
       </div>
@@ -740,14 +748,12 @@ export function TextBox({ children }: { children?: string | ReactElement }) {
 
 export function TextBoxWithNFTs({
   value,
-  src,
-  tokenIds,
+  tokens,
 }: {
   value: string;
-  src?: string;
-  tokenIds: number[];
+  tokens: [number, string | undefined][];
 }) {
-  const textBoxRounded = tokenIds.length > 0 ? 'rounded-t' : 'rounded';
+  const textBoxRounded = tokens.length > 0 ? 'rounded-t' : 'rounded';
 
   return (
     <div>
@@ -757,11 +763,11 @@ export function TextBoxWithNFTs({
         className={`${textBoxRounded} text-sm bg-transparent leading-8 h-8 px-4 w-full border-zinc-700`}
         type="text"
       />
-      {tokenIds.length > 0 && (
+      {tokens.length > 0 && (
         <div className="px-4 py-2 grid grid-cols-2 gap-x-4 gap-y-2 rounded-b border border-t-0 border-zinc-700">
-          {tokenIds.map((tokenId) => (
-            <div key={tokenId} className="">
-              <ItemNFT src={src} tokenId={tokenId} />
+          {tokens.map((token) => (
+            <div key={token[0]} className="">
+              <ItemNFT src={token[1]} tokenId={token[0]} />
             </div>
           ))}
         </div>

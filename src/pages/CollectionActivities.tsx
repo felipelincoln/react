@@ -16,6 +16,7 @@ import { Activity, Order, WithSignature } from '../packages/order/marketplacePro
 import { Navigate, useNavigate } from 'react-router-dom';
 import moment from 'moment';
 import { shortAddress } from '../packages/utils';
+import { config } from '../config';
 
 interface Token {
   collection_id: string;
@@ -266,7 +267,7 @@ function ActivitiesSection({
                   {activity.fulfiller == address ? 'You' : shortAddress(activity.fulfiller)}
                 </td>
                 <td className="text-xs align-top">
-                  <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                  <ExternalLink href={`${config.explorer}/tx/${activity.txHash}`}>
                     {moment(Number(activity.createdAt)).fromNow()}
                   </ExternalLink>
                 </td>

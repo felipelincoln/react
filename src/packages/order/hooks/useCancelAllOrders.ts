@@ -3,9 +3,9 @@ import { marketplaceProtocolABI, marketplaceProtocolContractAddress } from '../m
 import { useContext } from 'react';
 import { CollectionContext } from '../../../pages/App';
 import { useMutation } from '@tanstack/react-query';
+import { erc721Abi } from 'viem';
 
 export function useCancelAllOrders() {
-  const collection = useContext(CollectionContext);
   const { data: hash, writeContractAsync } = useWriteContract();
   const {
     isSuccess,
@@ -20,7 +20,7 @@ export function useCancelAllOrders() {
   } = useMutation({
     mutationFn: async () => {
       return await writeContractAsync({
-        abi: [...marketplaceProtocolABI(), ...collection.abi],
+        abi: [...marketplaceProtocolABI(), ...erc721Abi],
         address: marketplaceProtocolContractAddress(),
         functionName: 'incrementCounter',
       });

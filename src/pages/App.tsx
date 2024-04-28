@@ -617,7 +617,7 @@ function ActivityTab({ showTab }: { showTab: boolean }) {
                       </td>
                       <td>
                         <div className="flex flex-col gap-4">
-                          <ExternalLink href={`https://sepolia.etherscan.io/tx/${activity.txHash}`}>
+                          <ExternalLink href={`${config.explorer}/tx/${activity.txHash}`}>
                             {moment(Number(activity.createdAt)).fromNow()}
                           </ExternalLink>
                           <div className="flex flex-col gap-2">

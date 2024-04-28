@@ -10,9 +10,9 @@ import {
   marketplaceProtocolContractAddress,
   marketplaceProtocolFulfillOrderArgs,
 } from '../marketplaceProtocol';
+import erc721abi from '../contractAbi/erc721.abi.json';
 
 export function useFulfillOrder() {
-  const collection = useContext(CollectionContext);
   const { data: hash, writeContractAsync } = useWriteContract();
   const {
     isSuccess: isConfirmed,
@@ -27,7 +27,7 @@ export function useFulfillOrder() {
   } = useMutation({
     mutationFn: async (order: WithSelectedTokenIds<WithSignature<Order>>) => {
       return await writeContractAsync({
-        abi: [...marketplaceProtocolABI(), ...collection.abi],
+        abi: [...marketplaceProtocolABI(), ...erc721abi],
         address: marketplaceProtocolContractAddress(),
         functionName: 'fulfillAdvancedOrder',
         args: marketplaceProtocolFulfillOrderArgs(order),

@@ -7,9 +7,9 @@ import {
   marketplaceProtocolCancelOrderArgs,
   marketplaceProtocolContractAddress,
 } from '../marketplaceProtocol';
+import { erc721Abi } from 'viem';
 
 export function useCancelOrder() {
-  const collection = useContext(CollectionContext);
   const [args, setArgs] = useState<Order>();
   const { data: hash, writeContract, error: writeError } = useWriteContract();
   const {
@@ -28,7 +28,7 @@ export function useCancelOrder() {
   useEffect(() => {
     if (!!args && counter !== undefined) {
       writeContract({
-        abi: [...marketplaceProtocolABI(), ...collection.abi],
+        abi: [...marketplaceProtocolABI(), ...erc721Abi],
         address: marketplaceProtocolContractAddress(),
         functionName: 'cancel',
         args: marketplaceProtocolCancelOrderArgs({
