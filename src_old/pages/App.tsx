@@ -1,0 +1,680 @@
+import { createContext } from 'react';
+import { Activity, Collection, Order } from '../packages/order';
+import { LoaderFunctionArgs } from 'react-router-dom';
+import { WagmiProvider } from 'wagmi';
+
+export const CollectionContext = createContext<{ data: Collection | undefined }>({
+  data: undefined,
+});
+export const UserAddressContext = createContext<{ data: string | undefined; disconnect: Function }>(
+  { data: undefined, disconnect: () => {} },
+);
+export const UserENSContext = createContext<{ data: string | undefined }>({ data: undefined });
+export const UserTokensIdsContext = createContext<{
+  data: number[] | undefined;
+  refetch: Function;
+}>({
+  data: undefined,
+  refetch: () => {},
+});
+export const UserBalanceContext = createContext<{ data: string | undefined; refetch: Function }>({
+  data: undefined,
+  refetch: () => {},
+});
+export const UserOrdersContext = createContext<{
+  data: Order[] | undefined;
+  refetch: Function;
+}>({
+  data: undefined,
+  refetch: () => {},
+});
+export const UserActivitiesContext = createContext<{
+  data: Activity[] | undefined;
+  refetch: Function;
+}>({
+  data: undefined,
+  refetch: () => {},
+});
+
+export default function App({ children }: { children: ReactElement[] | ReactElement }) {
+  const wagmiConfig = createConfig({
+    chains: [sepolia],
+    connectors: [injected()],
+    transports: {
+      [sepolia.id]: fallback([unstable_connector(injected), http('http://localhost:3000/jsonrpc')]),
+    },
+  });
+
+  const queryClient = new QueryClient({
+    defaultOptions: { queries: { refetchOnWindowFocus: false } },
+  });
+
+  return (
+    <WagmiProvider config={wagmiConfig}>
+      <QueryClientProvider client={queryClient}>
+        <AppContextProvider>{children}</AppContextProvider>
+      </QueryClientProvider>
+    </WagmiProvider>
+  );
+}
+
+function AppContextProvider({ children }: { children: ReactElement[] | ReactElement }) {
+  const { contract } = useLoaderData() as collectionLoaderData;
+  const { address, isConnected } = useAccount();
+  const { disconnect } = useDisconnect();
+  const { data: ensName } = useEnsName({ address });
+  const [userBalance, setUserBalance] = useState<string | undefined>(undefined);
+  const [userTokens, setUserTokens] = useState<Token[] | undefined>(undefined);
+  const [userOrders, setUserOrders] = useState<WithSignature<Order>[] | undefined>(undefined);
+  const [userActivities, setUserActivities] = useState<With_Id<Activity>[] | undefined>(undefined);
+  const [userAddress, setUserAddress] = useState<`0x${string}` | undefined>(undefined);
+  const [userEns, setUserEns] = useState<string | undefined>(undefined);
+  const [showAccountTab, setShowAccountTab] = useState(false);
+  const [showActivityTab, setShowActivityTab] = useState(false);
+
+  const { data: userBalanceData, refetch: userBalanceRefetch } = useBalance({
+    address: userAddress,
+  });
+
+  const { data: collectionData } = useQuery<{
+    data?: { collection: Collection; isReady: boolean };
+    error?: string;
+  }>({
+    queryKey: ['collection', contract],
+    queryFn: () => fetch(`http://localhost:3000/collection/${contract}/`).then((res) => res.json()),
+  });
+
+  const collection = collectionData?.data?.collection;
+
+  const { data: userTokenIdsData, refetch: userTokenIdsRefetch } = useQuery<{
+    data?: { tokens: Token[] };
+    error?: string;
+  }>({
+    enabled: !!userAddress && !!collection,
+    queryKey: ['eth_tokens_user', userAddress],
+    queryFn: () =>
+      fetch(`http://localhost:3000/eth/tokens/${collection?.contract}/${userAddress}`).then((res) =>
+        res.json(),
+      ),
+  });
+
+  const userTokenIds = userTokens?.map((t) => t.tokenId);
+
+  const { data: userOrdersData, refetch: userOrdersRefetch } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+    error?: string;
+  }>({
+    queryKey: ['orders_list_user', userAddress, userTokenIds?.join('-')],
+    enabled: !!collection && !!userAddress && !!userTokenIds && userTokenIds.length > 0,
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds: userTokenIds, offerer: userAddress }, null, 0),
+      }).then((res) => res.json()),
+  });
+
+  const { data: userActivitiesData, refetch: userActivitiesRefetch } = useQuery<{
+    data?: { activities: With_Id<Activity>[] };
+    error?: string;
+  }>({
+    queryKey: ['activities_list_user', userAddress],
+    enabled: !!collection && !!userAddress,
+    queryFn: () =>
+      fetch(`http://localhost:3000/activities/list/${collection?.contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address: userAddress }, null, 0),
+      }).then((res) => res.json()),
+  });
+
+  useEffect(() => {
+    if (!isConnected) return;
+    if (!address || address.toLowerCase() == userAddress) return;
+    console.log('-> updating user address', address);
+    setUserAddress(address.toLowerCase() as `0x${string}`);
+  }, [address, isConnected]);
+
+  useEffect(() => {
+    if (!userBalanceData) return;
+    console.log('-> updating user balance', userBalanceData?.value.toString());
+    setUserBalance(userBalanceData?.value.toString());
+  }, [userBalanceData]);
+
+  useEffect(() => {
+    if (!userTokenIdsData) return;
+    if (userTokenIdsData.error) {
+      console.log('-> updating user token ids', []);
+      setUserTokens([]);
+      return;
+    }
+
+    console.log('-> updating user token ids', userTokenIdsData?.data?.tokens);
+    setUserTokens(userTokenIdsData?.data?.tokens);
+  }, [userTokenIdsData]);
+
+  useEffect(() => {
+    if (!userOrdersData) return;
+    console.log('-> updating user orders', userOrdersData?.data?.orders);
+    setUserOrders(userOrdersData?.data?.orders);
+  }, [userOrdersData]);
+
+  useEffect(() => {
+    if (!userActivitiesData) return;
+    console.log('-> updating user activities', userActivitiesData?.data?.activities);
+    setUserActivities(userActivitiesData?.data?.activities);
+  }, [userActivitiesData]);
+
+  useEffect(() => {
+    if (!userAddress) {
+      setShowAccountTab(false);
+      setShowActivityTab(false);
+    }
+  }, [userAddress]);
+
+  useEffect(() => {
+    if (!ensName) return;
+    console.log('-> updating user ens', ensName);
+    setUserEns(ensName);
+  }, [ensName]);
+
+  function disconnectUser() {
+    disconnect();
+    setUserAddress(undefined);
+    setUserEns(undefined);
+    setUserTokens(undefined);
+    setUserBalance(undefined);
+    setUserOrders(undefined);
+    setUserActivities(undefined);
+  }
+
+  if (!collectionData) {
+    return <div>Loading...</div>;
+  }
+
+  if (!collection) {
+    return <NotFoundPage />;
+  }
+
+  return (
+    <CollectionContext.Provider value={{ data: collection }}>
+      <UserTokensContext.Provider value={{ data: userTokens, refetch: userTokenIdsRefetch }}>
+        <UserBalanceContext.Provider value={{ data: userBalance, refetch: userBalanceRefetch }}>
+          <UserOrdersContext.Provider value={{ data: userOrders, refetch: userOrdersRefetch }}>
+            <UserAddressContext.Provider value={{ data: userAddress, disconnect: disconnectUser }}>
+              <UserENSContext.Provider value={{ data: userEns }}>
+                <UserActivitiesContext.Provider
+                  value={{ data: userActivities, refetch: userActivitiesRefetch }}
+                >
+                  <Navbar
+                    onClickAccount={() => {
+                      setShowAccountTab(!showAccountTab);
+                      setShowActivityTab(false);
+                    }}
+                    onClickActivity={() => {
+                      setShowActivityTab(!showActivityTab);
+                      setShowAccountTab(false);
+                    }}
+                  />
+                  <AccountTab showTab={showAccountTab} setShowTab={setShowAccountTab} />
+                  <ActivityTab showTab={showActivityTab} />
+                  {children}
+                </UserActivitiesContext.Provider>
+              </UserENSContext.Provider>
+            </UserAddressContext.Provider>
+          </UserOrdersContext.Provider>
+        </UserBalanceContext.Provider>
+      </UserTokensContext.Provider>
+    </CollectionContext.Provider>
+  );
+}
+
+function AccountTab({ showTab, setShowTab }: { showTab: boolean; setShowTab: Function }) {
+  const { data: collection } = useContext(CollectionContext);
+  const { data: address, disconnect } = useContext(UserAddressContext);
+  const { data: userTokensData } = useContext(UserTokensContext);
+  const { data: userOrdersData, refetch: refetchUserOrders } = useContext(UserOrdersContext);
+  const { data: ensName } = useContext(UserENSContext);
+  const navigate = useNavigate();
+  const [isUserOrdersDeleted, setIsUserOrdersDeleted] = useState<boolean>(false);
+  const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>();
+  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>();
+  const [openCancelDialog, setOpenCancelDialog] = useState(false);
+  const {
+    hash: cancelAllOrdersHash,
+    error: cancelAllOrdersError,
+    cancelAllOrders,
+    isPending: isCancelAllOrdersPending,
+    isConfirmed: isCancelAllOrdersConfirmed,
+  } = useCancelAllOrders();
+  const {
+    isValidChain,
+    switchChain,
+    isPending: isSwitchChainPending,
+    error: switchChainError,
+  } = useValidateChain();
+  const { data: userOrdersQuery } = useQuery<{
+    data: { orders: WithSignature<Order>[] };
+    error?: string;
+  }>({
+    queryKey: ['orders_list_user_refetch'],
+    enabled: isCancelAllOrdersConfirmed && !isUserOrdersDeleted,
+    refetchInterval: 1000,
+    queryFn: () =>
+      fetch(`http://localhost:3000/orders/list/${collection?.contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(
+          { tokenIds: userTokens.map((t) => t.tokenId), offerer: address },
+          null,
+          0,
+        ),
+      }).then((res) => res.json()),
+  });
+
+  const displayListButton = !!selectedTokenId ? '' : 'translate-y-16';
+  const userTokens = userTokensData || [];
+  const userOrders = userOrdersData || [];
+
+  useEffect(() => {
+    if (selectedTokenId) {
+      setLastSelectedTokenId(selectedTokenId);
+    }
+  }, [selectedTokenId]);
+
+  function handleSelectToken(tokenId: number) {
+    if (selectedTokenId === tokenId) {
+      setSelectedTokenId(undefined);
+      return;
+    }
+    setSelectedTokenId(tokenId);
+  }
+
+  function handleClickListItem() {
+    setShowTab(false);
+    setSelectedTokenId(undefined);
+    navigate(`/c/${collection?.contract}/order/create/${selectedTokenId}`);
+  }
+
+  function handleClickListedItem(tokenId: string) {
+    setShowTab(false);
+    setSelectedTokenId(undefined);
+    navigate(`/c/${collection?.contract}/order/fulfill/${tokenId}`);
+  }
+
+  function handleCancelAllOrders() {
+    setOpenCancelDialog(true);
+  }
+
+  useEffect(() => {
+    if (!cancelAllOrdersError && !switchChainError) return;
+
+    setOpenCancelDialog(false);
+  }, [!!cancelAllOrdersError, !!switchChainError]);
+
+  useEffect(() => {
+    if (!openCancelDialog) return;
+    if (isSwitchChainPending) return;
+    if (isValidChain) return;
+
+    console.log('-> switching chain');
+    switchChain();
+  }, [openCancelDialog]);
+
+  useEffect(() => {
+    if (!isValidChain) return;
+    if (!openCancelDialog) return;
+    if (isCancelAllOrdersPending) return;
+    if (!!isCancelAllOrdersConfirmed) return;
+
+    console.log('-> sending cancel transaction');
+    cancelAllOrders();
+  }, [isValidChain, openCancelDialog]);
+
+  useEffect(() => {
+    if (!isCancelAllOrdersConfirmed) return;
+    if (userOrdersQuery?.data.orders.length === 0) {
+      setIsUserOrdersDeleted(true);
+      return;
+    }
+  }, [userOrdersQuery?.data.orders.length]);
+
+  useEffect(() => {
+    if (!isUserOrdersDeleted) return;
+    refetchUserOrders();
+  }, [isUserOrdersDeleted]);
+
+  function cancelDialogMessage() {
+    if (isUserOrdersDeleted) {
+      return (
+        <div className="flex flex-col items-center gap-4">
+          <div>All orders have been canceled!</div>
+          <ButtonLight onClick={() => setOpenCancelDialog(false)}>Ok</ButtonLight>
+        </div>
+      );
+    }
+
+    return (
+      <div className="flex flex-col items-center gap-4">
+        <SpinnerIcon />
+        {cancelAllOrdersHash && !isUserOrdersDeleted && <div>Transaction is pending...</div>}
+        {!cancelAllOrdersHash && <div>Confirm in your wallet</div>}
+      </div>
+    );
+  }
+
+  const userUnlistedTokens = userTokens.filter(
+    ({ tokenId }) => !userOrders.find((order) => order.tokenId === tokenId.toString()),
+  );
+
+  const userTokenImage = Object.fromEntries(userTokens.map((t) => [t.tokenId, t.image]));
+
+  if (!collection) {
+    return <></>;
+  }
+
+  return (
+    <>
+      <Dialog title="Cancel all orders" open={openCancelDialog}>
+        <div className="flex flex-col items-center gap-4">{cancelDialogMessage()}</div>
+      </Dialog>
+      <Tab hidden={!showTab}>
+        <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
+          <div className="p-8 flex flex-col gap-8">
+            <div className="flex flex-col gap-2">
+              <div className="overflow-x-hidden text-ellipsis font-medium">
+                {!!ensName ? <span>{ensName}</span> : <span className="text-sm">{address}</span>}
+              </div>
+              <div className="flex flex-col gap-2 text-sm text-zinc-400 cursor-pointer">
+                <div className="hover:text-zinc-200" onClick={() => disconnect()}>
+                  Disconnect
+                </div>
+                {userOrders.length > 1 && (
+                  <div className="hover:text-zinc-200" onClick={() => handleCancelAllOrders()}>
+                    Cancel all orders ({userOrders.length})
+                  </div>
+                )}
+              </div>
+            </div>
+            {userOrders.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
+                <div className="flex flex-col flex-wrap gap-4">
+                  {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
+                    <ListedNFT
+                      tokenId={Number(tokenId)}
+                      name={collection.name}
+                      symbol={collection.symbol}
+                      src={userTokenImage[tokenId]}
+                      key={tokenId}
+                      tokenPrice={fulfillmentCriteria.token.amount}
+                      ethPrice={fulfillmentCriteria.coin?.amount}
+                      onClick={() => handleClickListedItem(tokenId)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="flex flex-col gap-4">
+              <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokens.length})</div>
+              <div className="grid grid-cols-3 gap-4">
+                {userUnlistedTokens.map(({ tokenId, image }) => (
+                  <CardNFTSelectable
+                    key={tokenId}
+                    src={image}
+                    selected={selectedTokenId === tokenId}
+                    onSelect={() => handleSelectToken(tokenId)}
+                    tokenId={tokenId}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+        <div>{selectedTokenId && <div className="h-16"></div>}</div>
+        <div
+          className={`fixed bottom-0 right-0 px-8 py-4 w-96 bg-zinc-800 flex gap-4 transition ease-in-out delay-0 ${displayListButton}`}
+        >
+          <Button disabled>{`${collection?.name} #${
+            selectedTokenId || lastSelectedTokenId
+          }`}</Button>
+          <ActionButton onClick={handleClickListItem}>List Item</ActionButton>
+        </div>
+      </Tab>
+    </>
+  );
+}
+
+function ActivityTab({ showTab }: { showTab: boolean }) {
+  const { data: collection } = useContext(CollectionContext);
+  const [userNotificationsCache, setuserNotificationsCache] = useState(0);
+  const { data: address } = useContext(UserAddressContext);
+  const { refetch: refetchUserTokens } = useContext(UserTokensContext);
+  const { refetch: refetchUserBalance } = useContext(UserBalanceContext);
+  const { refetch: refetchUserActivities, data: userActivitiesData } =
+    useContext(UserActivitiesContext);
+  const {
+    data: userNotificationsData,
+    isFetching: userNotificationsIsFetching,
+    isFetched: userNotificationsIsFetched,
+  } = useQuery<{
+    data?: { notifications: With_Id<Notification>[] };
+    error?: string;
+  }>({
+    queryKey: ['notifications_list_user'],
+    enabled: !!address,
+    queryFn: () =>
+      fetch(`http://localhost:3000/notifications/list/${collection?.contract}/${address}`).then(
+        (res) => res.json(),
+      ),
+  });
+  const userNotifications = userNotificationsData?.data?.notifications || [];
+
+  useEffect(() => {
+    if (!userNotificationsIsFetching && userNotificationsIsFetched) {
+      setuserNotificationsCache(userNotifications.length);
+    }
+  }, [userNotificationsIsFetching]);
+
+  useEffect(() => {
+    if (userNotificationsCache > 0) {
+      console.log('new notification');
+      refetchUserTokens();
+      refetchUserBalance();
+      refetchUserActivities();
+    }
+  }, [userNotificationsCache]);
+
+  // TODO: view notifications when user closes activity tab
+  useQuery<{ data: { activities: With_Id<Activity>[] } }>({
+    queryKey: ['user_view_notifications'],
+    enabled: !!address && userNotifications.length > 0 && showTab,
+    queryFn: () =>
+      fetch('http://localhost:3000/notifications/view/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ notificationIds: userNotifications.map((n) => n._id) }, null, 0),
+      }).then((res) => res.json()),
+  });
+
+  const userActivities = userActivitiesData || [];
+
+  return (
+    <Tab hidden={!showTab}>
+      <div className="mt-24 flex-grow overflow-y-auto overflow-x-hidden">
+        <div className="p-8 flex flex-col gap-4">
+          <div className="font-medium text-lg">Activity</div>
+          {userActivities.length > 0 && (
+            <table>
+              <tbody>
+                {userActivities.map((activity) => {
+                  const isOfferer = activity.offerer === address;
+                  const isNew = userNotifications.find(
+                    (notification) => notification.activityId == activity._id,
+                  );
+
+                  return (
+                    <tr
+                      key={activity.txHash}
+                      className="border-b-2 border-zinc-800 *:py-4 last:border-0"
+                    >
+                      <td className="align-top">
+                        <div className="flex flex-col gap-4 text-xs text-zinc-400">
+                          <div className="relative">
+                            {isNew && (
+                              <div className="absolute bottom-1 -left-5 h-2 w-2 rounded-full bg-cyan-400"></div>
+                            )}
+                            <span className={isNew ? 'font-medium text-zinc-200' : ''}>
+                              {' '}
+                              Item {isOfferer ? 'sold' : 'bought'}
+                            </span>
+                          </div>
+                          <ItemNFT src="" tokenId={Number(activity.tokenId)}></ItemNFT>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex flex-col gap-4">
+                          <ExternalLink href={`${config.explorer}/tx/${activity.txHash}`}>
+                            {moment(Number(activity.createdAt)).fromNow()}
+                          </ExternalLink>
+                          <div className="flex flex-col gap-2">
+                            {activity.fulfillment.coin && (
+                              <ItemETH value={activity.fulfillment.coin.amount} />
+                            )}
+                            {activity.fulfillment.token.identifier.map((tokenId) => (
+                              <ItemNFT
+                                key={activity.txHash.concat(tokenId)}
+                                src=""
+                                tokenId={Number(tokenId)}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      </div>
+    </Tab>
+  );
+}
+
+function Tab({ hidden, children }: { hidden: boolean; children: ReactElement | ReactElement[] }) {
+  const display = hidden ? 'translate-x-96' : 'z-10';
+  const containerZIndex = hidden ? '-z-20' : '';
+
+  return (
+    <div className={`absolute right-0 top-0 w-96 h-screen ${containerZIndex}`}>
+      <div
+        className={`fixed flex flex-col h-full w-96 box-content border-l-2 border-zinc-800 bg-zinc-900 transition ease-in-out delay-0 ${display}`}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function Navbar({
+  onClickAccount,
+  onClickActivity,
+}: {
+  onClickAccount: Function;
+  onClickActivity: Function;
+}) {
+  const { data: collection } = useContext(CollectionContext);
+  const { data: userTokens } = useContext(UserTokensContext);
+  const { data: userBalance } = useContext(UserBalanceContext);
+  const { data: userAddress } = useContext(UserAddressContext);
+  const { data: userNotificationsData } = useQuery<{
+    data?: { notifications: With_Id<Notification>[] };
+    error?: string;
+  }>({
+    queryKey: ['notifications_list_user'],
+    enabled: !!userAddress,
+    refetchInterval: 12_000,
+    queryFn: () =>
+      fetch(`http://localhost:3000/notifications/list/${collection?.contract}/${userAddress}`).then(
+        (res) => res.json(),
+      ),
+  });
+
+  const userNotifications = userNotificationsData?.data?.notifications || [];
+
+  let buttons = [<UserButton key="1" onClick={onClickAccount} />];
+  if (!!userAddress) {
+    let userTokensBalance = `${userTokens?.length} ${collection?.symbol}`;
+    let userEth = etherToString(BigInt(userBalance || '0'));
+
+    buttons = [
+      <Button key="2" disabled loading={!userTokens}>
+        <span>{userTokensBalance}</span>
+      </Button>,
+      <Button key="3" disabled loading={!userBalance}>
+        <span>{userEth}</span>
+      </Button>,
+      <ActivityButton
+        key="4"
+        count={userNotifications.length}
+        onClick={onClickActivity}
+      ></ActivityButton>,
+      ...buttons,
+    ];
+  }
+
+  return (
+    <div className="fixed top-0 z-20 w-full bg-zinc-900">
+      <div className="h-24 flex px-8 border-b-2 border-zinc-800">
+        <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
+        <div className="flex h-8 my-8 flex-grow justify-end gap-4">{buttons}</div>
+      </div>
+    </div>
+  );
+}
+
+function UserButton({ onClick }: { onClick: Function }) {
+  const { connect } = useConnect();
+  const { data: address } = useContext(UserAddressContext);
+  const { data: ensName } = useContext(UserENSContext);
+
+  if (!!ensName) {
+    return (
+      <Button onClick={onClick}>
+        <span>{ensName}</span>
+      </Button>
+    );
+  }
+
+  if (!!address) {
+    return (
+      <Button onClick={onClick}>
+        <span>{shortAddress(address)}</span>
+      </Button>
+    );
+  }
+
+  const chainId = (() => {
+    switch (config.ethereumNetwork) {
+      case EthereumNetwork.Mainnet:
+        return mainnet.id;
+      case EthereumNetwork.Sepolia:
+        return sepolia.id;
+      default:
+        throw new Error(`Invalid Ethereum Network: ${config.ethereumNetwork}`);
+    }
+  })();
+
+  return <Button onClick={() => connect({ connector: injected(), chainId })}>Connect</Button>;
+}

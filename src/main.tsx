@@ -1,68 +1,44 @@
 import './css/index.css';
-import ReactDOM from 'react-dom/client';
-import { RouterProvider, createBrowserRouter } from 'react-router-dom';
-import NotFoundPage from './pages/NotFound';
-import App, { collectionLoader } from './pages/App';
-import { Components } from './pages/Components';
-import { CollectionItems } from './pages/CollectionItems';
-import { OrderFulfill, OrderFulfillLoader } from './pages/OrderFulfill';
-import { OrderCreate, OrderCreateLoader } from './pages/OrderCreate';
-import { CollectionActivities } from './pages/CollectionActivities';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
+import { ErrorBoundary } from 'react-error-boundary';
+import { createRoot } from 'react-dom/client';
+import { WagmiProvider, createConfig, fallback, http, unstable_connector } from 'wagmi';
+import { injected } from 'wagmi/connectors';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { Suspense } from 'react';
+import { config } from './config';
+import { App } from './App';
+import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
+import { CollectionPage } from './pages';
 
-if (!['dark', 'light'].includes(localStorage.theme)) {
-  const preferedColor = window.matchMedia('(prefers-color-scheme: dark)').matches
-    ? 'dark'
-    : 'light';
+const wagmiConfig = createConfig({
+  chains: [config.eth.chain],
+  connectors: [injected()],
+  transports: {
+    [config.eth.chain.id]: fallback([unstable_connector(injected), http(config.eth.rpc)]),
+  },
+});
 
-  localStorage.setItem('theme', preferedColor);
-}
-document.documentElement.classList.add(localStorage.theme);
+const queryClient = new QueryClient({
+  defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 0 } },
+});
 
-const router = createBrowserRouter([
-  {
-    errorElement: <NotFoundPage />,
-  },
-  {
-    path: '/c/:contract',
-    element: (
-      <App>
-        <CollectionItems></CollectionItems>
-      </App>
-    ),
-    loader: collectionLoader,
-  },
-  {
-    path: '/c/:contract/activity',
-    element: (
-      <App>
-        <CollectionActivities></CollectionActivities>
-      </App>
-    ),
-    loader: collectionLoader,
-  },
-  {
-    path: '/c/:contract/order/create/:tokenId',
-    element: (
-      <App>
-        <OrderCreate></OrderCreate>
-      </App>
-    ),
-    loader: OrderCreateLoader,
-  },
-  {
-    path: '/c/:contract/order/fulfill/:tokenId',
-    element: (
-      <App>
-        <OrderFulfill></OrderFulfill>
-      </App>
-    ),
-    loader: OrderFulfillLoader,
-  },
-  {
-    path: '/components',
-    element: <Components></Components>,
-    loader: OrderFulfillLoader,
-  },
-]);
-
-ReactDOM.createRoot(document.getElementById('root')!).render(<RouterProvider router={router} />);
+const root = createRoot(document.getElementById('root')!);
+root.render(
+  <WagmiProvider config={wagmiConfig}>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <ErrorBoundary fallbackRender={({ error }) => <ErrorPage error={error} />}>
+          <Suspense fallback={<LoadingPage />}>
+            <Routes>
+              <Route path="/c/:contract" element={<App />}>
+                <Route path="" element={<CollectionPage />} />
+              </Route>
+              <Route path="*" element={<NotFoundPage />} />
+            </Routes>
+          </Suspense>
+        </ErrorBoundary>
+      </BrowserRouter>
+    </QueryClientProvider>
+  </WagmiProvider>,
+);
