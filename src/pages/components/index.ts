@@ -3,6 +3,7 @@ export * from './ActivityButton';
 export * from './ActivityTab';
 export * from './Button';
 export * from './CollectionQueued';
+export * from './Dialog';
 export * from './ExternalLink';
 export * from './IconEth';
 export * from './IconNft';
