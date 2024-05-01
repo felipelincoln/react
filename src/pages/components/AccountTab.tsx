@@ -2,10 +2,12 @@ import { useAccount, useDisconnect, useEnsName } from 'wagmi';
 import { ActionButton, Button, CardNftSelectable, ListedNft, Tab } from '.';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 
 export function AccountTab({ showTab }: { showTab: boolean }) {
   const contract = useParams().contract!;
+  const navigate = useNavigate();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
@@ -18,6 +20,11 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
     enabled: !!address && !!userTokenIdsResponse?.data,
     ...fetchUserOrders(contract, address!, userTokenIdsResponse?.data?.tokenIds || []),
   });
+  const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
+  const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
+  useEffect(() => {
+    if (selectedTokenId) setLastSelectedTokenId(selectedTokenId);
+  }, [selectedTokenId]);
 
   const collection = collectionResponse?.data?.collection!;
   const tokenImages = collectionResponse?.data?.tokenImages!;
@@ -40,7 +47,7 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
                 Disconnect
               </div>
               {!!userOrders && userOrders.length > 1 && (
-                <div className="hover:text-zinc-200" onClick={() => handleCancelAllOrders()}>
+                <div className="hover:text-zinc-200" onClick={() => 'handleCancelAllOrders() TODO'}>
                   Cancel all orders ({userOrders.length})
                 </div>
               )}
@@ -59,7 +66,7 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
                     key={tokenId}
                     tokenPrice={fulfillmentCriteria.token.amount}
                     ethPrice={fulfillmentCriteria.coin?.amount}
-                    onClick={() => handleClickListedItem(tokenId)}
+                    onClick={() => 'handleClickListedItem(tokenId) TODO'}
                   />
                 ))}
               </div>
@@ -75,7 +82,9 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
                     key={tokenId}
                     src={tokenImages[tokenId]}
                     selected={selectedTokenId === tokenId}
-                    onSelect={() => handleSelectToken(tokenId)}
+                    onSelect={() =>
+                      setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
+                    }
                     tokenId={tokenId}
                   />
                 ))}
@@ -86,10 +95,14 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
       </div>
       <div>{selectedTokenId && <div className="h-16"></div>}</div>
       <div
-        className={`fixed bottom-0 right-0 px-8 py-4 w-96 bg-zinc-800 flex gap-4 transition ease-in-out delay-0 ${displayListButton}`}
+        className={`fixed bottom-0 right-0 px-8 py-4 w-96 bg-zinc-800 flex gap-4 transition ease-in-out delay-0 ${
+          selectedTokenId ? '' : 'translate-y-16'
+        }`}
       >
         <Button disabled>{`${collection?.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
-        <ActionButton onClick={handleClickListItem}>List Item</ActionButton>
+        <ActionButton onClick={() => navigate('order/new/' + selectedTokenId)}>
+          List Item
+        </ActionButton>
       </div>
     </Tab>
   );

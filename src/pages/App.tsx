@@ -3,6 +3,7 @@ import { Outlet, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api';
 import { AccountTab, ActivityTab, CollectionQueued, Dialog, Navbar } from './components';
 import { ReactNode, createContext, useEffect, useState } from 'react';
+import { useAccount } from 'wagmi';
 
 export const DialogContext = createContext<{
   dialog: ReactNode | undefined;
@@ -14,6 +15,7 @@ export const DialogContext = createContext<{
 
 export function App() {
   const contract = useParams().contract!;
+  const { isConnected } = useAccount();
   const [activityTab, setActivityTab] = useState(false);
   const [accountTab, setAccountTab] = useState(false);
   const [dialog, setDialog] = useState<ReactNode | undefined>(undefined);
@@ -26,6 +28,13 @@ export function App() {
   useEffect(() => {
     if (activityTab) setAccountTab(false);
   }, [activityTab]);
+
+  useEffect(() => {
+    if (!isConnected) {
+      setActivityTab(false);
+      setAccountTab(false);
+    }
+  }, [isConnected]);
 
   const isReady = response.data?.isReady;
 
