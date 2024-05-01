@@ -5,7 +5,7 @@ import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
-export function AccountTab({ showTab }: { showTab: boolean }) {
+export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: Function }) {
   const contract = useParams().contract!;
   const navigate = useNavigate();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
@@ -53,44 +53,52 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
               )}
             </div>
           </div>
-          {!!userOrders && userOrders.length > 0 && (
-            <div className="flex flex-col gap-4">
-              <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
-              <div className="flex flex-col flex-wrap gap-4">
-                {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
-                  <ListedNft
-                    tokenId={tokenId}
-                    name={collection.name}
-                    symbol={collection.symbol}
-                    src={tokenImages[tokenId]}
-                    key={tokenId}
-                    tokenPrice={fulfillmentCriteria.token.amount}
-                    ethPrice={fulfillmentCriteria.coin?.amount}
-                    onClick={() => 'handleClickListedItem(tokenId) TODO'}
-                  />
-                ))}
+          <hr className="border-zinc-800 border-2 border-t-0 -mx-8" />
+          <div className="flex flex-col gap-2">
+            <div className="overflow-x-hidden text-ellipsis font-medium">{collection.name}</div>
+            {!!userOrders && userOrders.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
+                <div className="flex flex-col flex-wrap gap-4">
+                  {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
+                    <ListedNft
+                      tokenId={tokenId}
+                      name={collection.name}
+                      symbol={collection.symbol}
+                      src={tokenImages[tokenId]}
+                      key={tokenId}
+                      tokenPrice={fulfillmentCriteria.token.amount}
+                      ethPrice={fulfillmentCriteria.coin?.amount}
+                      onClick={() => {
+                        navigate('order/' + selectedTokenId);
+                        onNavigate();
+                        setSelectedTokenId(undefined);
+                      }}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
-            <div className="flex flex-col gap-4">
-              <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokens.length})</div>
-              <div className="grid grid-cols-3 gap-4">
-                {userUnlistedTokens.map((tokenId) => (
-                  <CardNftSelectable
-                    key={tokenId}
-                    src={tokenImages[tokenId]}
-                    selected={selectedTokenId === tokenId}
-                    onSelect={() =>
-                      setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
-                    }
-                    tokenId={tokenId}
-                  />
-                ))}
+            {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
+              <div className="flex flex-col gap-4">
+                <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokens.length})</div>
+                <div className="grid grid-cols-3 gap-4">
+                  {userUnlistedTokens.map((tokenId) => (
+                    <CardNftSelectable
+                      key={tokenId}
+                      src={tokenImages[tokenId]}
+                      selected={selectedTokenId === tokenId}
+                      onSelect={() =>
+                        setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
+                      }
+                      tokenId={tokenId}
+                    />
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
       <div>{selectedTokenId && <div className="h-16"></div>}</div>
@@ -100,7 +108,13 @@ export function AccountTab({ showTab }: { showTab: boolean }) {
         }`}
       >
         <Button disabled>{`${collection?.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
-        <ActionButton onClick={() => navigate('order/new/' + selectedTokenId)}>
+        <ActionButton
+          onClick={() => {
+            navigate('order/create/' + selectedTokenId);
+            onNavigate();
+            setSelectedTokenId(undefined);
+          }}
+        >
           List Item
         </ActionButton>
       </div>

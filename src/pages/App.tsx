@@ -50,7 +50,7 @@ export function App() {
         onClickAccount={() => setAccountTab(!accountTab)}
       />
       <ActivityTab showTab={activityTab} />
-      <AccountTab showTab={accountTab} />
+      <AccountTab showTab={accountTab} onNavigate={() => setAccountTab(false)} />
       <Outlet />
     </DialogContext.Provider>
   );

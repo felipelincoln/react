@@ -7,7 +7,7 @@ import { injected } from 'wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { config } from './config';
-import { App, CollectionPage } from './pages';
+import { App, CollectionPage, OrderCreatePage } from './pages';
 import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
 
 const wagmiConfig = createConfig({
@@ -32,6 +32,7 @@ root.render(
             <Routes>
               <Route path="/c/:contract" element={<App />}>
                 <Route path="" element={<CollectionPage />} />
+                <Route path="order/create/:tokenId" element={<OrderCreatePage />} />
               </Route>
               <Route path="*" element={<NotFoundPage />} />
             </Routes>
