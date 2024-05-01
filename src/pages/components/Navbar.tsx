@@ -7,7 +7,13 @@ import { etherToString } from '../../utils';
 import { Button } from './Button';
 import { ActivityButton } from './ActivityButton';
 
-export function Navbar({ onClickActivity }: { onClickActivity: Function }) {
+export function Navbar({
+  onClickActivity,
+  onClickAccount,
+}: {
+  onClickActivity: Function;
+  onClickAccount: Function;
+}) {
   const contract = useParams().contract!;
   const { address } = useAccount();
   const { data: userBalance, isPending: userBalanceIsPending } = useBalance({ address });
@@ -44,7 +50,7 @@ export function Navbar({ onClickActivity }: { onClickActivity: Function }) {
               <ActivityButton count={userNotifications} onClick={onClickActivity} />
             </>
           )}
-          <AccountButton onClick={() => {}}></AccountButton>
+          <AccountButton onClick={onClickAccount}></AccountButton>
         </div>
       </div>
     </div>

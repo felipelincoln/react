@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { Activity, Collection, Notification } from './types';
+import { Activity, Collection, Notification, Order } from './types';
 
 interface ApiResponse<T> {
   data?: T;
@@ -53,6 +53,22 @@ export function fetchUserActivities(contract: string, address: string) {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ address }, null, 0),
+      }).then(handleFetchError);
+    },
+  };
+}
+
+export function fetchUserOrders(contract: string, address: string, tokenIds: number[]) {
+  return {
+    queryKey: ['userOrders', contract, address, tokenIds.join(',')],
+    queryFn: async (): Promise<ApiResponse<{ orders: Order[] }>> => {
+      console.log('> [api] fetch user orders');
+      return fetch(`${config.api.url}/orders/list/${contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address, tokenIds }, null, 0),
       }).then(handleFetchError);
     },
   };

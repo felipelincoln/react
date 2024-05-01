@@ -1,8 +1,8 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Outlet, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api';
-import { ActivityTab, CollectionQueued, Dialog, Navbar } from './components';
-import { ReactNode, createContext, useState } from 'react';
+import { AccountTab, ActivityTab, CollectionQueued, Dialog, Navbar } from './components';
+import { ReactNode, createContext, useEffect, useState } from 'react';
 
 export const DialogContext = createContext<{
   dialog: ReactNode | undefined;
@@ -19,6 +19,14 @@ export function App() {
   const [dialog, setDialog] = useState<ReactNode | undefined>(undefined);
   const { data: response } = useSuspenseQuery(fetchCollection(contract));
 
+  useEffect(() => {
+    if (accountTab) setActivityTab(false);
+  }, [accountTab]);
+
+  useEffect(() => {
+    if (activityTab) setAccountTab(false);
+  }, [activityTab]);
+
   const isReady = response.data?.isReady;
 
   if (!isReady) {
@@ -28,8 +36,12 @@ export function App() {
   return (
     <DialogContext.Provider value={{ dialog, setDialog }}>
       <Dialog />
-      <Navbar onClickActivity={() => setActivityTab(!activityTab)} />
+      <Navbar
+        onClickActivity={() => setActivityTab(!activityTab)}
+        onClickAccount={() => setAccountTab(!accountTab)}
+      />
       <ActivityTab showTab={activityTab} />
+      <AccountTab showTab={accountTab} />
       <Outlet />
     </DialogContext.Provider>
   );
