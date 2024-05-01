@@ -1,0 +1,31 @@
+import { useAccount, useConnect, useEnsName } from 'wagmi';
+import { shortAddress } from '../../utils';
+import { config } from '../../config';
+import { injected } from 'wagmi/connectors';
+import { Button } from './Button';
+
+export function AccountButton({ onClick }: { onClick: Function }) {
+  const { connect } = useConnect();
+  const { address } = useAccount();
+  const { data: ensName } = useEnsName({ address });
+
+  if (ensName) {
+    return (
+      <Button onClick={onClick}>
+        <span>{ensName}</span>
+      </Button>
+    );
+  }
+
+  if (address) {
+    return (
+      <Button onClick={onClick}>
+        <span>{shortAddress(address)}</span>
+      </Button>
+    );
+  }
+
+  const chainId = config.eth.chain.id;
+
+  return <Button onClick={() => connect({ connector: injected(), chainId })}>Connect</Button>;
+}

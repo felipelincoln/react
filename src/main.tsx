@@ -7,9 +7,8 @@ import { injected } from 'wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Suspense } from 'react';
 import { config } from './config';
-import { App } from './App';
+import { App, CollectionPage } from './pages';
 import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
-import { CollectionPage } from './pages';
 
 const wagmiConfig = createConfig({
   chains: [config.eth.chain],
@@ -20,7 +19,7 @@ const wagmiConfig = createConfig({
 });
 
 const queryClient = new QueryClient({
-  defaultOptions: { queries: { refetchOnWindowFocus: false, retry: 0 } },
+  defaultOptions: { queries: { refetchOnWindowFocus: true, retry: 0, staleTime: Infinity } },
 });
 
 const root = createRoot(document.getElementById('root')!);

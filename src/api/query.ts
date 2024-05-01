@@ -1,5 +1,5 @@
 import { config } from '../config';
-import { Collection } from './types';
+import { Activity, Collection, Notification } from './types';
 
 interface ApiResponse<T> {
   data?: T;
@@ -8,10 +8,52 @@ interface ApiResponse<T> {
 
 export function fetchCollection(contract: string) {
   return {
-    queryKey: ['collection'],
-    queryFn: async (): Promise<ApiResponse<{ collection: Collection; isReady: boolean }>> => {
-      console.log('> [api] calling fetch collection');
+    queryKey: ['collection', contract],
+    queryFn: async (): Promise<
+      ApiResponse<{ collection: Collection; isReady: boolean; tokenImages: Record<number, string> }>
+    > => {
+      console.log('> [api] fetch collection');
       return fetch(`${config.api.url}/collections/get/${contract}`).then(handleFetchError);
+    },
+  };
+}
+
+export function fetchUserTokenIds(contract: string, address: string) {
+  return {
+    queryKey: ['userTokenIds', contract, address],
+    queryFn: async (): Promise<ApiResponse<{ tokenIds: number[] }>> => {
+      console.log('> [api] fetch user token ids');
+      return fetch(`${config.api.url}/eth/tokens/list/${contract}/${address}`).then(
+        handleFetchError,
+      );
+    },
+  };
+}
+
+export function fetchUserNotifications(contract: string, address: string) {
+  return {
+    queryKey: ['userNotifications', contract, address],
+    queryFn: async (): Promise<ApiResponse<{ notifications: Notification[] }>> => {
+      console.log('> [api] fetch user notifications');
+      return fetch(`${config.api.url}/notifications/list/${contract}/${address}`).then(
+        handleFetchError,
+      );
+    },
+  };
+}
+
+export function fetchUserActivities(contract: string, address: string) {
+  return {
+    queryKey: ['userActivities', contract, address],
+    queryFn: async (): Promise<ApiResponse<{ activities: Activity[] }>> => {
+      console.log('> [api] fetch user activities');
+      return fetch(`${config.api.url}/activities/list/${contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ address }, null, 0),
+      }).then(handleFetchError);
     },
   };
 }

@@ -24,6 +24,7 @@ export interface Order {
 }
 
 export interface Activity {
+  _id: string;
   etype: string;
   contract: string;
   tokenId: number;
@@ -56,4 +57,10 @@ export interface Token {
   tokenId: number;
   image?: string;
   attributes: Record<string, string>;
+}
+
+export interface Notification {
+  activityId: string;
+  contract: string;
+  address: string;
 }
