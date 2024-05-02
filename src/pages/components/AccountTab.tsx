@@ -1,9 +1,27 @@
-import { useAccount, useDisconnect, useEnsName } from 'wagmi';
-import { ActionButton, Button, CardNftSelectable, ListedNft, Tab } from '.';
-import { useQuery } from '@tanstack/react-query';
+import {
+  useAccount,
+  useDisconnect,
+  useEnsName,
+  useSwitchChain,
+  useWaitForTransactionReceipt,
+} from 'wagmi';
+import {
+  ActionButton,
+  Button,
+  ButtonLight,
+  CardNftSelectable,
+  ListedNft,
+  SpinnerIcon,
+  Tab,
+} from '.';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { ReactNode, useContext, useEffect, useState } from 'react';
+import { useIncrementCounter } from '../../hooks';
+import { shortAddress } from '../../utils';
+import { DialogContext } from '../App';
+import { config } from '../../config';
 
 export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: Function }) {
   const contract = useParams().contract!;
@@ -22,6 +40,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   });
   const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
+
   useEffect(() => {
     if (selectedTokenId) setLastSelectedTokenId(selectedTokenId);
   }, [selectedTokenId]);
@@ -40,16 +59,20 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         <div className="p-8 flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <div className="overflow-x-hidden text-ellipsis font-medium">
-              {!!ensName ? <span>{ensName}</span> : <span className="text-sm">{address}</span>}
+              {!!ensName ? (
+                <span>{ensName}</span>
+              ) : (
+                <span className="text-sm">{shortAddress(address)}</span>
+              )}
             </div>
             <div className="flex flex-col gap-2 text-sm text-zinc-400 cursor-pointer">
               <div className="hover:text-zinc-200" onClick={() => disconnect()}>
                 Disconnect
               </div>
-              {!!userOrders && userOrders.length > 1 && (
-                <div className="hover:text-zinc-200" onClick={() => 'handleCancelAllOrders() TODO'}>
+              {!!userOrders && (
+                <ButtonIncrementCounter>
                   Cancel all orders ({userOrders.length})
-                </div>
+                </ButtonIncrementCounter>
               )}
             </div>
           </div>
@@ -119,5 +142,115 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         </ActionButton>
       </div>
     </Tab>
+  );
+}
+
+function ButtonIncrementCounter({ children }: { children: ReactNode }) {
+  const { setDialog } = useContext(DialogContext);
+  const { chainId } = useAccount();
+  const {
+    switchChain,
+    data: switchChainData,
+    isPending: switchNetworkIsPending,
+    isError: switchNetworkIsError,
+  } = useSwitchChain();
+  const queryClient = useQueryClient();
+  const {
+    incrementCounter,
+    data: incrementCounterData,
+    isPending: incrementCounterIsPending,
+    isError: incrementCounterIsError,
+  } = useIncrementCounter();
+  const { data: incrementCounterReceiptData } = useWaitForTransactionReceipt({
+    hash: incrementCounterData,
+  });
+
+  useEffect(() => {
+    if (incrementCounterIsError || switchNetworkIsError) {
+      setDialog(undefined);
+    }
+  }, [incrementCounterIsError, switchNetworkIsError]);
+
+  useEffect(() => {
+    if (incrementCounterIsPending || switchNetworkIsPending) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel all orders</div>
+            <SpinnerIcon />
+            <div>Confirm in your wallet</div>
+            <div className="text-sx text-zinc-400 flex gap-2">
+              <div>⚠️</div>
+              <div>
+                Warning: This will also cancel all your Opensea orders and offers, for all
+                collections.
+              </div>
+            </div>
+          </div>
+        </div>,
+      );
+    }
+  }, [incrementCounterIsPending, switchNetworkIsPending]);
+
+  useEffect(() => {
+    if (incrementCounterData) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel all orders</div>
+            <SpinnerIcon />
+            <div>Transaction is pending...</div>
+          </div>
+        </div>,
+      );
+    }
+  }, [incrementCounterData]);
+
+  useEffect(() => {
+    if (!incrementCounterReceiptData) return;
+    if (incrementCounterReceiptData?.transactionHash == incrementCounterData) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel all orders</div>
+            <div>All orders have been canceled.</div>
+            <ButtonLight onClick={() => setDialog(undefined)}>OK</ButtonLight>
+          </div>
+        </div>,
+      );
+      queryClient.invalidateQueries({ queryKey: [fetchUserOrders('', '', []).queryKey[0]] });
+    } else {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel all orders</div>
+            <div>Aborted: transaction was cancelled or replaced.</div>
+            <ButtonLight onClick={() => setDialog(undefined)}>OK</ButtonLight>
+          </div>
+        </div>,
+      );
+    }
+  }, [incrementCounterReceiptData]);
+
+  useEffect(() => {
+    if (switchChainData?.id == config.eth.chain.id) {
+      incrementCounter();
+    }
+  }, [switchChainData]);
+
+  return (
+    <div
+      className="hover:text-zinc-200"
+      onClick={() => {
+        if (chainId == config.eth.chain.id) {
+          incrementCounter();
+          return;
+        }
+
+        switchChain({ chainId: config.eth.chain.id });
+      }}
+    >
+      {children}
+    </div>
   );
 }
