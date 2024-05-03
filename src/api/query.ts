@@ -10,7 +10,7 @@ export function fetchCollection(contract: string) {
   return {
     queryKey: ['collection', contract],
     queryFn: async (): Promise<
-      ApiResponse<{ collection: Collection; isReady: boolean; tokenImages: Record<number, string> }>
+      ApiResponse<{ collection: Collection; isReady: boolean; tokenImages: Record<string, string> }>
     > => {
       console.log('> [api] fetch collection');
       return fetch(`${config.api.url}/collections/get/${contract}`).then(handleFetchError);
@@ -60,6 +60,22 @@ export function fetchUserTokenIds(contract: string, address: string) {
       return fetch(`${config.api.url}/eth/tokens/list/${contract}/${address}`).then(
         handleFetchError,
       );
+    },
+  };
+}
+
+export function fetchActivities(contract: string, tokenIds: number[]) {
+  return {
+    queryKey: ['activities', contract, tokenIds.join('-')],
+    queryFn: async (): Promise<ApiResponse<{ activities: Activity[] }>> => {
+      console.log('> [api] fetch activities');
+      return fetch(`${config.api.url}/activities/list/${contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds }, null, 0),
+      }).then(handleFetchError);
     },
   };
 }

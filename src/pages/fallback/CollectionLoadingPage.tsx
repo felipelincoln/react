@@ -1,7 +1,9 @@
+import { useMatch } from 'react-router-dom';
 import { AttributeTags } from '../components';
 
 export function CollectionLoadingPage() {
-  // TODO: loading for activities
+  const activityPage = useMatch({ path: '/c/:contract/activity' });
+
   return (
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">
@@ -11,16 +13,24 @@ export function CollectionLoadingPage() {
         </div>
         <AttributeTags />
       </div>
-      <div className="flex flex-wrap gap-4 pt-8 animate-pulse">
-        {Array.from({ length: 5 }).map((_, index) => (
-          <CardNftOrderSkeleton key={index} />
-        ))}
-      </div>
+      {activityPage ? (
+        <div className="m-auto max-w-lg flex flex-col gap-2">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <ActivityItemSkeleton key={index} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex flex-wrap gap-4 pt-8 animate-pulse">
+          {Array.from({ length: 5 }).map((_, index) => (
+            <CardNftOrderSkeleton key={index} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-export function CardNftOrderSkeleton() {
+function CardNftOrderSkeleton() {
   return (
     <div className="w-48 h-full bg-zinc-800 rounded">
       <div className="px-4 py-2">
@@ -32,4 +42,8 @@ export function CardNftOrderSkeleton() {
       </div>
     </div>
   );
+}
+
+function ActivityItemSkeleton() {
+  return <div className="w-full h-16 bg-zinc-800 animate-pulse rounded"></div>;
 }

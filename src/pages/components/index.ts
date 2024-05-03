@@ -3,6 +3,7 @@ export * from './AccountTab';
 export * from './ActionButton';
 export * from './ActivityButton';
 export * from './ActivityTab';
+export * from './ActivityTableRow';
 export * from './AttributeTags';
 export * from './Button';
 export * from './ButtonAccordion';

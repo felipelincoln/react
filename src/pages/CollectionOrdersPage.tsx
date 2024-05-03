@@ -26,19 +26,19 @@ export function CollectionOrdersPage() {
   const userTokenIdsOrDefault = userTokenIdsResponse?.data?.tokenIds || [];
   const userEthBalanceOrDefault = etherToString(userBalance?.value) || '0';
   const userAddressOrDefault = address || '';
-  const orders = ordersResponse?.data?.orders;
+  const orders = ordersResponse?.data?.orders!;
 
   return (
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">
         <div className="flex items-center gap-2 *:leading-8">
-          <div>{orders!.length}</div>
+          <div>{orders.length}</div>
           <div>Results</div>
         </div>
         <AttributeTags />
       </div>
       <div className="flex flex-wrap gap-4 pt-8">
-        {orders!.map((order) => (
+        {orders.map((order) => (
           <CardNftOrder
             key={order.tokenId}
             priceToken={order.fulfillmentCriteria.token.amount}
