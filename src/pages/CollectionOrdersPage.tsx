@@ -1,0 +1,62 @@
+import { useContext } from 'react';
+import { FilterContext } from './CollectionPage';
+import { AttributeTags, CardNftOrder, Tag } from './components';
+import { useParams } from 'react-router-dom';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api';
+import { useAccount, useBalance } from 'wagmi';
+import { etherToString, userCanFulfillOrder } from '../utils';
+
+export function CollectionOrdersPage() {
+  const { filter } = useContext(FilterContext);
+  const contract = useParams().contract!;
+  const { address } = useAccount();
+  const { data: userBalance } = useBalance({ address });
+  const { data: collectionResponse } = useQuery(fetchCollection(contract));
+  const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, filter));
+  const { data: ordersResponse } = useSuspenseQuery(
+    fetchOrders(contract, tokenIdsResponse.data?.tokens || []),
+  );
+  const { data: userTokenIdsResponse } = useQuery({
+    enabled: !!address,
+    ...fetchUserTokenIds(contract, address!),
+  });
+
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages;
+  const userTokenIdsOrDefault = userTokenIdsResponse?.data?.tokenIds || [];
+  const userEthBalanceOrDefault = etherToString(userBalance?.value) || '0';
+  const userAddressOrDefault = address || '';
+  const orders = ordersResponse?.data?.orders;
+
+  return (
+    <div className="flex-grow p-8">
+      <div className="flex h-8 gap-4 items-center">
+        <div>
+          {orders!.length} <span>oi</span> Results
+        </div>
+        <AttributeTags />
+      </div>
+      <div className="flex flex-wrap gap-4 pt-8">
+        {orders!.map((order) => (
+          <CardNftOrder
+            key={order.tokenId}
+            priceToken={order.fulfillmentCriteria.token.amount}
+            priceEth={order.fulfillmentCriteria.coin?.amount}
+            contract={collection.contract}
+            symbol={collection.symbol}
+            src={tokenImages[order.tokenId]}
+            tokenId={order.tokenId}
+            canFullfill={userCanFulfillOrder(
+              order,
+              userTokenIdsOrDefault,
+              userEthBalanceOrDefault,
+              userAddressOrDefault,
+            )}
+          ></CardNftOrder>
+        ))}
+        <div className="flex-grow"></div>
+      </div>
+    </div>
+  );
+}

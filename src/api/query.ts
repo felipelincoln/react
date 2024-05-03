@@ -18,6 +18,40 @@ export function fetchCollection(contract: string) {
   };
 }
 
+export function fetchTokenIds(contract: string, filter: Record<string, string>) {
+  return {
+    queryKey: ['tokenIds', contract, filter],
+    queryFn: async (): Promise<
+      ApiResponse<{ tokens: number[]; count: number; skip?: number; limit?: number }>
+    > => {
+      console.log('> [api] fetch token ids');
+      return fetch(`${config.api.url}/tokens/list/${contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ filter }, null, 0),
+      }).then(handleFetchError);
+    },
+  };
+}
+
+export function fetchOrders(contract: string, tokenIds: number[]) {
+  return {
+    queryKey: ['orders', contract, tokenIds.join(',')],
+    queryFn: async (): Promise<ApiResponse<{ orders: Order[] }>> => {
+      console.log('> [api] fetch orders');
+      return fetch(`${config.api.url}/orders/list/${contract}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ tokenIds }, null, 0),
+      }).then(handleFetchError);
+    },
+  };
+}
+
 export function fetchUserTokenIds(contract: string, address: string) {
   return {
     queryKey: ['userTokenIds', contract, address],

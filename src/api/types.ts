@@ -49,7 +49,7 @@ export interface Collection {
   image: string;
   contract: string;
   totalSupply: number;
-  attributeSummary: Record<number, { attribute: string; options: Record<number, string> }>;
+  attributeSummary: Record<string, { attribute: string; options: Record<string, string> }>;
 }
 
 export interface Token {
