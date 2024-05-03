@@ -6,7 +6,6 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api';
 import { useAccount, useBalance } from 'wagmi';
 import { etherToString, userCanFulfillOrder } from '../utils';
-
 export function CollectionOrdersPage() {
   const { filter } = useContext(FilterContext);
   const contract = useParams().contract!;
@@ -32,8 +31,9 @@ export function CollectionOrdersPage() {
   return (
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">
-        <div>
-          {orders!.length} <span>oi</span> Results
+        <div className="flex items-center gap-2 *:leading-8">
+          <div>{orders!.length}</div>
+          <div>Results</div>
         </div>
         <AttributeTags />
       </div>
@@ -55,7 +55,6 @@ export function CollectionOrdersPage() {
             )}
           ></CardNftOrder>
         ))}
-        <div className="flex-grow"></div>
       </div>
     </div>
   );
