@@ -1,18 +1,17 @@
-import { useQuery } from '@tanstack/react-query';
-import { useContext } from 'react';
-import { useParams } from 'react-router-dom';
-import { fetchCollection } from '../../api';
-import { FilterContext } from '../CollectionPage';
 import { Tag } from '.';
+import { Collection } from '../../api/types';
 
-export function AttributeTags() {
-  const contract = useParams().contract!;
-  const { filter, setFilter } = useContext(FilterContext);
-  const { data: collectionResponse } = useQuery(fetchCollection(contract));
-
-  const collection = collectionResponse!.data!.collection;
+export function AttributeTags({
+  collection,
+  filter,
+  setFilter,
+}: {
+  collection: Collection;
+  filter: Record<string, string>;
+  setFilter: (filter: Record<string, string>) => void;
+}) {
   return (
-    <div className="flex gap-4 items-center">
+    <div className="flex flex-wrap gap-4 items-center">
       {Object.keys(filter).map((key) => (
         <Tag
           key={`${key}-${filter[key]}`}
@@ -27,15 +26,7 @@ export function AttributeTags() {
           }`}
         </Tag>
       ))}
-      {Object.keys(filter).length > 0 && (
-        <a
-          onClick={() => {
-            setFilter({});
-          }}
-        >
-          Clear
-        </a>
-      )}
+      {Object.keys(filter).length > 0 && <a onClick={() => setFilter({})}>Clear</a>}
     </div>
   );
 }

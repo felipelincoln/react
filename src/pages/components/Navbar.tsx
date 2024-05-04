@@ -1,4 +1,4 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api';
 import { AccountButton } from './AccountButton';
@@ -6,6 +6,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { etherToString } from '../../utils';
 import { Button } from './Button';
 import { ActivityButton } from './ActivityButton';
+import { useEffect } from 'react';
 
 export function Navbar({
   onClickActivity,
@@ -15,6 +16,7 @@ export function Navbar({
   onClickAccount: Function;
 }) {
   const contract = useParams().contract!;
+  const queryClient = useQueryClient();
   const { address } = useAccount();
   const { data: userBalance, isPending: userBalanceIsPending } = useBalance({ address });
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
@@ -27,6 +29,16 @@ export function Navbar({
     staleTime: 12_000,
     ...fetchUserNotifications(contract, address!),
   });
+
+  useEffect(() => {
+    if (userNotificationsResponse?.data?.notifications.length) {
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          return query.queryKey[0] != fetchCollection(contract).queryKey[0];
+        },
+      });
+    }
+  }, [userNotificationsResponse?.data?.notifications.map((n) => n.activityId).join('-')]);
 
   const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;

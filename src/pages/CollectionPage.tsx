@@ -5,9 +5,10 @@ import { Button, ButtonAccordion, Checkbox } from './components';
 import { Suspense, createContext, useState } from 'react';
 import { CollectionLoadingPage, LoadingPage } from './fallback';
 
-export const FilterContext = createContext<{ filter: Record<string, string>; setFilter: Function }>(
-  { filter: {}, setFilter: () => {} },
-);
+export const FilterContext = createContext<{
+  filter: Record<string, string>;
+  setFilter: (filter: Record<string, string>) => void;
+}>({ filter: {}, setFilter: (_filter) => {} });
 
 export function CollectionPage() {
   const contract = useParams().contract!;

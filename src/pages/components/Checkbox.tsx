@@ -7,7 +7,7 @@ export function Checkbox({
 }: {
   checked?: boolean;
   label: ReactNode;
-  onClick: Function;
+  onClick?: Function;
 }) {
   let id = crypto.randomUUID();
   return (
@@ -15,14 +15,14 @@ export function Checkbox({
       <input
         id={id}
         checked={!!checked}
-        onChange={() => onClick()}
+        onChange={() => onClick?.()}
         type="checkbox"
         className="peer hidden"
       />
       <label
         htmlFor={id}
         tabIndex={0}
-        className="text-sm flex-grow cursor-pointer text-nowrap before:inline-block before:w-4 before:h-4 before:mr-2 before:-mt-px before:mb-px before:align-sub before:rounded before:border-none before:bg-zinc-800 before:hover:bg-zinc-700 peer-checked:before:bg-cyan-400"
+        className="text-sm flex-grow cursor-pointer text-nowrap before:inline-block before:w-4 before:h-4 before:mr-2 before:-mt-px before:mb-px before:align-sub before:rounded before:border-none before:bg-zinc-700 before:hover:bg-zinc-600 peer-checked:before:bg-cyan-400"
       >
         {label}
       </label>

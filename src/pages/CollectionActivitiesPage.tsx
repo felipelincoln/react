@@ -7,7 +7,7 @@ import { FilterContext } from './CollectionPage';
 import { useAccount } from 'wagmi';
 
 export function CollectionActivitiesPage() {
-  const { filter } = useContext(FilterContext);
+  const { filter, setFilter } = useContext(FilterContext);
   const contract = useParams().contract!;
   const { address } = useAccount();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
@@ -16,6 +16,7 @@ export function CollectionActivitiesPage() {
     fetchActivities(contract, tokenIdsResponse.data?.tokens || []),
   );
 
+  const collection = collectionResponse?.data?.collection!;
   const tokenImages = collectionResponse?.data?.tokenImages!;
   const activities = activitiesResponse.data?.activities!;
 
@@ -26,7 +27,7 @@ export function CollectionActivitiesPage() {
           <div>{activities.length}</div>
           <div>Results</div>
         </div>
-        <AttributeTags />
+        <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
       {activities.length > 0 && (
         <table className="m-auto">

@@ -1,13 +1,14 @@
 import { useContext } from 'react';
 import { FilterContext } from './CollectionPage';
-import { AttributeTags, CardNftOrder, Tag } from './components';
+import { AttributeTags, CardNftOrder } from './components';
 import { useParams } from 'react-router-dom';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api';
 import { useAccount, useBalance } from 'wagmi';
 import { etherToString, userCanFulfillOrder } from '../utils';
+
 export function CollectionOrdersPage() {
-  const { filter } = useContext(FilterContext);
+  const { filter, setFilter } = useContext(FilterContext);
   const contract = useParams().contract!;
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
@@ -35,7 +36,7 @@ export function CollectionOrdersPage() {
           <div>{orders.length}</div>
           <div>Results</div>
         </div>
-        <AttributeTags />
+        <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
       <div className="flex flex-wrap gap-4 pt-8">
         {orders.map((order) => (
