@@ -3,14 +3,14 @@ import { Order } from '../api/types';
 export function userCanFulfillOrder(
   order: Order,
   userTokenIds: number[],
-  userBalance: string,
+  userBalance: bigint,
   userAddress: string,
 ) {
   const tokensCriteria = order.fulfillmentCriteria.token;
   const coinsCriteria = BigInt(order.fulfillmentCriteria.coin?.amount ?? '0');
-  const userCoins = BigInt(userBalance);
+  const userCoins = userBalance;
 
-  if (userAddress === order.offerer) {
+  if (userAddress.toLowerCase() === order.offerer) {
     return false;
   }
 

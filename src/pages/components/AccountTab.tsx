@@ -15,7 +15,7 @@ import {
   Tab,
 } from '.';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api';
+import { fetchCollection, fetchOrders, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ReactNode, useContext, useEffect, useState } from 'react';
 import { useIncrementCounter } from '../../hooks';
@@ -36,7 +36,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   });
   const { data: userOrdersResponse } = useQuery({
     enabled: !!address && !!userTokenIdsResponse?.data,
-    ...fetchUserOrders(contract, address!, userTokenIdsResponse?.data?.tokenIds || []),
+    ...fetchUserOrders(contract, address!),
   });
   const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
@@ -146,8 +146,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
 }
 
 function ButtonIncrementCounter({ children }: { children: ReactNode }) {
+  const contract = useParams().contract!;
   const { setDialog } = useContext(DialogContext);
-  const { chainId } = useAccount();
+  const { address, chainId } = useAccount();
   const {
     switchChain,
     data: switchChainData,
@@ -218,7 +219,17 @@ function ButtonIncrementCounter({ children }: { children: ReactNode }) {
           </div>
         </div>,
       );
-      queryClient.invalidateQueries({ queryKey: [fetchUserOrders('', '', []).queryKey[0]] });
+      queryClient.invalidateQueries({
+        predicate: (query) => {
+          const userOrdersQueryKey = fetchUserOrders(contract, address!).queryKey[0];
+          const ordersQueryKey = fetchOrders(contract, []).queryKey[0];
+
+          if (query.queryKey[0] == userOrdersQueryKey) return true;
+          if (query.queryKey[0] == ordersQueryKey) return true;
+
+          return false;
+        },
+      });
     } else {
       setDialog(
         <div>

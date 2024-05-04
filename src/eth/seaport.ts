@@ -4,8 +4,8 @@ import seaportAbiJson from './seaport.abi.json';
 import { config } from '../config';
 import { Order } from '../api/types';
 
-type OrderFragment = Omit<Order, 'signature' | 'orderHash'>;
-type WithCounter<T> = T & { counter: string };
+export type OrderFragment = Omit<Order, 'signature' | 'orderHash'>;
+export type WithCounter<T> = T & { counter: string };
 type WithSignature<T> = T & { signature: string };
 type WithSelectedTokenIds<T> = T & { selectedTokenIds: number[] };
 
@@ -65,7 +65,7 @@ function seaportEip712Types() {
   };
 }
 
-function seaportEip712Message(args: WithCounter<OrderFragment>) {
+export function seaportEip712Message(args: WithCounter<OrderFragment>) {
   const ethConsideration = !!args.fulfillmentCriteria.coin && {
     itemType: '0',
     token: '0x0000000000000000000000000000000000000000',
@@ -188,7 +188,7 @@ export function seaportContractAddress() {
   return seaport.contract;
 }
 
-export function Eip712Default() {
+export function seaportEip712Default() {
   return {
     domain: seaportEip712Domain(),
     primaryType: 'OrderComponents' as 'OrderComponents',

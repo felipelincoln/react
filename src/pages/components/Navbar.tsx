@@ -1,6 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
-import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api';
+import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api/query';
 import { AccountButton } from './AccountButton';
 import { useAccount, useBalance } from 'wagmi';
 import { etherToString } from '../../utils';

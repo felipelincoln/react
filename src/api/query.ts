@@ -1,10 +1,6 @@
 import { config } from '../config';
-import { Activity, Collection, Notification, Order } from './types';
-
-interface ApiResponse<T> {
-  data?: T;
-  error?: string;
-}
+import { Activity, ApiResponse, Collection, Notification, Order } from './types';
+import { handleFetchError } from './utils';
 
 export function fetchCollection(contract: string) {
   return {
@@ -37,11 +33,12 @@ export function fetchTokenIds(contract: string, filter: Record<string, string>) 
 }
 
 export function fetchOrders(contract: string, tokenIds: number[]) {
+  const contractLowerCase = contract.toLowerCase();
   return {
-    queryKey: ['orders', contract, tokenIds.join(',')],
+    queryKey: ['orders', contractLowerCase, tokenIds.join(',')],
     queryFn: async (): Promise<ApiResponse<{ orders: Order[] }>> => {
       console.log('> [api] fetch orders');
-      return fetch(`${config.api.url}/orders/list/${contract}`, {
+      return fetch(`${config.api.url}/orders/list/${contractLowerCase}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -108,9 +105,9 @@ export function fetchUserActivities(contract: string, address: string) {
   };
 }
 
-export function fetchUserOrders(contract: string, address: string, tokenIds: number[]) {
+export function fetchUserOrders(contract: string, address: string) {
   return {
-    queryKey: ['userOrders', contract, address, tokenIds.join(',')],
+    queryKey: ['userOrders', contract, address],
     queryFn: async (): Promise<ApiResponse<{ orders: Order[] }>> => {
       console.log('> [api] fetch user orders');
       return fetch(`${config.api.url}/orders/list/${contract}`, {
@@ -118,18 +115,8 @@ export function fetchUserOrders(contract: string, address: string, tokenIds: num
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address, tokenIds }, null, 0),
+        body: JSON.stringify({ address }, null, 0),
       }).then(handleFetchError);
     },
   };
-}
-
-async function handleFetchError(response: Response) {
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(data.error);
-  }
-
-  return data;
 }

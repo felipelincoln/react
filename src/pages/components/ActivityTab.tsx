@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { ExternalLink, ItemEth, ItemNft, Tab } from '.';
-import { fetchCollection, fetchUserActivities, fetchUserNotifications } from '../../api';
+import { fetchCollection, fetchUserActivities, fetchUserNotifications } from '../../api/query';
 import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import moment from 'moment';

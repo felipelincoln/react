@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
-import { fetchCollection } from '../api';
+import { fetchCollection } from '../api/query';
 import { Button, ButtonAccordion, Checkbox } from './components';
 import { Suspense, createContext, useState } from 'react';
 import { CollectionLoadingPage, LoadingPage } from './fallback';

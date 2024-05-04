@@ -3,7 +3,7 @@ import { FilterContext } from './CollectionPage';
 import { AttributeTags, CardNftOrder } from './components';
 import { useParams } from 'react-router-dom';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api';
+import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api/query';
 import { useAccount, useBalance } from 'wagmi';
 import { etherToString, userCanFulfillOrder } from '../utils';
 
@@ -24,9 +24,6 @@ export function CollectionOrdersPage() {
 
   const collection = collectionResponse!.data!.collection;
   const tokenImages = collectionResponse!.data!.tokenImages;
-  const userTokenIdsOrDefault = userTokenIdsResponse?.data?.tokenIds || [];
-  const userEthBalanceOrDefault = etherToString(userBalance?.value) || '0';
-  const userAddressOrDefault = address || '';
   const orders = ordersResponse?.data?.orders!;
 
   return (
@@ -50,9 +47,9 @@ export function CollectionOrdersPage() {
             tokenId={order.tokenId}
             canFullfill={userCanFulfillOrder(
               order,
-              userTokenIdsOrDefault,
-              userEthBalanceOrDefault,
-              userAddressOrDefault,
+              userTokenIdsResponse?.data?.tokenIds || [],
+              userBalance?.value || 0n,
+              address || '',
             )}
           ></CardNftOrder>
         ))}

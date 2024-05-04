@@ -1,6 +1,6 @@
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { ActivityTableRow, AttributeTags } from './components';
-import { fetchActivities, fetchCollection, fetchTokenIds } from '../api';
+import { fetchActivities, fetchCollection, fetchTokenIds } from '../api/query';
 import { useParams } from 'react-router-dom';
 import { useContext } from 'react';
 import { FilterContext } from './CollectionPage';

@@ -3,7 +3,7 @@ import { AttributeTags } from '../components';
 import { useContext } from 'react';
 import { FilterContext } from '../CollectionPage';
 import { useQuery } from '@tanstack/react-query';
-import { fetchCollection } from '../../api';
+import { fetchCollection } from '../../api/query';
 
 export function CollectionLoadingPage() {
   const contract = useParams().contract!;
