@@ -5,7 +5,7 @@ import { createRoot } from 'react-dom/client';
 import { WagmiProvider, createConfig, fallback, http, unstable_connector } from 'wagmi';
 import { injected } from 'wagmi/connectors';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Suspense } from 'react';
+import { StrictMode, Suspense } from 'react';
 import { config } from './config';
 import {
   App,
@@ -36,7 +36,14 @@ root.render(
         <ErrorBoundary fallbackRender={({ error }) => <ErrorPage error={error} />}>
           <Suspense fallback={<LoadingPage />}>
             <Routes>
-              <Route path="/c/:contract" element={<App />}>
+              <Route
+                path="/c/:contract"
+                element={
+                  <StrictMode>
+                    <App />
+                  </StrictMode>
+                }
+              >
                 <Route path="" element={<CollectionPage />}>
                   <Route path="" element={<CollectionOrdersPage />} />
                   <Route path="activity" element={<CollectionActivitiesPage />} />

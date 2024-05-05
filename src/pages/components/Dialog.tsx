@@ -17,7 +17,7 @@ export function Dialog() {
           className="w-full fixed z-40 left-0 top-0 bg-zinc-950 opacity-85"
         ></div>
         <div className="w-full h-full fixed z-50 left-0 top-0 flex items-center justify-center">
-          <div className="p-4 bg-zinc-800 rounded">{dialog}</div>
+          <div className="p-4 bg-zinc-800 rounded min-w-96">{dialog}</div>
         </div>
       </>
     )

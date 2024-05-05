@@ -7,34 +7,36 @@ import {
   seaportEip712Default,
   seaportEip712Message,
 } from '../eth';
-import { useValidateChain } from './useValidateChain';
-import { useAccount, useReadContract, useSignTypedData } from 'wagmi';
+import { useAccount, useReadContract, useSignTypedData, useSwitchChain } from 'wagmi';
 import { DialogContext } from '../pages';
 import { ButtonLight, SpinnerIcon } from '../pages/components';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postOrder } from '../api/mutation';
-import { Order } from '../api/types';
 import { fetchCollection, fetchOrders, fetchUserOrders } from '../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
+import { config } from '../config';
 
 export function useSubmitOrder() {
+  const { setDialog } = useContext(DialogContext);
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const { address } = useAccount();
-  const { setDialog } = useContext(DialogContext);
+  const { address, chainId } = useAccount();
   const [orderFragment, setOrderFragment] = useState<OrderFragment | undefined>();
-  const { data: isChainValid, validateChain } = useValidateChain();
 
-  const { data: counter, isPending: counterIsPending } = useReadContract({
+  const {
+    data: counter,
+    isPending: counterIsPending,
+    error: counterError,
+  } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
     functionName: 'getCounter',
     args: [orderFragment?.offerer],
-    query: { enabled: !!isChainValid },
+    query: { enabled: !!orderFragment && chainId == config.eth.chain.id },
   });
 
-  const { data: orderHash, isPending: orderHashIsPending } = useReadContract({
+  const { data: orderHash, error: orderHashError } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
     functionName: 'getOrderHash',
@@ -42,32 +44,64 @@ export function useSubmitOrder() {
       orderFragment && counter != undefined
         ? [seaportEip712Message({ ...orderFragment, counter: counter!.toString() })]
         : [],
-    query: { enabled: counter != undefined },
+    query: { enabled: !!orderFragment && chainId == config.eth.chain.id && counter != undefined },
   });
 
-  const { data: signature, signTypedData, isPending: signTypedDataIsPending } = useSignTypedData();
-  const { mutate: mutatePostOrder, data: mutatePostOrderData } = useMutation(
+  const {
+    switchChain,
+    isPending: switchChainIsPending,
+    error: switchChainError,
+  } = useSwitchChain();
+
+  const {
+    data: signature,
+    signTypedData,
+    isPending: signTypedDataIsPending,
+    error: signTypedDataError,
+  } = useSignTypedData();
+
+  const {
+    mutate: mutatePostOrder,
+    data: mutatePostOrderData,
+    isPending: mutatePostOrderIsPending,
+    error: mutatePostOrderError,
+  } = useMutation(
     postOrder({ ...orderFragment!, orderHash: orderHash as string, signature: signature! }),
   );
 
   useEffect(() => {
+    if (
+      switchChainError ||
+      counterError ||
+      orderHashError ||
+      signTypedDataError ||
+      mutatePostOrderError
+    ) {
+      setOrderFragment(undefined);
+      setDialog(undefined);
+    }
+  }, [switchChainError, counterError, orderHashError, signTypedDataError, mutatePostOrderError]);
+
+  useEffect(() => {
     if (!orderFragment) return;
-    validateChain();
+    if (chainId == config.eth.chain.id) return;
+
+    switchChain({ chainId: config.eth.chain.id });
   }, [orderFragment]);
 
   useEffect(() => {
-    if (!counter) return;
-    if (!orderFragment) return;
-    const order: WithCounter<OrderFragment> = {
-      ...orderFragment,
-      counter: counter.toString(),
-    };
-
-    signTypedData({
-      message: seaportEip712Message(order),
-      ...seaportEip712Default(),
-    });
-  }, [counter]);
+    if (switchChainIsPending) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+            <div className="w-full font-medium pb-4">Switch chain</div>
+            <SpinnerIcon />
+            <div>Confirm in your wallet</div>
+          </div>
+        </div>,
+      );
+    }
+  }, [switchChainIsPending]);
 
   useEffect(() => {
     if (orderFragment && counterIsPending) {
@@ -81,10 +115,25 @@ export function useSubmitOrder() {
         </div>,
       );
     }
-  }, [counterIsPending, orderFragment]);
+  }, [orderFragment, counterIsPending]);
 
   useEffect(() => {
-    if (orderFragment && signTypedDataIsPending) {
+    if (!counter) return;
+    if (!orderFragment) return;
+    if (chainId != config.eth.chain.id) return;
+    const order: WithCounter<OrderFragment> = {
+      ...orderFragment,
+      counter: counter.toString(),
+    };
+
+    signTypedData({
+      message: seaportEip712Message(order),
+      ...seaportEip712Default(),
+    });
+  }, [orderFragment, chainId, counter]);
+
+  useEffect(() => {
+    if (signTypedDataIsPending) {
       setDialog(
         <div>
           <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
@@ -95,13 +144,27 @@ export function useSubmitOrder() {
         </div>,
       );
     }
-  }, [signTypedDataIsPending, orderFragment]);
+  }, [signTypedDataIsPending]);
 
   useEffect(() => {
     if (orderFragment && orderHash && signature) {
       mutatePostOrder();
     }
   }, [orderFragment, orderHash, signature]);
+
+  useEffect(() => {
+    if (!mutatePostOrderIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Creating order...</div>
+        </div>
+      </div>,
+    );
+  }, [mutatePostOrderIsPending]);
 
   useEffect(() => {
     if (!mutatePostOrderData) return;
@@ -139,5 +202,3 @@ export function useSubmitOrder() {
 
   return { submitOrder };
 }
-
-// TODO: allowance
