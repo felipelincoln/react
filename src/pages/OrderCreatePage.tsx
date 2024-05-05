@@ -49,13 +49,19 @@ export function OrderCreatePage() {
   });
   const {
     submitOrder,
-    counterIsPending,
-    orderHashIsPending,
+    //counterIsPending,
+    //orderHashIsPending,
     switchChainIsPending,
+    //isApprovedForAllIsPending,
+    setApprovalForAllIsPending,
+    setApprovalForAllReceiptIsPending,
     signTypedDataIsPending,
     mutatePostOrderIsPending,
     isSuccess,
     switchChainError,
+    isApprovedForAllError,
+    setApprovalForAllError,
+    setApprovalForAllReceiptError,
     counterError,
     orderHashError,
     signTypedDataError,
@@ -77,18 +83,32 @@ export function OrderCreatePage() {
   }, [switchChainIsPending]);
 
   useEffect(() => {
-    if (!counterIsPending && !orderHashIsPending) return;
+    if (!setApprovalForAllIsPending) return;
 
     setDialog(
       <div>
         <div className="flex flex-col items-center gap-4 max-w-lg">
           <div className="w-full font-medium pb-4">Create order</div>
           <SpinnerIcon />
-          <div>Generating seaport order...</div>
+          <div>Confirm in your wallet</div>
         </div>
       </div>,
     );
-  }, [counterIsPending, orderHashIsPending]);
+  }, [setApprovalForAllIsPending]);
+
+  useEffect(() => {
+    if (!setApprovalForAllReceiptIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Waiting for approval transaction to confirm...</div>
+        </div>
+      </div>,
+    );
+  }, [setApprovalForAllReceiptIsPending]);
 
   useEffect(() => {
     if (!signTypedDataIsPending) return;

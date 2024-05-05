@@ -115,7 +115,7 @@ export function fetchUserOrders(contract: string, address: string) {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ address }, null, 0),
+        body: JSON.stringify({ offerer: address }, null, 0),
       }).then(handleFetchError);
     },
   };
