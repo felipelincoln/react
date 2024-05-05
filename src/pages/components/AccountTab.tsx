@@ -77,50 +77,54 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
             </div>
           </div>
           <hr className="border-zinc-800 border-2 border-t-0 -mx-8" />
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-4">
             <div className="overflow-x-hidden text-ellipsis font-medium">{collection.name}</div>
-            {!!userOrders && userOrders.length > 0 && (
-              <div className="flex flex-col gap-4">
-                <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
-                <div className="flex flex-col flex-wrap gap-4">
-                  {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
-                    <ListedNft
-                      tokenId={tokenId}
-                      name={collection.name}
-                      symbol={collection.symbol}
-                      src={tokenImages[tokenId]}
-                      key={tokenId}
-                      tokenPrice={fulfillmentCriteria.token.amount}
-                      ethPrice={fulfillmentCriteria.coin?.amount}
-                      onClick={() => {
-                        navigate('order/' + selectedTokenId);
-                        onNavigate();
-                        setSelectedTokenId(undefined);
-                      }}
-                    />
-                  ))}
+            <div className="flex flex-col gap-8">
+              {!!userOrders && userOrders.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
+                  <div className="flex flex-col flex-wrap gap-4">
+                    {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
+                      <ListedNft
+                        tokenId={tokenId}
+                        name={collection.name}
+                        symbol={collection.symbol}
+                        src={tokenImages[tokenId]}
+                        key={tokenId}
+                        tokenPrice={fulfillmentCriteria.token.amount}
+                        ethPrice={fulfillmentCriteria.coin?.amount}
+                        onClick={() => {
+                          navigate('order/' + selectedTokenId);
+                          onNavigate();
+                          setSelectedTokenId(undefined);
+                        }}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
 
-            {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
-              <div className="flex flex-col gap-4">
-                <div className="text-sm text-zinc-400">Unlisted ({userUnlistedTokens.length})</div>
-                <div className="grid grid-cols-3 gap-4">
-                  {userUnlistedTokens.map((tokenId) => (
-                    <CardNftSelectable
-                      key={tokenId}
-                      src={tokenImages[tokenId]}
-                      selected={selectedTokenId === tokenId}
-                      onSelect={() =>
-                        setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
-                      }
-                      tokenId={tokenId}
-                    />
-                  ))}
+              {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
+                <div className="flex flex-col gap-4">
+                  <div className="text-sm text-zinc-400">
+                    Unlisted ({userUnlistedTokens.length})
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    {userUnlistedTokens.map((tokenId) => (
+                      <CardNftSelectable
+                        key={tokenId}
+                        src={tokenImages[tokenId]}
+                        selected={selectedTokenId === tokenId}
+                        onSelect={() =>
+                          setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
+                        }
+                        tokenId={tokenId}
+                      />
+                    ))}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       </div>

@@ -17,7 +17,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { config } from '../config';
 
 export function useSubmitOrder() {
-  const { setDialog } = useContext(DialogContext);
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const navigate = useNavigate();
@@ -36,7 +35,11 @@ export function useSubmitOrder() {
     query: { enabled: !!orderFragment && chainId == config.eth.chain.id },
   });
 
-  const { data: orderHash, error: orderHashError } = useReadContract({
+  const {
+    data: orderHash,
+    error: orderHashError,
+    isPending: orderHashIsPending,
+  } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
     functionName: 'getOrderHash',
@@ -78,7 +81,6 @@ export function useSubmitOrder() {
       mutatePostOrderError
     ) {
       setOrderFragment(undefined);
-      setDialog(undefined);
     }
   }, [switchChainError, counterError, orderHashError, signTypedDataError, mutatePostOrderError]);
 
@@ -90,35 +92,8 @@ export function useSubmitOrder() {
   }, [orderFragment]);
 
   useEffect(() => {
-    if (switchChainIsPending) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Switch chain</div>
-            <SpinnerIcon />
-            <div>Confirm in your wallet</div>
-          </div>
-        </div>,
-      );
-    }
-  }, [switchChainIsPending]);
-
-  useEffect(() => {
-    if (orderFragment && counterIsPending) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Create order</div>
-            <SpinnerIcon />
-            <div>Generating seaport order...</div>
-          </div>
-        </div>,
-      );
-    }
-  }, [orderFragment, counterIsPending]);
-
-  useEffect(() => {
     if (!counter) return;
+    if (!orderHash) return;
     if (!orderFragment) return;
     if (chainId != config.eth.chain.id) return;
     const order: WithCounter<OrderFragment> = {
@@ -130,41 +105,13 @@ export function useSubmitOrder() {
       message: seaportEip712Message(order),
       ...seaportEip712Default(),
     });
-  }, [orderFragment, chainId, counter]);
-
-  useEffect(() => {
-    if (signTypedDataIsPending) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Create order</div>
-            <SpinnerIcon />
-            <div>Confirm in your wallet</div>
-          </div>
-        </div>,
-      );
-    }
-  }, [signTypedDataIsPending]);
+  }, [orderFragment, chainId, counter, orderHash]);
 
   useEffect(() => {
     if (orderFragment && orderHash && signature) {
       mutatePostOrder();
     }
   }, [orderFragment, orderHash, signature]);
-
-  useEffect(() => {
-    if (!mutatePostOrderIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Creating order...</div>
-        </div>
-      </div>,
-    );
-  }, [mutatePostOrderIsPending]);
 
   useEffect(() => {
     if (!mutatePostOrderData) return;
@@ -180,25 +127,24 @@ export function useSubmitOrder() {
         return false;
       },
     });
-
-    setDialog(
-      <div className="flex flex-col items-center gap-4">
-        <div>Order created!</div>
-        <ButtonLight
-          onClick={() => {
-            navigate(`/c/${contract}`);
-            setDialog(undefined);
-          }}
-        >
-          Ok
-        </ButtonLight>
-      </div>,
-    );
   }, [mutatePostOrderData]);
 
   function submitOrder(arg: OrderFragment) {
     setOrderFragment(arg);
   }
 
-  return { submitOrder };
+  return {
+    submitOrder,
+    counterIsPending: !!orderFragment && counterIsPending,
+    orderHashIsPending: !!orderFragment && orderHashIsPending,
+    switchChainIsPending,
+    signTypedDataIsPending,
+    mutatePostOrderIsPending,
+    switchChainError,
+    counterError,
+    orderHashError,
+    signTypedDataError,
+    mutatePostOrderError,
+    isSuccess: !!mutatePostOrderData,
+  };
 }

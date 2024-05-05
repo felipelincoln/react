@@ -3,22 +3,25 @@ import {
   ActionButton,
   AttributeTags,
   Button,
+  ButtonLight,
   CardNftSelectable,
   CardNftSelectableSkeleton,
   Checkbox,
   Input,
   Paginator,
+  SpinnerIcon,
   TextBox,
   Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds } from '../api/query';
-import { useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
 import { config } from '../config';
 import { useSubmitOrder } from '../hooks';
+import { DialogContext } from './App';
 
 interface FormData {
   ethPrice?: string;
@@ -32,9 +35,9 @@ interface FormData {
 export function OrderCreatePage() {
   const contract = useParams().contract!;
   const tokenId = Number(useParams().tokenId!);
+  const { setDialog } = useContext(DialogContext);
   const navigate = useNavigate();
   const { address } = useAccount();
-  const { submitOrder } = useSubmitOrder();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, {}));
   const [now] = useState(moment().unix());
@@ -44,6 +47,106 @@ export function OrderCreatePage() {
     tokenPrice: 1,
     expireDays: 7,
   });
+  const {
+    submitOrder,
+    counterIsPending,
+    orderHashIsPending,
+    switchChainIsPending,
+    signTypedDataIsPending,
+    mutatePostOrderIsPending,
+    isSuccess,
+    switchChainError,
+    counterError,
+    orderHashError,
+    signTypedDataError,
+    mutatePostOrderError,
+  } = useSubmitOrder();
+
+  useEffect(() => {
+    if (!switchChainIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Confirm in your wallet</div>
+        </div>
+      </div>,
+    );
+  }, [switchChainIsPending]);
+
+  useEffect(() => {
+    if (!counterIsPending && !orderHashIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Generating seaport order...</div>
+        </div>
+      </div>,
+    );
+  }, [counterIsPending, orderHashIsPending]);
+
+  useEffect(() => {
+    if (!signTypedDataIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Confirm in your wallet</div>
+        </div>
+      </div>,
+    );
+  }, [signTypedDataIsPending]);
+
+  useEffect(() => {
+    if (!mutatePostOrderIsPending) return;
+
+    setDialog(
+      <div>
+        <div className="flex flex-col items-center gap-4 max-w-lg">
+          <div className="w-full font-medium pb-4">Create order</div>
+          <SpinnerIcon />
+          <div>Creating order...</div>
+        </div>
+      </div>,
+    );
+  }, [mutatePostOrderIsPending]);
+
+  useEffect(() => {
+    if (!isSuccess) return;
+
+    setDialog(
+      <div className="flex flex-col items-center gap-4">
+        <div>Order created!</div>
+        <ButtonLight
+          onClick={() => {
+            navigate(`/c/${contract}`);
+            setDialog(undefined);
+          }}
+        >
+          Ok
+        </ButtonLight>
+      </div>,
+    );
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (
+      switchChainError ||
+      counterError ||
+      orderHashError ||
+      signTypedDataError ||
+      mutatePostOrderError
+    ) {
+      setDialog(undefined);
+    }
+  }, [switchChainError, counterError, orderHashError, signTypedDataError, mutatePostOrderError]);
 
   const collection = collectionResponse!.data!.collection;
   const tokenIds = tokenIdsResponse!.data!.tokens;
