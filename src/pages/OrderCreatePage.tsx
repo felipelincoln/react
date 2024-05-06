@@ -4,6 +4,7 @@ import {
   AttributeTags,
   Button,
   ButtonLight,
+  CardNftOrder,
   CardNftSelectable,
   CardNftSelectableSkeleton,
   Checkbox,
@@ -57,8 +58,6 @@ export function OrderCreatePage() {
     isError,
   } = useSubmitOrder();
 
-  console.log({ isValidChainStatus, isApprovedForAllStatus });
-
   useEffect(() => {
     if (isError) {
       setDialog(undefined);
@@ -68,7 +67,7 @@ export function OrderCreatePage() {
       setDialog(
         OrderCreateDialog(
           <div>
-            <div>{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),
@@ -90,7 +89,7 @@ export function OrderCreatePage() {
       setDialog(
         OrderCreateDialog(
           <div>
-            <div>{`Allowing Seaport to access your ${collection.symbol}`}</div>
+            <div className="text-center">{`Allowing Seaport to access your ${collection.symbol}`}</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),
@@ -107,7 +106,7 @@ export function OrderCreatePage() {
       setDialog(
         OrderCreateDialog(
           <div>
-            <div>Signing the order...</div>
+            <div className="text-center">Signing the order</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),
