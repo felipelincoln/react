@@ -15,7 +15,7 @@ import {
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds } from '../api/query';
-import { useContext, useEffect, useState } from 'react';
+import { ReactNode, useContext, useEffect, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -49,124 +49,100 @@ export function OrderCreatePage() {
   });
   const {
     submitOrder,
-    //counterIsPending,
-    //orderHashIsPending,
-    switchChainIsPending,
-    //isApprovedForAllIsPending,
-    setApprovalForAllIsPending,
-    setApprovalForAllReceiptIsPending,
-    signTypedDataIsPending,
-    mutatePostOrderIsPending,
+    isValidChainStatus,
+    isApprovedForAllStatus,
+    signatureStatus,
+    postOrderStatus,
     isSuccess,
-    switchChainError,
-    isApprovedForAllError,
-    setApprovalForAllError,
-    setApprovalForAllReceiptError,
-    counterError,
-    orderHashError,
-    signTypedDataError,
-    mutatePostOrderError,
+    isError,
   } = useSubmitOrder();
 
-  useEffect(() => {
-    if (!switchChainIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Confirm in your wallet</div>
-        </div>
-      </div>,
-    );
-  }, [switchChainIsPending]);
+  console.log({ isValidChainStatus, isApprovedForAllStatus });
 
   useEffect(() => {
-    if (!setApprovalForAllIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Confirm in your wallet</div>
-        </div>
-      </div>,
-    );
-  }, [setApprovalForAllIsPending]);
-
-  useEffect(() => {
-    if (!setApprovalForAllReceiptIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Waiting for approval transaction to confirm...</div>
-        </div>
-      </div>,
-    );
-  }, [setApprovalForAllReceiptIsPending]);
-
-  useEffect(() => {
-    if (!signTypedDataIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Confirm in your wallet</div>
-        </div>
-      </div>,
-    );
-  }, [signTypedDataIsPending]);
-
-  useEffect(() => {
-    if (!mutatePostOrderIsPending) return;
-
-    setDialog(
-      <div>
-        <div className="flex flex-col items-center gap-4 max-w-lg">
-          <div className="w-full font-medium pb-4">Create order</div>
-          <SpinnerIcon />
-          <div>Creating order...</div>
-        </div>
-      </div>,
-    );
-  }, [mutatePostOrderIsPending]);
-
-  useEffect(() => {
-    if (!isSuccess) return;
-
-    setDialog(
-      <div className="flex flex-col items-center gap-4">
-        <div>Order created!</div>
-        <ButtonLight
-          onClick={() => {
-            navigate(`/c/${contract}`);
-            setDialog(undefined);
-          }}
-        >
-          Ok
-        </ButtonLight>
-      </div>,
-    );
-  }, [isSuccess]);
-
-  useEffect(() => {
-    if (
-      switchChainError ||
-      counterError ||
-      orderHashError ||
-      signTypedDataError ||
-      mutatePostOrderError
-    ) {
+    if (isError) {
       setDialog(undefined);
     }
-  }, [switchChainError, counterError, orderHashError, signTypedDataError, mutatePostOrderError]);
+
+    if (isValidChainStatus == 'pending') {
+      setDialog(
+        OrderCreateDialog(
+          <div>
+            <div>{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'error') {
+      setDialog(undefined);
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:read') {
+      setDialog(OrderCreateDialog('Verifying Seaport allowance ...'));
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:write') {
+      setDialog(
+        OrderCreateDialog(
+          <div>
+            <div>{`Allowing Seaport to access your ${collection.symbol}`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:receipt') {
+      setDialog(OrderCreateDialog('Waiting for approval transaction to confirm ...'));
+      return;
+    }
+
+    if (signatureStatus == 'pending') {
+      setDialog(
+        OrderCreateDialog(
+          <div>
+            <div>Signing the order...</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (postOrderStatus == 'pending') {
+      setDialog(OrderCreateDialog('Creating the order ...'));
+      return;
+    }
+
+    if (isSuccess) {
+      setDialog(
+        <div className="flex flex-col items-center gap-4">
+          <div>Order created!</div>
+          <ButtonLight
+            onClick={() => {
+              navigate(`/c/${contract}`);
+              setDialog(undefined);
+            }}
+          >
+            Ok
+          </ButtonLight>
+        </div>,
+      );
+    }
+  }, [
+    isApprovedForAllStatus,
+    isValidChainStatus,
+    signatureStatus,
+    postOrderStatus,
+    isError,
+    isSuccess,
+  ]);
 
   const collection = collectionResponse!.data!.collection;
   const tokenIds = tokenIdsResponse!.data!.tokens;
@@ -434,6 +410,18 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           />
         </div>
       )}
+    </div>
+  );
+}
+
+function OrderCreateDialog(message?: ReactNode) {
+  return (
+    <div>
+      <div className="flex flex-col items-center gap-4 max-w-lg">
+        <div className="w-full font-medium pb-4">Create order</div>
+        <SpinnerIcon />
+        <div>{message}</div>
+      </div>
     </div>
   );
 }

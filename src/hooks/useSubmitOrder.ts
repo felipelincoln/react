@@ -1,50 +1,48 @@
 import { useEffect, useState } from 'react';
 import {
   OrderFragment,
-  WithCounter,
   seaportAbi,
   seaportContractAddress,
   seaportEip712Default,
   seaportEip712Message,
 } from '../eth';
-import {
-  useAccount,
-  useReadContract,
-  useSignTypedData,
-  useSwitchChain,
-  useWaitForTransactionReceipt,
-  useWriteContract,
-} from 'wagmi';
+import { useAccount, useReadContract, useSignTypedData } from 'wagmi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { postOrder } from '../api/mutation';
+import { postOrder as postOrderQuery } from '../api/mutation';
 import { fetchOrders, fetchUserOrders } from '../api/query';
 import { useParams } from 'react-router-dom';
-import { config } from '../config';
-import { erc721Abi } from 'viem';
+import { useSeaportAllowance } from './useSeaportAllowance';
+import { useValidateChain } from './useValidateChain';
 
 export function useSubmitOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const { address, chainId } = useAccount();
+  const { address } = useAccount();
   const [orderFragment, setOrderFragment] = useState<OrderFragment | undefined>();
 
   const {
-    data: counter,
-    isPending: counterIsPending,
-    error: counterError,
-  } = useReadContract({
+    isValidChain,
+    status: isValidChainStatus,
+    isError: isValidChainIsError,
+  } = useValidateChain({ enabled: !!orderFragment });
+
+  const {
+    isApprovedForAll,
+    status: isApprovedForAllStatus,
+    isError: isApprovedForAllIsError,
+  } = useSeaportAllowance({
+    enabled: !!orderFragment && isValidChain,
+  });
+
+  const { data: counter, isError: counterIsError } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
     functionName: 'getCounter',
     args: [orderFragment?.offerer],
-    query: { enabled: !!orderFragment && chainId == config.eth.chain.id },
+    query: { enabled: !!orderFragment && isValidChain },
   });
 
-  const {
-    data: orderHash,
-    error: orderHashError,
-    isPending: orderHashIsPending,
-  } = useReadContract({
+  const { data: orderHash, isError: orderHashIsError } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
     functionName: 'getOrderHash',
@@ -52,116 +50,49 @@ export function useSubmitOrder() {
       orderFragment && counter != undefined
         ? [seaportEip712Message({ ...orderFragment, counter: counter!.toString() })]
         : [],
-    query: { enabled: !!orderFragment && chainId == config.eth.chain.id && counter != undefined },
+    query: { enabled: !!orderFragment && isValidChain && counter != undefined },
   });
-
-  const {
-    data: isApprovedForAll,
-    error: isApprovedForAllError,
-    isPending: isApprovedForAllIsPending,
-  } = useReadContract({
-    address: contract as `0x${string}`,
-    abi: erc721Abi,
-    functionName: 'isApprovedForAll',
-    args: [address!, config.eth.seaport.conduit],
-    query: { enabled: !!orderFragment && chainId == config.eth.chain.id },
-  });
-
-  const {
-    writeContract: setApprovalForAll,
-    data: setApprovalForAllData,
-    isPending: setApprovalForAllIsPending,
-    error: setApprovalForAllError,
-  } = useWriteContract();
-
-  const {
-    data: setApprovalForAllReceiptData,
-    isPending: setApprovalForAllReceiptIsPending,
-    error: setApprovalForAllReceiptError,
-  } = useWaitForTransactionReceipt({
-    hash: setApprovalForAllData,
-  });
-
-  const {
-    switchChain,
-    isPending: switchChainIsPending,
-    error: switchChainError,
-  } = useSwitchChain();
 
   const {
     data: signature,
     signTypedData,
-    isPending: signTypedDataIsPending,
-    error: signTypedDataError,
+    status: signatureStatus,
+    isError: signatureIsError,
   } = useSignTypedData();
 
   const {
-    mutate: mutatePostOrder,
-    data: mutatePostOrderData,
-    isPending: mutatePostOrderIsPending,
-    error: mutatePostOrderError,
+    mutate: postOrder,
+    data: postOrderData,
+    status: postOrderStatus,
+    isError: postOrderIsError,
   } = useMutation(
-    postOrder({ ...orderFragment!, orderHash: orderHash as string, signature: signature! }),
+    postOrderQuery({ ...orderFragment!, orderHash: orderHash as string, signature: signature! }),
   );
 
   useEffect(() => {
     if (
-      switchChainError ||
-      counterError ||
-      orderHashError ||
-      isApprovedForAllError ||
-      setApprovalForAllError ||
-      setApprovalForAllReceiptError ||
-      signTypedDataError ||
-      mutatePostOrderError
+      isValidChainIsError ||
+      isApprovedForAllIsError ||
+      counterIsError ||
+      orderHashIsError ||
+      signatureIsError ||
+      postOrderIsError
     ) {
       setOrderFragment(undefined);
     }
   }, [
-    switchChainError,
-    counterError,
-    orderHashError,
-    isApprovedForAllError,
-    setApprovalForAllError,
-    setApprovalForAllReceiptError,
-    signTypedDataError,
-    mutatePostOrderError,
+    isValidChainIsError,
+    isApprovedForAllIsError,
+    counterIsError,
+    orderHashIsError,
+    signatureIsError,
+    postOrderIsError,
   ]);
 
   useEffect(() => {
     if (!orderFragment) return;
-    if (chainId == config.eth.chain.id) return;
-
-    switchChain({ chainId: config.eth.chain.id });
-  }, [orderFragment]);
-
-  useEffect(() => {
-    if (!orderFragment) return;
-    if (chainId != config.eth.chain.id) return;
-    if (isApprovedForAll != false) return;
-
-    setApprovalForAll({
-      address: contract as `0x${string}`,
-      abi: erc721Abi,
-      functionName: 'setApprovalForAll',
-      args: [config.eth.seaport.conduit, true],
-    });
-  }, [orderFragment, chainId, isApprovedForAll]);
-
-  console.log({
-    chainId,
-    counter,
-    orderHash,
-    isApprovedForAll,
-    setApprovalForAllReceiptData,
-    setApprovalForAllData,
-  });
-
-  useEffect(() => {
-    if (!orderFragment) return;
-    if (chainId != config.eth.chain.id) return;
-    if (!isApprovedForAll && setApprovalForAllReceiptData?.transactionHash != setApprovalForAllData)
-      return;
+    if (!isValidChain) return;
+    if (!isApprovedForAll) return;
     if (counter == undefined) return;
     if (!orderHash) return;
 
@@ -169,24 +100,16 @@ export function useSubmitOrder() {
       message: seaportEip712Message({ ...orderFragment, counter: counter.toString() }),
       ...seaportEip712Default(),
     });
-  }, [
-    orderFragment,
-    chainId,
-    counter,
-    orderHash,
-    isApprovedForAll,
-    setApprovalForAllReceiptData,
-    setApprovalForAllData,
-  ]);
+  }, [orderFragment, isValidChain, isApprovedForAll, counter, orderHash]);
 
   useEffect(() => {
     if (orderFragment && orderHash && signature) {
-      mutatePostOrder();
+      postOrder();
     }
   }, [orderFragment, orderHash, signature]);
 
   useEffect(() => {
-    if (!mutatePostOrderData) return;
+    if (!postOrderData) return;
 
     queryClient.invalidateQueries({
       predicate: (query) => {
@@ -199,7 +122,7 @@ export function useSubmitOrder() {
         return false;
       },
     });
-  }, [mutatePostOrderData]);
+  }, [postOrderData]);
 
   function submitOrder(arg: OrderFragment) {
     setOrderFragment(arg);
@@ -207,22 +130,17 @@ export function useSubmitOrder() {
 
   return {
     submitOrder,
-    counterIsPending: !!orderFragment && counterIsPending,
-    orderHashIsPending: !!orderFragment && orderHashIsPending,
-    isApprovedForAllIsPending: !!orderFragment && isApprovedForAllIsPending,
-    setApprovalForAllReceiptIsPending: !!setApprovalForAllData && setApprovalForAllReceiptIsPending,
-    switchChainIsPending,
-    setApprovalForAllIsPending,
-    signTypedDataIsPending,
-    mutatePostOrderIsPending,
-    switchChainError,
-    counterError,
-    orderHashError,
-    isApprovedForAllError,
-    setApprovalForAllError,
-    setApprovalForAllReceiptError,
-    signTypedDataError,
-    mutatePostOrderError,
-    isSuccess: !!mutatePostOrderData,
+    isSuccess: !!postOrderData,
+    isError:
+      isValidChainIsError ||
+      isApprovedForAllIsError ||
+      counterIsError ||
+      orderHashIsError ||
+      signatureIsError ||
+      postOrderIsError,
+    isValidChainStatus,
+    isApprovedForAllStatus,
+    signatureStatus,
+    postOrderStatus,
   };
 }
