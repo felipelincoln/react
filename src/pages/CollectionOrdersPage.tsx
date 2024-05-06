@@ -1,4 +1,4 @@
-import { useContext } from 'react';
+import { useContext, useMemo } from 'react';
 import { FilterContext } from './CollectionPage';
 import { AttributeTags, CardNftOrder } from './components';
 import { useParams } from 'react-router-dom';
@@ -25,6 +25,45 @@ export function CollectionOrdersPage() {
   const collection = collectionResponse!.data!.collection;
   const tokenImages = collectionResponse!.data!.tokenImages;
   const orders = ordersResponse?.data?.orders!;
+  const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
+
+  const ordersSorted = useMemo(() => {
+    if (!address) return orders;
+    if (!userTokenIds) return orders;
+    if (!userBalance) return orders;
+
+    const ordersCopy = [...orders];
+    ordersCopy.sort((a, b) => {
+      const tokenPriceA = Number(a.fulfillmentCriteria.token.amount);
+      const tokenPriceB = Number(b.fulfillmentCriteria.token.amount);
+      const coinPriceA = BigInt(a.fulfillmentCriteria.coin?.amount || '0');
+      const coinPriceB = BigInt(b.fulfillmentCriteria.coin?.amount || '0');
+
+      const userCanFulfillA = userCanFulfillOrder(a, userTokenIds, userBalance.value, address);
+      const userCanFulfillB = userCanFulfillOrder(b, userTokenIds, userBalance.value, address);
+
+      if (userCanFulfillA && !userCanFulfillB) {
+        return -1;
+      } else if (!userCanFulfillA && userCanFulfillB) {
+        return 1;
+      }
+
+      if (tokenPriceA !== tokenPriceB) {
+        return tokenPriceA - tokenPriceB;
+      }
+
+      if (coinPriceA !== coinPriceB) {
+        return coinPriceA < coinPriceB ? -1 : 1;
+      }
+
+      return 0;
+    });
+
+    console.log('-> [app] sorting feed');
+
+    return ordersCopy;
+  }, [!!orders, !!userTokenIds, !!userBalance, !!address]);
+  console.log(!!orders, !!userTokenIds, !!userBalance, !!address);
 
   return (
     <div className="flex-grow p-8">
@@ -36,7 +75,7 @@ export function CollectionOrdersPage() {
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
       <div className="flex flex-wrap gap-4 pt-8">
-        {orders.map((order) => (
+        {ordersSorted.map((order) => (
           <CardNftOrder
             key={order.tokenId}
             priceToken={order.fulfillmentCriteria.token.amount}
@@ -47,7 +86,7 @@ export function CollectionOrdersPage() {
             tokenId={order.tokenId}
             canFullfill={userCanFulfillOrder(
               order,
-              userTokenIdsResponse?.data?.tokenIds || [],
+              userTokenIds || [],
               userBalance?.value || 0n,
               address || '',
             )}

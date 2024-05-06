@@ -121,16 +121,21 @@ export function OrderCreatePage() {
 
     if (isSuccess) {
       setDialog(
-        <div className="flex flex-col items-center gap-4">
-          <div>Order created!</div>
-          <ButtonLight
-            onClick={() => {
-              navigate(`/c/${contract}`);
-              setDialog(undefined);
-            }}
-          >
-            Ok
-          </ButtonLight>
+        <div>
+          <div className="flex flex-col items-center gap-4 max-w-lg">
+            <div className="w-full font-medium pb-4">Create order</div>
+            <div className="flex flex-col items-center gap-4">
+              <div>Order created!</div>
+              <ButtonLight
+                onClick={() => {
+                  navigate(`/c/${contract}`);
+                  setDialog(undefined);
+                }}
+              >
+                Ok
+              </ButtonLight>
+            </div>
+          </div>
         </div>,
       );
     }
