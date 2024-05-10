@@ -5,7 +5,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api/query';
 import { useAccount, useBalance } from 'wagmi';
-import { etherToString, userCanFulfillOrder } from '../utils';
+import { userCanFulfillOrder } from '../utils';
 
 export function CollectionOrdersPage() {
   const { filter, setFilter } = useContext(FilterContext);
@@ -62,8 +62,12 @@ export function CollectionOrdersPage() {
     console.log('-> [app] sorting feed');
 
     return ordersCopy;
-  }, [!!orders, !!userTokenIds, !!userBalance, !!address]);
-  console.log(!!orders, !!userTokenIds, !!userBalance, !!address);
+  }, [
+    orders.map((o) => o.tokenId).join('-'),
+    userTokenIds?.join('-'),
+    userBalance?.value,
+    address,
+  ]);
 
   return (
     <div className="flex-grow p-8">
