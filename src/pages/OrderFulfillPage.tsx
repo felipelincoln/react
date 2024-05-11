@@ -98,8 +98,6 @@ export function OrderFulfillPage() {
       return;
     }
 
-    console.log(orderQueryStatus);
-
     if (orderQueryStatus == 'pending') {
       setDialog(OrderFulfillDialog());
       return;

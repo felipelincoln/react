@@ -6,7 +6,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { etherToString } from '../../utils';
 import { Button } from './Button';
 import { ActivityButton } from './ActivityButton';
-import { useEffect } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import { postViewUserNotifications } from '../../api/mutation';
 
 export function Navbar({
@@ -19,6 +19,7 @@ export function Navbar({
   onClickAccount: Function;
 }) {
   const contract = useParams().contract!;
+  const prevActivityTab = useRef<boolean>(activityTab);
   const queryClient = useQueryClient();
   const { address } = useAccount();
   const { data: userBalance, isPending: userBalanceIsPending } = useBalance({ address });
@@ -33,13 +34,34 @@ export function Navbar({
     ...fetchUserNotifications(contract, address!),
   });
 
-  const { mutate: viewUserNotifications } = useMutation(
+  const {
+    mutate: viewUserNotifications,
+    data,
+    reset,
+  } = useMutation(
     postViewUserNotifications(
       userNotificationsResponse?.data?.notifications.map((n) => n._id) || [],
     ),
   );
 
-  // TODO: invalidate user notifications query after vieweing notifications
+  useEffect(() => {
+    if (prevActivityTab.current && !activityTab) {
+      if (userNotificationsResponse?.data?.notifications.length) {
+        viewUserNotifications();
+      }
+    }
+
+    prevActivityTab.current = activityTab;
+  }, [activityTab]);
+
+  useEffect(() => {
+    if (data) {
+      queryClient.invalidateQueries({
+        queryKey: fetchUserNotifications(contract, address!).queryKey,
+      });
+      reset();
+    }
+  }, [data]);
 
   useEffect(() => {
     if (userNotificationsResponse?.data?.notifications.length) {
@@ -49,7 +71,7 @@ export function Navbar({
         },
       });
     }
-  }, [userNotificationsResponse?.data?.notifications.map((n) => n.activityId).join('-')]);
+  }, [userNotificationsResponse?.data?.notifications.map((n) => n._id).join('-')]);
 
   const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;
@@ -70,13 +92,7 @@ export function Navbar({
               <Button disabled loading={userBalanceIsPending}>
                 {userEthBalance}
               </Button>
-              <ActivityButton
-                count={userNotifications}
-                onClick={() => {
-                  if (activityTab) viewUserNotifications();
-                  onClickActivity();
-                }}
-              />
+              <ActivityButton count={userNotifications} onClick={onClickActivity} />
             </>
           )}
           <AccountButton onClick={onClickAccount}></AccountButton>
