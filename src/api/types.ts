@@ -60,6 +60,7 @@ export interface Token {
 }
 
 export interface Notification {
+  _id: string;
   activityId: string;
   contract: string;
   address: string;

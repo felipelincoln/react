@@ -33,7 +33,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
             <table>
               <tbody>
                 {userActivities.map((activity) => {
-                  const isOfferer = activity.offerer === address;
+                  const isOfferer = activity.offerer == (address || '').toLowerCase();
                   const isNew = userNotifications.find(
                     (notification) => notification.activityId == activity._id,
                   );
@@ -65,7 +65,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
                           <ExternalLink
                             href={`${config.eth.chain.blockExplorers.default.url}/tx/${activity.txHash}`}
                           >
-                            {moment(activity.createdAt).fromNow()}
+                            {moment(activity.createdAt * 1000).fromNow()}
                           </ExternalLink>
                           <div className="flex flex-col gap-2">
                             {activity.fulfillment.coin && (

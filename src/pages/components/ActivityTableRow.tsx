@@ -27,14 +27,18 @@ export function ActivityTableRow({
         </div>
       </td>
       <td className="text-xs align-top pr-8">
-        {activity.offerer == userAddress ? 'You' : shortAddress(activity.offerer)}
+        {activity.offerer == (userAddress || '').toLowerCase()
+          ? 'You'
+          : shortAddress(activity.offerer)}
       </td>
       <td className="text-xs align-top pr-8">
-        {activity.fulfiller == userAddress ? 'You' : shortAddress(activity.fulfiller)}
+        {activity.fulfiller == (userAddress || '').toLowerCase()
+          ? 'You'
+          : shortAddress(activity.fulfiller)}
       </td>
       <td className="text-xs align-top">
         <ExternalLink href={`${config.eth.chain.blockExplorers.default.url}/tx/${activity.txHash}`}>
-          {moment(activity.createdAt).fromNow()}
+          {moment(activity.createdAt * 1000).fromNow()}
         </ExternalLink>
       </td>
     </tr>

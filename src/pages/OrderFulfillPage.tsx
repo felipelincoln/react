@@ -44,6 +44,7 @@ export function OrderFulfillPage() {
     isValidChainStatus,
     isApprovedForAllStatus,
     fulfillAdvancedOrderStatus,
+    orderQueryStatus,
     isSuccess,
     isError,
   } = useFulfillOrder();
@@ -97,6 +98,13 @@ export function OrderFulfillPage() {
       return;
     }
 
+    console.log(orderQueryStatus);
+
+    if (orderQueryStatus == 'pending') {
+      setDialog(OrderFulfillDialog());
+      return;
+    }
+
     if (isSuccess) {
       setDialog(
         <div>
@@ -117,7 +125,14 @@ export function OrderFulfillPage() {
         </div>,
       );
     }
-  }, [isApprovedForAllStatus, isValidChainStatus, fulfillAdvancedOrderStatus, isError, isSuccess]);
+  }, [
+    isApprovedForAllStatus,
+    isValidChainStatus,
+    fulfillAdvancedOrderStatus,
+    orderQueryStatus,
+    isError,
+    isSuccess,
+  ]);
 
   const collection = collectionResponse!.data!.collection;
   const tokenImages = collectionResponse!.data!.tokenImages;

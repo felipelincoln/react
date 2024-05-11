@@ -46,6 +46,7 @@ export function App() {
     <DialogContext.Provider value={{ dialog, setDialog }}>
       <Dialog />
       <Navbar
+        activityTab={activityTab}
         onClickActivity={() => setActivityTab(!activityTab)}
         onClickAccount={() => setAccountTab(!accountTab)}
       />

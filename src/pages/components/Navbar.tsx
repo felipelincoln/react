@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useParams } from 'react-router-dom';
 import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api/query';
 import { AccountButton } from './AccountButton';
@@ -7,11 +7,14 @@ import { etherToString } from '../../utils';
 import { Button } from './Button';
 import { ActivityButton } from './ActivityButton';
 import { useEffect } from 'react';
+import { postViewUserNotifications } from '../../api/mutation';
 
 export function Navbar({
+  activityTab,
   onClickActivity,
   onClickAccount,
 }: {
+  activityTab: boolean;
   onClickActivity: Function;
   onClickAccount: Function;
 }) {
@@ -29,6 +32,14 @@ export function Navbar({
     staleTime: 12_000,
     ...fetchUserNotifications(contract, address!),
   });
+
+  const { mutate: viewUserNotifications } = useMutation(
+    postViewUserNotifications(
+      userNotificationsResponse?.data?.notifications.map((n) => n._id) || [],
+    ),
+  );
+
+  // TODO: invalidate user notifications query after vieweing notifications
 
   useEffect(() => {
     if (userNotificationsResponse?.data?.notifications.length) {
@@ -59,7 +70,13 @@ export function Navbar({
               <Button disabled loading={userBalanceIsPending}>
                 {userEthBalance}
               </Button>
-              <ActivityButton count={userNotifications} onClick={onClickActivity} />
+              <ActivityButton
+                count={userNotifications}
+                onClick={() => {
+                  if (activityTab) viewUserNotifications();
+                  onClickActivity();
+                }}
+              />
             </>
           )}
           <AccountButton onClick={onClickAccount}></AccountButton>

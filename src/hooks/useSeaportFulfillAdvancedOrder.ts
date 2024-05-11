@@ -104,6 +104,7 @@ export function useSeaportFulfillAdvancedOrder(args: {
 
   return {
     status,
+    isSuccess: status === 'success',
     isError: status === 'error',
   };
 }
