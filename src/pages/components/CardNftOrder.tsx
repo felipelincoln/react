@@ -23,7 +23,7 @@ export function CardNftOrder({
   return (
     <div
       className="w-48 h-full group cursor-pointer bg-zinc-800 rounded"
-      onClick={() => navigate(`/c/${contract}/order/fulfill/${tokenId}`)}
+      onClick={() => navigate(`/c/${contract}/order/${tokenId}`)}
     >
       <div className="px-4 py-2 text-sm flex justify-between items-center">
         <span className="h-6 text-base">{tokenId}</span>

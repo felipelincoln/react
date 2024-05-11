@@ -59,7 +59,7 @@ export function CollectionOrdersPage() {
       return 0;
     });
 
-    console.log('-> [app] sorting feed');
+    console.log('> [app] sorting feed');
 
     return ordersCopy;
   }, [

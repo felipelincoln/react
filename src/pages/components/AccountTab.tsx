@@ -94,7 +94,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                         tokenPrice={fulfillmentCriteria.token.amount}
                         ethPrice={fulfillmentCriteria.coin?.amount}
                         onClick={() => {
-                          navigate('order/' + selectedTokenId);
+                          navigate('order/' + tokenId);
                           onNavigate();
                           setSelectedTokenId(undefined);
                         }}

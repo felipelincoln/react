@@ -4,7 +4,6 @@ import {
   AttributeTags,
   Button,
   ButtonLight,
-  CardNftOrder,
   CardNftSelectable,
   CardNftSelectableSkeleton,
   Checkbox,
@@ -23,6 +22,7 @@ import { useAccount } from 'wagmi';
 import { config } from '../config';
 import { useSubmitOrder } from '../hooks';
 import { DialogContext } from './App';
+import { NotFoundPage } from './fallback';
 
 interface FormData {
   ethPrice?: string;
@@ -189,6 +189,10 @@ export function OrderCreatePage() {
       },
       salt: '0',
     });
+  }
+
+  if (Number.isNaN(tokenId)) {
+    return <NotFoundPage />;
   }
 
   return (

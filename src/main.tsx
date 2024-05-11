@@ -13,6 +13,8 @@ import {
   CollectionOrdersPage,
   CollectionPage,
   OrderCreatePage,
+  OrderFulfillPage,
+  OrderPage,
 } from './pages';
 import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
 
@@ -44,13 +46,16 @@ root.render(
                   </StrictMode>
                 }
               >
-                <Route path="" element={<CollectionPage />}>
-                  <Route path="" element={<CollectionOrdersPage />} />
-                  <Route path="activity" element={<CollectionActivitiesPage />} />
+                <Route path="" Component={CollectionPage}>
+                  <Route path="" Component={CollectionOrdersPage} />
+                  <Route path="activity" Component={CollectionActivitiesPage} />
                 </Route>
-                <Route path="order/create/:tokenId" element={<OrderCreatePage />} />
+                <Route path="order" Component={OrderPage}>
+                  <Route path="create/:tokenId" Component={OrderCreatePage} />
+                  <Route path=":tokenId" Component={OrderFulfillPage} />
+                </Route>
               </Route>
-              <Route path="*" element={<NotFoundPage />} />
+              <Route path="*" Component={NotFoundPage} />
             </Routes>
           </Suspense>
         </ErrorBoundary>
