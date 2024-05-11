@@ -7,7 +7,7 @@ import { Order } from '../api/types';
 export type OrderFragment = Omit<Order, 'signature' | 'orderHash'>;
 export type WithCounter<T> = T & { counter: string };
 type WithSignature<T> = T & { signature: string };
-type WithSelectedTokenIds<T> = T & { selectedTokenIds: number[] };
+export type WithSelectedTokenIds<T> = T & { selectedTokenIds: number[] };
 
 function merkleTree(data: number[]) {
   const leaves = data.map((x) => toHex(x, { size: 32 })).map((x) => keccak256(x));

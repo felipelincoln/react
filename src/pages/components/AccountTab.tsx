@@ -5,15 +5,7 @@ import {
   useSwitchChain,
   useWaitForTransactionReceipt,
 } from 'wagmi';
-import {
-  ActionButton,
-  Button,
-  ButtonLight,
-  CardNftSelectable,
-  ListedNft,
-  SpinnerIcon,
-  Tab,
-} from '.';
+import { Button, ButtonBlue, ButtonLight, CardNftSelectable, ListedNft, SpinnerIcon, Tab } from '.';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -135,7 +127,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         }`}
       >
         <Button disabled>{`${collection?.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
-        <ActionButton
+        <ButtonBlue
           onClick={() => {
             navigate('order/create/' + selectedTokenId);
             onNavigate();
@@ -143,7 +135,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           }}
         >
           List Item
-        </ActionButton>
+        </ButtonBlue>
       </div>
     </Tab>
   );

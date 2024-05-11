@@ -1,8 +1,8 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  ActionButton,
   AttributeTags,
   Button,
+  ButtonBlue,
   ButtonLight,
   CardNftSelectable,
   CardNftSelectableSkeleton,
@@ -72,11 +72,6 @@ export function OrderCreatePage() {
           </div>,
         ),
       );
-      return;
-    }
-
-    if (isApprovedForAllStatus == 'error') {
-      setDialog(undefined);
       return;
     }
 
@@ -160,14 +155,14 @@ export function OrderCreatePage() {
     if (form.tokenPrice > form.tokenIds.length && !form.anyTokenId) {
       setForm({
         ...form,
-        error: `Selected tokens (${form.tokenIds.length}) is not enough for the ${collection.symbol} price (${form.tokenPrice})`,
+        error: `Must select at least ${form.tokenPrice} ${collection.symbol}`,
       });
       return;
     }
     if (parseEther(form.ethPrice || '') == 0n && form.tokenPrice == 0) {
       setForm({
         ...form,
-        error: `At least ETH price or ${collection.symbol} price must be greater than 0`,
+        error: `ETH price and ${collection.symbol} price can't be both 0`,
       });
       return;
     }
@@ -233,7 +228,7 @@ export function OrderCreatePage() {
             </TextBox>
           </div>
           <div className="flex items-center">
-            <ActionButton onClick={submit}>Confirm</ActionButton>
+            <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
             <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
               Cancel
             </a>

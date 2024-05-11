@@ -1,26 +1,176 @@
 import moment from 'moment';
 import { etherToString } from '../utils';
 import {
-  ActionButton,
+  ButtonBlue,
+  ButtonLight,
   CardNftSelectable,
   InputDisabledWithLabel,
   Paginator,
+  SpinnerIcon,
   TextBox,
   TextBoxWithNfts,
   Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { fetchCollection, fetchOrders } from '../api/query';
-import { useParams } from 'react-router-dom';
+import { fetchCollection, fetchOrders, fetchUserTokenIds } from '../api/query';
+import { useNavigate, useParams } from 'react-router-dom';
 import { NotFoundPage } from './fallback';
+import { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { useAccount, useBalance } from 'wagmi';
+import { useFulfillOrder } from '../hooks';
+import { DialogContext } from './App';
+import { config } from '../config';
 
 export function OrderFulfillPage() {
   const contract = useParams().contract!;
   const tokenId = Number(useParams().tokenId!);
+  const { setDialog } = useContext(DialogContext);
+  const navigate = useNavigate();
+  const { address } = useAccount();
+  const { data: userBalance } = useBalance({ address });
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: orderResponse } = useSuspenseQuery(fetchOrders(contract, [tokenId]));
+  const { data: userTokenIdsResponse } = useQuery({
+    enabled: !!address,
+    ...fetchUserTokenIds(contract, address!),
+  });
 
-  if (Number.isNaN(tokenId)) {
+  const [paginatedTokenIds, setPaginatedTokenIds] = useState<number[]>([]);
+  const [selectedTokenIds, setSelectedTokenIds] = useState<number[]>([]);
+  const [page, setPage] = useState<number>(0);
+  const [error, setError] = useState<string | undefined>();
+  const {
+    fulfillOrder,
+    isValidChainStatus,
+    isApprovedForAllStatus,
+    fulfillAdvancedOrderStatus,
+    isSuccess,
+    isError,
+  } = useFulfillOrder();
+
+  useEffect(() => {
+    if (isError) {
+      setDialog(undefined);
+    }
+
+    if (isValidChainStatus == 'pending') {
+      setDialog(
+        OrderFulfillDialog(
+          <div>
+            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:read') {
+      setDialog(OrderFulfillDialog('Verifying Seaport allowance ...'));
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:write') {
+      setDialog(
+        OrderFulfillDialog(
+          <div>
+            <div className="text-center">{`Allowing Seaport to access your ${collection.symbol}`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (isApprovedForAllStatus == 'pending:receipt') {
+      setDialog(OrderFulfillDialog('Waiting for approval transaction to confirm ...'));
+      return;
+    }
+
+    if (fulfillAdvancedOrderStatus == 'pending:write') {
+      setDialog(OrderFulfillDialog(<div className="text-center">Confirm in your wallet</div>));
+      return;
+    }
+
+    if (fulfillAdvancedOrderStatus == 'pending:receipt') {
+      setDialog(OrderFulfillDialog('Waiting for purchase transaction to confirm ...'));
+      return;
+    }
+
+    if (isSuccess) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 max-w-lg">
+            <div className="w-full font-medium pb-4">Order fulfill</div>
+            <div className="flex flex-col items-center gap-4">
+              <div>Success!</div>
+              <ButtonLight
+                onClick={() => {
+                  navigate(`/c/${contract}`);
+                  setDialog(undefined);
+                }}
+              >
+                Ok
+              </ButtonLight>
+            </div>
+          </div>
+        </div>,
+      );
+    }
+  }, [isApprovedForAllStatus, isValidChainStatus, fulfillAdvancedOrderStatus, isError, isSuccess]);
+
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages;
+  const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
+  const order = orderResponse.data?.orders[0];
+  const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
+  const ethCost =
+    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
+
+  const orderTokenIdsSorted = useMemo(() => {
+    if (!order) return [];
+
+    const orderTokenIdsCopy = [...order.fulfillmentCriteria.token.identifier];
+    orderTokenIdsCopy.sort((a, b) => {
+      const aIsUserToken = (userTokenIds || []).includes(Number(a));
+      const bIsUserToken = (userTokenIds || []).includes(Number(b));
+      if (aIsUserToken && !bIsUserToken) {
+        return -1;
+      } else if (!aIsUserToken && bIsUserToken) {
+        return 1;
+      } else {
+        return a - b;
+      }
+    });
+    console.log('> [app] sorting tokens');
+
+    return orderTokenIdsCopy;
+  }, [!!order, userTokenIds?.join('-')]);
+
+  function submit() {
+    if (!order) return;
+    if (!userBalance) return;
+
+    if (moment().unix() > order?.endTime) {
+      setError('Order has expired');
+      return;
+    }
+
+    if (selectedTokenIds.length < tokenPrice) {
+      setError(`Must select ${tokenPrice} ${collection.symbol}`);
+      return;
+    }
+
+    if (userBalance?.value < ethCost) {
+      setError('Insufficient funds');
+      return;
+    }
+
+    fulfillOrder({ ...order, selectedTokenIds });
+    setError(undefined);
+  }
+
+  if (Number.isNaN(tokenId) || !order) {
     return <NotFoundPage />;
   }
 
@@ -34,7 +184,7 @@ export function OrderFulfillPage() {
               <span className="text-sm font-medium">Selected items</span>{' '}
               <Tootltip>Selected items will be used to fulfill this order</Tootltip>
             </span>
-            <InputDisabledWithLabel value={selectedTokenIds.length} label={`${orderTokenAmount}`} />
+            <InputDisabledWithLabel value={selectedTokenIds.length} label={`${tokenPrice}`} />
           </div>
           <div className="flex flex-wrap gap-4">
             {order &&
@@ -43,7 +193,21 @@ export function OrderFulfillPage() {
                   key={tokenId}
                   tokenId={Number(tokenId)}
                   src={tokenImages[tokenId]}
-                  onSelect={() => handleSelectToken(tokenId)}
+                  onSelect={() => {
+                    let tokenIds = [...selectedTokenIds];
+                    if (tokenIds.includes(tokenId)) {
+                      tokenIds = tokenIds.filter((id) => id != tokenId);
+                    } else {
+                      if (tokenPrice == 1) {
+                        setSelectedTokenIds([tokenId]);
+                      }
+                      if (selectedTokenIds.length >= tokenPrice) {
+                        return;
+                      }
+                      tokenIds.push(tokenId);
+                    }
+                    setSelectedTokenIds(tokenIds);
+                  }}
                   selected={selectedTokenIds.includes(tokenId)}
                   disabled={!userTokenIds?.includes(Number(tokenId))}
                 />
@@ -51,10 +215,10 @@ export function OrderFulfillPage() {
           </div>
           <Paginator
             items={orderTokenIdsSorted}
-            page={tokensPage}
+            page={page}
             setItems={setPaginatedTokenIds}
-            setPage={setTokensPage}
-            itemsPerPage={18}
+            setPage={setPage}
+            itemsPerPage={30}
           />
         </div>
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
@@ -65,7 +229,7 @@ export function OrderFulfillPage() {
           <div className="flex flex-col gap-4">
             <div>You pay</div>
             <div>
-              {totalAmount > 0 && <TextBox>{`${etherToString(totalAmount, false)}`}</TextBox>}
+              {ethCost > 0 && <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>}
               {order?.fee && (
                 <div className="text-zinc-400 text-xs pt-1 pl-4">
                   fee: {etherToString(BigInt(order?.fee?.amount), false)}
@@ -79,20 +243,30 @@ export function OrderFulfillPage() {
           </div>
           <div className="flex flex-col gap-4">
             <div>Order expires</div>
-            <TextBox>
-              {moment(now * 1000)
-                .add(form.expireDays, 'days')
-                .fromNow()}
-            </TextBox>
+            <TextBox>{moment(order.endTime * 1000).fromNow()}</TextBox>
           </div>
           <div className="flex items-center">
-            <ActionButton onClick={submit}>Confirm</ActionButton>
+            <ButtonBlue loading={!order || !userBalance} onClick={submit}>
+              Confirm
+            </ButtonBlue>
             <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
               Cancel
             </a>
           </div>
-          {!!form.error && <div className="overflow-hidden text-ellipsis red">{form.error}</div>}
+          {error && <div className="overflow-hidden text-ellipsis red">{error}</div>}
         </div>
+      </div>
+    </div>
+  );
+}
+
+function OrderFulfillDialog(message?: ReactNode) {
+  return (
+    <div>
+      <div className="flex flex-col items-center gap-4 max-w-lg">
+        <div className="w-full font-medium pb-4">Fulfill order</div>
+        <SpinnerIcon />
+        <div>{message}</div>
       </div>
     </div>
   );

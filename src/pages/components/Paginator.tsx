@@ -8,7 +8,7 @@ export function Paginator({
   setPage,
   itemsPerPage = 10,
 }: {
-  items: any[];
+  items: number[];
   page: number;
   setItems: Function;
   setPage: Function;
@@ -17,7 +17,7 @@ export function Paginator({
   const pages = Array.from({ length: Math.ceil(items.length / itemsPerPage) }, (_, index) => index);
   const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
   const lastPage = pages.length - 1;
-  useEffect(() => setItems(paginatedItems), [items.length, page]);
+  useEffect(() => setItems(paginatedItems), [items.join('-'), page]);
   const n = 4;
 
   return (
