@@ -1,23 +1,18 @@
-import {
-  useAccount,
-  useDisconnect,
-  useEnsName,
-  useSwitchChain,
-  useWaitForTransactionReceipt,
-} from 'wagmi';
+import { useAccount, useDisconnect, useEnsName } from 'wagmi';
 import { Button, ButtonBlue, ButtonLight, CardNftSelectable, ListedNft, SpinnerIcon, Tab } from '.';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { fetchCollection, fetchOrders, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { ReactNode, useContext, useEffect, useState } from 'react';
-import { useIncrementCounter } from '../../hooks';
 import { shortAddress } from '../../utils';
 import { DialogContext } from '../App';
 import { config } from '../../config';
+import { useCancelAllOrders } from '../../hooks';
 
 export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: Function }) {
   const contract = useParams().contract!;
   const navigate = useNavigate();
+  const { setDialog } = useContext(DialogContext);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
@@ -32,10 +27,78 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   });
   const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
+  const {
+    cancelAllOrders,
+    isError,
+    isSuccess,
+    isValidChainStatus,
+    seaportIncrementCounterStatus,
+    userOrdersQueryStatus,
+  } = useCancelAllOrders();
 
   useEffect(() => {
     if (selectedTokenId) setLastSelectedTokenId(selectedTokenId);
   }, [selectedTokenId]);
+
+  useEffect(() => {
+    if (isError) {
+      setDialog(undefined);
+    }
+
+    if (isValidChainStatus == 'pending') {
+      setDialog(
+        CancelAllOrdersDialog(
+          <div>
+            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (seaportIncrementCounterStatus == 'pending:write') {
+      setDialog(
+        CancelAllOrdersDialog(
+          <div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (seaportIncrementCounterStatus == 'pending:receipt') {
+      setDialog(CancelAllOrdersDialog('Waiting for transaction to confirm ...'));
+      return;
+    }
+
+    if (userOrdersQueryStatus == 'pending') {
+      setDialog(CancelAllOrdersDialog());
+      return;
+    }
+
+    if (isSuccess) {
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel all orders</div>
+            <div className="flex flex-col items-center gap-4">
+              <div>Success!</div>
+              <ButtonLight
+                onClick={() => {
+                  navigate(`/c/${contract}`);
+                  setDialog(undefined);
+                }}
+              >
+                Ok
+              </ButtonLight>
+            </div>
+          </div>
+        </div>,
+      );
+    }
+  }, [isValidChainStatus, seaportIncrementCounterStatus, isError, isSuccess]);
 
   const collection = collectionResponse?.data?.collection!;
   const tokenImages = collectionResponse?.data?.tokenImages!;
@@ -62,9 +125,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                 Disconnect
               </div>
               {!!userOrders && (
-                <ButtonIncrementCounter>
+                <div className="hover:text-zinc-200" onClick={cancelAllOrders}>
                   Cancel all orders ({userOrders.length})
-                </ButtonIncrementCounter>
+                </div>
               )}
             </div>
           </div>
@@ -141,123 +204,20 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   );
 }
 
-function ButtonIncrementCounter({ children }: { children: ReactNode }) {
-  const contract = useParams().contract!;
-  const { setDialog } = useContext(DialogContext);
-  const { address, chainId } = useAccount();
-  const {
-    switchChain,
-    data: switchChainData,
-    isPending: switchNetworkIsPending,
-    isError: switchNetworkIsError,
-  } = useSwitchChain();
-  const queryClient = useQueryClient();
-  const {
-    incrementCounter,
-    data: incrementCounterData,
-    isPending: incrementCounterIsPending,
-    isError: incrementCounterIsError,
-  } = useIncrementCounter();
-  const { data: incrementCounterReceiptData } = useWaitForTransactionReceipt({
-    hash: incrementCounterData,
-  });
-
-  useEffect(() => {
-    if (incrementCounterIsError || switchNetworkIsError) {
-      setDialog(undefined);
-    }
-  }, [incrementCounterIsError, switchNetworkIsError]);
-
-  useEffect(() => {
-    if (incrementCounterIsPending || switchNetworkIsPending) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel all orders</div>
-            <SpinnerIcon />
-            <div>Confirm in your wallet</div>
-            <div className="text-sx text-zinc-400 flex gap-2">
-              <div>⚠️</div>
-              <div>
-                Warning: This will also cancel all your Opensea orders and offers, for all
-                collections.
-              </div>
-            </div>
-          </div>
-        </div>,
-      );
-    }
-  }, [incrementCounterIsPending, switchNetworkIsPending]);
-
-  useEffect(() => {
-    if (incrementCounterData) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel all orders</div>
-            <SpinnerIcon />
-            <div>Transaction is pending...</div>
-          </div>
-        </div>,
-      );
-    }
-  }, [incrementCounterData]);
-
-  useEffect(() => {
-    if (!incrementCounterReceiptData) return;
-    if (incrementCounterReceiptData?.transactionHash == incrementCounterData) {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel all orders</div>
-            <div>All orders have been canceled.</div>
-            <ButtonLight onClick={() => setDialog(undefined)}>OK</ButtonLight>
-          </div>
-        </div>,
-      );
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const userOrdersQueryKey = fetchUserOrders(contract, address!).queryKey[0];
-          const ordersQueryKey = fetchOrders(contract, []).queryKey[0];
-
-          if (query.queryKey[0] == userOrdersQueryKey) return true;
-          if (query.queryKey[0] == ordersQueryKey) return true;
-
-          return false;
-        },
-      });
-    } else {
-      setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 min-w-64 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel all orders</div>
-            <div>Aborted: transaction was cancelled or replaced.</div>
-            <ButtonLight onClick={() => setDialog(undefined)}>OK</ButtonLight>
-          </div>
-        </div>,
-      );
-    }
-  }, [incrementCounterReceiptData]);
-
-  useEffect(() => {
-    if (switchChainData?.id == config.eth.chain.id) {
-      incrementCounter();
-    }
-  }, [switchChainData]);
-
+function CancelAllOrdersDialog(message?: ReactNode) {
   return (
-    <div
-      className="hover:text-zinc-200"
-      onClick={() => {
-        if (chainId == config.eth.chain.id) {
-          incrementCounter();
-          return;
-        }
-
-        switchChain({ chainId: config.eth.chain.id });
-      }}
-    >
-      {children}
+    <div>
+      <div className="flex flex-col items-center gap-4 max-w-lg">
+        <div className="w-full font-medium pb-4">Cancel all orders</div>
+        <SpinnerIcon />
+        <div>{message}</div>
+        <div className="text-sx text-zinc-400 flex gap-2">
+          <div>⚠️</div>
+          <div>
+            Warning: This will also cancel all your Opensea orders and offers, for all collections.
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

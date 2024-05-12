@@ -46,9 +46,12 @@ export function useFulfillOrder() {
     ...fetchOrders(contract, order ? [order.tokenId] : []),
     refetchInterval: orderQueryStatus != 'success' ? 1_000 : false,
     enabled: fulfillAdvancedOrderIsSuccess && orderQueryStatus != 'success',
+    staleTime: 0,
   });
 
   useEffect(() => {
+    if (orderQueryStatus == 'success') return;
+
     if (orderQueryResponse?.data?.orders.length == 0) {
       setOrderQueryStatus('success');
       queryClient.invalidateQueries({
@@ -56,10 +59,10 @@ export function useFulfillOrder() {
           const collectionQueryKey = fetchCollection(contract).queryKey[0];
           const orderQueryKey = fetchOrders(contract, [order!.tokenId]);
 
-          if (query.queryKey[0] == collectionQueryKey || query.queryKey[0] == orderQueryKey)
-            return true;
+          if (query.queryKey[0] == collectionQueryKey) return false;
+          if (query.queryKey[0] == orderQueryKey) return false;
 
-          return false;
+          return true;
         },
       });
       return;
@@ -74,7 +77,7 @@ export function useFulfillOrder() {
       setOrderQueryStatus('error');
       return;
     }
-  }, [orderQueryIsFetching]);
+  }, [orderQueryResponse, orderQueryIsFetching, orderQueryIsError]);
 
   useEffect(() => {
     if (isValidChainIsError || isApprovedForAllIsError || fulfillAdvancedOrderIsError) {
