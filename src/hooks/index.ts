@@ -1,5 +1,6 @@
 export * from './useCancelAllOrders';
 export * from './useFulfillOrder';
+export * from './useQueryUntil';
 export * from './useSeaportAllowance';
 export * from './useSeaportFulfillAdvancedOrder';
 export * from './useSeaportIncrementCounter';

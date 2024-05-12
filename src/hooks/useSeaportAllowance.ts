@@ -13,7 +13,7 @@ type SeaportAllowanceStatus =
   | 'success'
   | 'error';
 
-export function useSeaportAllowance(query?: { enabled?: boolean }) {
+export function useSeaportAllowance({ run }: { run: boolean }) {
   const { address } = useAccount();
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
@@ -29,7 +29,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
     abi: erc721Abi,
     functionName: 'isApprovedForAll',
     args: [address!, config.eth.seaport.conduit],
-    query,
+    query: { enabled: run },
   });
 
   const {
@@ -50,7 +50,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
   });
 
   useEffect(() => {
-    if (query?.enabled == false) return;
+    if (!run) return;
     if (isApprovedForAll != false) return;
 
     setApprovalForAll({
@@ -59,7 +59,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
       functionName: 'setApprovalForAll',
       args: [config.eth.seaport.conduit, true],
     });
-  }, [query?.enabled, isApprovedForAll]);
+  }, [run, isApprovedForAll]);
 
   useEffect(() => {
     if (!setApprovalForAllReceiptData) return;
@@ -70,7 +70,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
   }, [setApprovalForAllReceiptData]);
 
   useEffect(() => {
-    if (!query?.enabled) {
+    if (!run) {
       setStatus('idle');
       return;
     }
@@ -95,7 +95,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
       return;
     }
   }, [
-    query?.enabled,
+    run,
     isApprovedForAll,
     isApprovedForAllError,
     isApprovedForAllIsPendingQuery,
@@ -107,7 +107,7 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
   ]);
 
   useEffect(() => {
-    if (!query?.enabled) {
+    if (!run) {
       resetSetApprovalForAll();
       queryClient.resetQueries({
         predicate: ({ queryKey }) =>
@@ -115,11 +115,11 @@ export function useSeaportAllowance(query?: { enabled?: boolean }) {
           queryKey[0] == setApprovalForAllReceiptQueryKey[0],
       });
     }
-  }, [!!query?.enabled]);
+  }, [!!run]);
 
   return {
-    isApprovedForAll,
     status,
+    isSuccess: isApprovedForAll,
     isError: status == 'error',
   };
 }

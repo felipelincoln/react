@@ -1,18 +1,15 @@
 import { useEffect, useState } from 'react';
-import { useSeaportIncrementCounter, useValidateChain } from '.';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryUntil, useSeaportIncrementCounter, useValidateChain } from '.';
 import { useParams } from 'react-router-dom';
 import { useAccount } from 'wagmi';
 import { fetchOrders, fetchUserOrders } from '../api/query';
+import { QueryClient, useQueryClient } from '@tanstack/react-query';
 
 export function useCancelAllOrders() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const { address } = useAccount();
   const [start, setStart] = useState(false);
-  const [userOrdersQueryStatus, setUserOrdersQueryStatus] = useState<
-    'idle' | 'pending' | 'success' | 'error'
-  >('idle');
 
   const {
     status: isValidChainStatus,
@@ -27,62 +24,29 @@ export function useCancelAllOrders() {
   } = useSeaportIncrementCounter({ run: start && isValidChain });
 
   const {
-    data: userOrdersQueryResponse,
-    isFetching: userOrdersQueryIsFetching,
+    status: userOrdersQueryStatus,
+    isSuccess: userOrdersQueryIsSuccess,
     isError: userOrdersQueryIsError,
-  } = useQuery({
+  } = useQueryUntil({
     ...fetchUserOrders(contract, address!),
-    refetchInterval: 1000,
-    enabled: start && seaportIncrementCounterIsSuccess && userOrdersQueryStatus != 'success',
+    queryUntilFn: (response) => response?.data?.orders.length === 0,
+    enabled: start && seaportIncrementCounterIsSuccess,
   });
 
-  useEffect(() => {
-    if (!start) return;
-    if (!seaportIncrementCounterIsSuccess) return;
-    if (userOrdersQueryStatus == 'success') return;
-
-    if (userOrdersQueryResponse?.data?.orders.length == 0) {
-      setUserOrdersQueryStatus('success');
-      queryClient.invalidateQueries({
-        predicate: (query) => {
-          const userOrdersQueryKey = fetchUserOrders(contract, address!).queryKey[0];
-          const ordersQueryKey = fetchOrders(contract, []).queryKey[0];
-
-          if (query.queryKey[0] == userOrdersQueryKey) return true;
-          if (query.queryKey[0] == ordersQueryKey) return true;
-
-          return false;
-        },
-      });
-
-      return;
-    }
-
-    if (userOrdersQueryIsFetching) {
-      setUserOrdersQueryStatus('pending');
-      return;
-    }
-
-    if (userOrdersQueryIsError) {
-      setUserOrdersQueryStatus('error');
-      return;
-    }
-  }, [start, userOrdersQueryResponse, userOrdersQueryIsFetching, userOrdersQueryIsError]);
+  const isError = seaportIncrementCounterIsError || isValidChainIsError || userOrdersQueryIsError;
+  const isSuccess = isValidChain && seaportIncrementCounterIsSuccess && userOrdersQueryIsSuccess;
 
   useEffect(() => {
-    if (seaportIncrementCounterIsError || isValidChainIsError) {
+    if (isSuccess) {
+      queryClient.invalidateQueries({ queryKey: [fetchOrders(contract, []).queryKey[0]] });
+    }
+  }, [isSuccess]);
+
+  useEffect(() => {
+    if (isError || isSuccess) {
       setStart(false);
     }
-  }, [seaportIncrementCounterIsError, isValidChainIsError]);
-
-  useEffect(() => {
-    if (start) return;
-
-    setUserOrdersQueryStatus('idle');
-    queryClient.resetQueries({
-      queryKey: ['no-cache', ...fetchUserOrders(contract, address!).queryKey],
-    });
-  }, [start]);
+  }, [isError, isSuccess]);
 
   function cancelAllOrders() {
     setStart(true);
@@ -93,16 +57,7 @@ export function useCancelAllOrders() {
     isValidChainStatus,
     seaportIncrementCounterStatus,
     userOrdersQueryStatus,
-    isSuccess: seaportIncrementCounterIsSuccess && userOrdersQueryStatus == 'success',
-    isError: seaportIncrementCounterIsError || isValidChainIsError,
+    isSuccess,
+    isError,
   };
-}
-
-export function useQueryUntil(args: {
-  queryKey: any[];
-  queryFn: () => Promise<any>;
-  refetchInterval: number;
-  enabled: boolean;
-}) {
-  const { data } = useQuery({ ...args, staleTime: 0 });
 }

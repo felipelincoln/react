@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { Order } from '../api/types';
 import { WithSelectedTokenIds } from '../eth';
 import { useValidateChain } from './useValidateChain';
-import { useSeaportAllowance, useSeaportFulfillAdvancedOrder } from '.';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useQueryUntil, useSeaportAllowance, useSeaportFulfillAdvancedOrder } from '.';
+import { useQueryClient } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders } from '../api/query';
 import { useParams } from 'react-router-dom';
 
@@ -11,23 +11,18 @@ export function useFulfillOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const [order, setOrder] = useState<WithSelectedTokenIds<Order> | undefined>(undefined);
-  const [orderQueryStatus, setOrderQueryStatus] = useState<
-    'idle' | 'pending' | 'success' | 'error'
-  >('idle');
 
   const {
-    isValidChain,
     status: isValidChainStatus,
+    isSuccess: isValidChain,
     isError: isValidChainIsError,
-  } = useValidateChain({ enabled: !!order });
+  } = useValidateChain({ run: !!order });
 
   const {
-    isApprovedForAll,
     status: isApprovedForAllStatus,
+    isSuccess: isApprovedForAll,
     isError: isApprovedForAllIsError,
-  } = useSeaportAllowance({
-    enabled: !!order && isValidChain,
-  });
+  } = useSeaportAllowance({ run: !!order && isValidChain });
 
   const {
     status: fulfillAdvancedOrderStatus,
@@ -39,51 +34,37 @@ export function useFulfillOrder() {
   });
 
   const {
-    data: orderQueryResponse,
-    isFetching: orderQueryIsFetching,
+    status: orderQueryStatus,
+    isSuccess: orderQueryIsSuccess,
     isError: orderQueryIsError,
-  } = useQuery({
+  } = useQueryUntil({
     ...fetchOrders(contract, order ? [order.tokenId] : []),
-    refetchInterval: orderQueryStatus != 'success' ? 1_000 : false,
-    enabled: fulfillAdvancedOrderIsSuccess && orderQueryStatus != 'success',
-    staleTime: 0,
+    queryUntilFn: (response) => response?.data?.orders.length == 0,
+    enabled: !!order && isValidChain && !!isApprovedForAll && fulfillAdvancedOrderIsSuccess,
   });
 
-  useEffect(() => {
-    if (orderQueryStatus == 'success') return;
+  const isError =
+    isValidChainIsError ||
+    isApprovedForAllIsError ||
+    fulfillAdvancedOrderIsError ||
+    orderQueryIsError;
 
-    if (orderQueryResponse?.data?.orders.length == 0) {
-      setOrderQueryStatus('success');
+  const isSuccess =
+    isValidChain && isApprovedForAll && fulfillAdvancedOrderIsSuccess && orderQueryIsSuccess;
+
+  useEffect(() => {
+    if (isSuccess) {
       queryClient.invalidateQueries({
-        predicate: (query) => {
-          const collectionQueryKey = fetchCollection(contract).queryKey[0];
-          const orderQueryKey = fetchOrders(contract, [order!.tokenId]);
-
-          if (query.queryKey[0] == collectionQueryKey) return false;
-          if (query.queryKey[0] == orderQueryKey) return false;
-
-          return true;
-        },
+        predicate: ({ queryKey }) => queryKey[0] != fetchCollection(contract).queryKey[0],
       });
-      return;
     }
-
-    if (orderQueryIsFetching) {
-      setOrderQueryStatus('pending');
-      return;
-    }
-
-    if (orderQueryIsError) {
-      setOrderQueryStatus('error');
-      return;
-    }
-  }, [orderQueryResponse, orderQueryIsFetching, orderQueryIsError]);
+  }, [isSuccess]);
 
   useEffect(() => {
-    if (isValidChainIsError || isApprovedForAllIsError || fulfillAdvancedOrderIsError) {
+    if (isSuccess || isError) {
       setOrder(undefined);
     }
-  }, [isValidChainIsError, isApprovedForAllIsError, fulfillAdvancedOrderIsError]);
+  }, [isSuccess, isError]);
 
   function fulfillOrder(args: WithSelectedTokenIds<Order>) {
     setOrder(args);
@@ -91,8 +72,8 @@ export function useFulfillOrder() {
 
   return {
     fulfillOrder,
-    isSuccess: fulfillAdvancedOrderIsSuccess && orderQueryStatus == 'success',
-    isError: isValidChainIsError || isApprovedForAllIsError || fulfillAdvancedOrderIsError,
+    isSuccess,
+    isError,
     isValidChainStatus,
     isApprovedForAllStatus,
     fulfillAdvancedOrderStatus,

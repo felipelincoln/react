@@ -16,7 +16,7 @@ type SeaportFulfillAdvancedOrderStatus =
   | 'error';
 
 export function useSeaportFulfillAdvancedOrder(args: {
-  query?: { enabled?: boolean };
+  run: boolean;
   order: WithSelectedTokenIds<Order>;
 }) {
   const contract = useParams().contract!;
