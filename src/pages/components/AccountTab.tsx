@@ -98,7 +98,13 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         </div>,
       );
     }
-  }, [isValidChainStatus, seaportIncrementCounterStatus, isError, isSuccess]);
+  }, [
+    isValidChainStatus,
+    seaportIncrementCounterStatus,
+    userOrdersQueryStatus,
+    isError,
+    isSuccess,
+  ]);
 
   const collection = collectionResponse?.data?.collection!;
   const tokenImages = collectionResponse?.data?.tokenImages!;

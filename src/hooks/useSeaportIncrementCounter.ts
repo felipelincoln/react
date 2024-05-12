@@ -11,7 +11,7 @@ type SeaportIncrementCounterStatus =
   | 'success'
   | 'error';
 
-export function useSeaportIncrementCounter(args: { query?: { enabled?: boolean } }) {
+export function useSeaportIncrementCounter({ run }: { run: boolean }) {
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SeaportIncrementCounterStatus>('idle');
 
@@ -33,7 +33,7 @@ export function useSeaportIncrementCounter(args: { query?: { enabled?: boolean }
   });
 
   useEffect(() => {
-    if (!args.query?.enabled) return;
+    if (!run) return;
 
     writeContract({
       abi: seaportAbi(),
@@ -41,10 +41,10 @@ export function useSeaportIncrementCounter(args: { query?: { enabled?: boolean }
       functionName: 'incrementCounter',
       chainId: config.eth.chain.id,
     });
-  }, [args.query?.enabled]);
+  }, [run]);
 
   useEffect(() => {
-    if (!args.query?.enabled) {
+    if (!run) {
       setStatus('idle');
       return;
     }
@@ -65,7 +65,7 @@ export function useSeaportIncrementCounter(args: { query?: { enabled?: boolean }
       return;
     }
   }, [
-    args.query?.enabled,
+    run,
     writeContractError,
     writeContractIsPending,
     writeContractReceiptError,
@@ -73,11 +73,11 @@ export function useSeaportIncrementCounter(args: { query?: { enabled?: boolean }
   ]);
 
   useEffect(() => {
-    if (!args.query?.enabled) {
+    if (!run) {
       resetWriteContract();
       queryClient.resetQueries({ queryKey: writeContractReceiptQueryKey });
     }
-  }, [!!args.query?.enabled]);
+  }, [run]);
 
   return {
     status,

@@ -1,23 +1,46 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAccount, useSwitchChain } from 'wagmi';
 import { config } from '../config';
 
-export function useValidateChain(query?: { enabled?: boolean }) {
+type ValidateChainStatus = 'idle' | 'pending' | 'success' | 'error';
+
+export function useValidateChain({ run }: { run: boolean }) {
   const { chainId } = useAccount();
-  const { switchChain, status, isError, reset } = useSwitchChain();
-
-  useEffect(() => {
-    if (query?.enabled == false) return;
-    if (chainId == config.eth.chain.id) return;
-
-    switchChain({ chainId: config.eth.chain.id });
-  }, [query?.enabled, chainId]);
-
-  useEffect(() => {
-    if (!query?.enabled) reset();
-  }, [!!query?.enabled]);
-
+  const { switchChain, isPending, isError, reset } = useSwitchChain();
+  const [status, setStatus] = useState<ValidateChainStatus>('idle');
   const isValidChain = chainId == config.eth.chain.id;
 
-  return { isValidChain, status, isError };
+  useEffect(() => {
+    if (!run) return;
+    if (isValidChain) return;
+
+    switchChain({ chainId: config.eth.chain.id });
+  }, [run, isValidChain]);
+
+  useEffect(() => {
+    if (!run) {
+      setStatus('idle');
+      return;
+    }
+    if (isError) {
+      setStatus('error');
+      return;
+    }
+    if (isValidChain) {
+      setStatus('success');
+      return;
+    }
+    if (isPending) {
+      setStatus('pending');
+      return;
+    }
+  }, [run, isValidChain, isPending, isError]);
+
+  useEffect(() => {
+    if (!run) {
+      reset();
+    }
+  }, [run]);
+
+  return { status, isSuccess: status == 'success', isError };
 }

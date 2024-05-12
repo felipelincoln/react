@@ -21,10 +21,10 @@ export function useSubmitOrder() {
   const [orderFragment, setOrderFragment] = useState<OrderFragment | undefined>();
 
   const {
-    isValidChain,
     status: isValidChainStatus,
+    isSuccess: isValidChain,
     isError: isValidChainIsError,
-  } = useValidateChain({ enabled: !!orderFragment });
+  } = useValidateChain({ run: !!orderFragment });
 
   const {
     isApprovedForAll,

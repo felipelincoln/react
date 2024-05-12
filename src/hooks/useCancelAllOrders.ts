@@ -15,27 +15,25 @@ export function useCancelAllOrders() {
   >('idle');
 
   const {
-    isValidChain,
     status: isValidChainStatus,
+    isSuccess: isValidChain,
     isError: isValidChainIsError,
-  } = useValidateChain({ enabled: start });
+  } = useValidateChain({ run: start });
 
   const {
     status: seaportIncrementCounterStatus,
     isSuccess: seaportIncrementCounterIsSuccess,
     isError: seaportIncrementCounterIsError,
-  } = useSeaportIncrementCounter({ query: { enabled: start && isValidChain } });
+  } = useSeaportIncrementCounter({ run: start && isValidChain });
 
   const {
     data: userOrdersQueryResponse,
     isFetching: userOrdersQueryIsFetching,
     isError: userOrdersQueryIsError,
   } = useQuery({
-    queryKey: ['no-cache', ...fetchUserOrders(contract, address!).queryKey],
-    queryFn: fetchUserOrders(contract, address!).queryFn,
-    refetchInterval: seaportIncrementCounterIsSuccess ? 1_000 : false,
-    enabled: start && seaportIncrementCounterIsSuccess,
-    staleTime: 0,
+    ...fetchUserOrders(contract, address!),
+    refetchInterval: 1000,
+    enabled: start && seaportIncrementCounterIsSuccess && userOrdersQueryStatus != 'success',
   });
 
   useEffect(() => {
@@ -45,7 +43,6 @@ export function useCancelAllOrders() {
 
     if (userOrdersQueryResponse?.data?.orders.length == 0) {
       setUserOrdersQueryStatus('success');
-      setStart(false);
       queryClient.invalidateQueries({
         predicate: (query) => {
           const userOrdersQueryKey = fetchUserOrders(contract, address!).queryKey[0];
@@ -99,4 +96,13 @@ export function useCancelAllOrders() {
     isSuccess: seaportIncrementCounterIsSuccess && userOrdersQueryStatus == 'success',
     isError: seaportIncrementCounterIsError || isValidChainIsError,
   };
+}
+
+export function useQueryUntil(args: {
+  queryKey: any[];
+  queryFn: () => Promise<any>;
+  refetchInterval: number;
+  enabled: boolean;
+}) {
+  const { data } = useQuery({ ...args, staleTime: 0 });
 }
