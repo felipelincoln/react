@@ -23,7 +23,7 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
     data: isApprovedForAll,
     error: isApprovedForAllError,
     isPending: isApprovedForAllIsPendingQuery,
-    queryKey: isApprovedForAllQueryKey,
+    queryKey: [isApprovedForAllQueryKey],
   } = useReadContract({
     address: contract as `0x${string}`,
     abi: erc721Abi,
@@ -44,7 +44,7 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
     data: setApprovalForAllReceiptData,
     isPending: setApprovalForAllReceiptIsPendingQuery,
     error: setApprovalForAllReceiptError,
-    queryKey: setApprovalForAllReceiptQueryKey,
+    queryKey: [setApprovalForAllReceiptQueryKey],
   } = useWaitForTransactionReceipt({
     hash: setApprovalForAllData,
   });
@@ -59,15 +59,15 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
       functionName: 'setApprovalForAll',
       args: [config.eth.seaport.conduit, true],
     });
-  }, [run, isApprovedForAll]);
+  }, [run, isApprovedForAll, contract, setApprovalForAll]);
 
   useEffect(() => {
     if (!setApprovalForAllReceiptData) return;
 
     if (setApprovalForAllReceiptData?.transactionHash == setApprovalForAllData) {
-      queryClient.resetQueries({ queryKey: isApprovedForAllQueryKey });
+      queryClient.resetQueries({ queryKey: [isApprovedForAllQueryKey] });
     }
-  }, [setApprovalForAllReceiptData]);
+  }, [setApprovalForAllReceiptData, setApprovalForAllData, isApprovedForAllQueryKey, queryClient]);
 
   useEffect(() => {
     if (!run) {
@@ -111,11 +111,17 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
       resetSetApprovalForAll();
       queryClient.resetQueries({
         predicate: ({ queryKey }) =>
-          queryKey[0] == isApprovedForAllQueryKey[0] ||
-          queryKey[0] == setApprovalForAllReceiptQueryKey[0],
+          queryKey[0] == isApprovedForAllQueryKey ||
+          queryKey[0] == setApprovalForAllReceiptQueryKey,
       });
     }
-  }, [!!run]);
+  }, [
+    run,
+    isApprovedForAllQueryKey,
+    queryClient,
+    resetSetApprovalForAll,
+    setApprovalForAllReceiptQueryKey,
+  ]);
 
   return {
     status,

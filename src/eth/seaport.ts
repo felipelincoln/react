@@ -93,8 +93,8 @@ export function seaportEip712Message(args: WithCounter<OrderFragment>) {
     recipient: args.fee.recipient,
   };
 
-  const ethConsiderationList = !!ethConsideration ? [ethConsideration] : [];
-  const feeConsiderationList = !!marketplaceFeeConsideration ? [marketplaceFeeConsideration] : [];
+  const ethConsiderationList = ethConsideration ? [ethConsideration] : [];
+  const feeConsiderationList = marketplaceFeeConsideration ? [marketplaceFeeConsideration] : [];
   const tokenConsiderationList = Array.from(
     { length: Number(args.fulfillmentCriteria.token.amount) },
     () => tokenConsideration,
@@ -173,7 +173,7 @@ export function seaportCancelOrderArgs(order: WithCounter<OrderFragment>) {
     ...order,
     selectedTokenIds: [],
     signature: '',
-  })[0][0] as any[]; // order.advancedOrder.orderParameters
+  })[0][0] as (string | number | (string | number)[][] | string[])[]; // order.advancedOrder.orderParameters
 
   advancedOrder[10] = [order.counter];
 
@@ -191,7 +191,7 @@ export function seaportContractAddress() {
 export function seaportEip712Default() {
   return {
     domain: seaportEip712Domain(),
-    primaryType: 'OrderComponents' as 'OrderComponents',
+    primaryType: 'OrderComponents' as const,
     types: seaportEip712Types(),
   };
 }

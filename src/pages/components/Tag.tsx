@@ -1,6 +1,6 @@
 import { Button } from '.';
 
-export function Tag({ children, onClick }: { children: string; onClick: Function }) {
+export function Tag({ children, onClick }: { children: string; onClick: () => void }) {
   return (
     <Button onClick={() => onClick()}>
       {children}

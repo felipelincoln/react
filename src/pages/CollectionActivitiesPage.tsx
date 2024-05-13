@@ -16,20 +16,20 @@ export function CollectionActivitiesPage() {
     fetchActivities(contract, tokenIdsResponse.data?.tokens || []),
   );
 
-  const collection = collectionResponse?.data?.collection!;
-  const tokenImages = collectionResponse?.data?.tokenImages!;
-  const activities = activitiesResponse.data?.activities!;
+  const collection = collectionResponse?.data?.collection;
+  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const activities = activitiesResponse.data?.activities;
 
   return (
     <div className="flex-grow p-8 gap-8">
       <div className="flex h-8 gap-4 items-center">
         <div className="flex items-center gap-2 *:leading-8">
-          <div>{activities.length}</div>
+          <div>{activities?.length}</div>
           <div>Results</div>
         </div>
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
-      {activities.length > 0 && (
+      {activities && activities.length > 0 && (
         <table className="m-auto">
           <thead>
             <tr className="*:font-normal text-sm text-zinc-400 text-left">

@@ -7,7 +7,7 @@ export function etherToString(ether = 0n, truncate = true) {
     return formatted.concat(' ETH');
   }
 
-  let indexOfSeparator = formatted.indexOf('.');
+  const indexOfSeparator = formatted.indexOf('.');
   if (indexOfSeparator != -1) {
     formatted = formatted.slice(0, indexOfSeparator + 5);
     if (formatted === '0.0000') {

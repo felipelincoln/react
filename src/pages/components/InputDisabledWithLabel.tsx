@@ -1,6 +1,12 @@
 import { ReactNode } from 'react';
 
-export function InputDisabledWithLabel({ value, label }: { value: any; label: ReactNode }) {
+export function InputDisabledWithLabel({
+  value,
+  label,
+}: {
+  value: string | number;
+  label: ReactNode;
+}) {
   return (
     <div className="flex w-52">
       <input

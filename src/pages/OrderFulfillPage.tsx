@@ -86,7 +86,9 @@ export function OrderFulfillPage() {
     console.log('> [app] sorting tokens');
 
     return orderTokenIdsCopy;
-  }, [!!order, userTokenIds?.join('-')]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [order, userTokenIds?.join('-')]);
 
   useEffect(() => {
     if (isError) {
@@ -169,6 +171,10 @@ export function OrderFulfillPage() {
     orderQueryStatus,
     isError,
     isSuccess,
+    collection,
+    contract,
+    navigate,
+    setDialog,
   ]);
 
   useEffect(() => {
@@ -241,6 +247,9 @@ export function OrderFulfillPage() {
     userOrdersQueryStatus,
     cancelOrderIsSuccess,
     cancelOrderIsError,
+    contract,
+    navigate,
+    setDialog,
   ]);
 
   function submit() {

@@ -9,7 +9,7 @@ export function Button({
   children?: ReactNode;
   disabled?: boolean;
   loading?: boolean;
-  onClick?: Function;
+  onClick?: () => void;
 }) {
   if (loading) {
     return (
@@ -26,7 +26,7 @@ export function Button({
   return (
     <button
       type="button"
-      disabled={!!disabled}
+      disabled={disabled}
       onClick={() => onClick?.()}
       className="h-8 px-4 rounded text-sm bg-zinc-800 text-zinc-200 whitespace-nowrap hover:bg-zinc-700 disabled:bg-inherit disabled:outline disabled:outline-1 disabled:-outline-offset-1 disabled:outline-zinc-700"
     >

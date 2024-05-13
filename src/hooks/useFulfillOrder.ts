@@ -59,7 +59,7 @@ export function useFulfillOrder() {
         predicate: ({ queryKey }) => queryKey[0] != fetchCollection(contract).queryKey[0],
       });
     }
-  }, [isSuccess]);
+  }, [isSuccess, queryClient, contract]);
 
   useEffect(() => {
     if (isSuccess || isError) {

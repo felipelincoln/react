@@ -16,7 +16,7 @@ export function ListedNft({
   src?: string;
   tokenPrice: string;
   ethPrice?: string;
-  onClick?: Function;
+  onClick?: () => void;
 }) {
   return (
     <div className="flex gap-2 items-end cursor-pointer" onClick={() => onClick?.()}>

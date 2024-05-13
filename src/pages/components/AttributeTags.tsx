@@ -6,7 +6,7 @@ export function AttributeTags({
   filter,
   setFilter,
 }: {
-  collection: Collection;
+  collection?: Collection;
   filter: Record<string, string>;
   setFilter: (filter: Record<string, string>) => void;
 }) {

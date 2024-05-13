@@ -5,8 +5,6 @@ import { erc20Abi } from 'viem';
 import { config } from '../../config';
 import { Order } from '../../api/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { fetchCollection } from '../../api/query';
-import { useParams } from 'react-router-dom';
 
 type SeaportFulfillAdvancedOrderStatus =
   | 'idle'
@@ -22,7 +20,6 @@ export function useSeaportFulfillAdvancedOrder({
   run: boolean;
   order: WithSelectedTokenIds<Order>;
 }) {
-  const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SeaportFulfillAdvancedOrderStatus>('idle');
 
@@ -38,7 +35,7 @@ export function useSeaportFulfillAdvancedOrder({
     data: writeContractReceiptData,
     isPending: writeContractReceiptIsPendingQuery,
     error: writeContractReceiptError,
-    queryKey: writeContractReceiptQueryKey,
+    queryKey: [writeContractReceiptQueryKey],
   } = useWaitForTransactionReceipt({
     hash,
   });
@@ -54,7 +51,7 @@ export function useSeaportFulfillAdvancedOrder({
       value:
         BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
     });
-  }, [run]);
+  }, [run, order, writeContract]);
 
   useEffect(() => {
     if (!run) {
@@ -79,6 +76,7 @@ export function useSeaportFulfillAdvancedOrder({
     }
   }, [
     run,
+    hash,
     writeContractError,
     writeContractIsPending,
     writeContractReceiptData,
@@ -89,9 +87,9 @@ export function useSeaportFulfillAdvancedOrder({
   useEffect(() => {
     if (!run) {
       resetWriteContract();
-      queryClient.resetQueries({ queryKey: writeContractReceiptQueryKey });
+      queryClient.resetQueries({ queryKey: [writeContractReceiptQueryKey] });
     }
-  }, [run]);
+  }, [run, queryClient, resetWriteContract, writeContractReceiptQueryKey]);
 
   return {
     status,

@@ -9,7 +9,7 @@ import { DialogContext } from '../App';
 import { config } from '../../config';
 import { useCancelAllOrders } from '../../hooks';
 
-export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: Function }) {
+export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: () => void }) {
   const contract = useParams().contract!;
   const navigate = useNavigate();
   const { setDialog } = useContext(DialogContext);
@@ -104,10 +104,13 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     userOrdersQueryStatus,
     isError,
     isSuccess,
+    contract,
+    navigate,
+    setDialog,
   ]);
 
-  const collection = collectionResponse?.data?.collection!;
-  const tokenImages = collectionResponse?.data?.tokenImages!;
+  const collection = collectionResponse?.data?.collection;
+  const tokenImages = collectionResponse?.data?.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
   const userOrders = userOrdersResponse?.data?.orders;
   const userUnlistedTokens = userTokenIds?.filter(
@@ -120,7 +123,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         <div className="p-8 flex flex-col gap-8">
           <div className="flex flex-col gap-2">
             <div className="overflow-x-hidden text-ellipsis font-medium">
-              {!!ensName ? (
+              {ensName ? (
                 <span>{ensName}</span>
               ) : (
                 <span className="text-sm">{shortAddress(address)}</span>
@@ -139,7 +142,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           </div>
           <hr className="border-zinc-800 border-2 border-t-0 -mx-8" />
           <div className="flex flex-col gap-4">
-            <div className="overflow-x-hidden text-ellipsis font-medium">{collection.name}</div>
+            <div className="overflow-x-hidden text-ellipsis font-medium">{collection?.name}</div>
             <div className="flex flex-col gap-8">
               {!!userOrders && userOrders.length > 0 && (
                 <div className="flex flex-col gap-4">
@@ -148,8 +151,8 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                     {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
                       <ListedNft
                         tokenId={tokenId}
-                        name={collection.name}
-                        symbol={collection.symbol}
+                        name={collection?.name || ''}
+                        symbol={collection?.symbol || ''}
                         src={tokenImages[tokenId]}
                         key={tokenId}
                         tokenPrice={fulfillmentCriteria.token.amount}

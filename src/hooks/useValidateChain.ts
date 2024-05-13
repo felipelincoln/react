@@ -15,7 +15,7 @@ export function useValidateChain({ run }: { run: boolean }) {
     if (isValidChain) return;
 
     switchChain({ chainId: config.eth.chain.id });
-  }, [run, isValidChain]);
+  }, [run, isValidChain, switchChain]);
 
   useEffect(() => {
     if (!run) {
@@ -40,7 +40,7 @@ export function useValidateChain({ run }: { run: boolean }) {
     if (!run) {
       reset();
     }
-  }, [run]);
+  }, [run, reset]);
 
   return { status, isSuccess: status == 'success', isError };
 }

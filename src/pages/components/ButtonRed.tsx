@@ -9,7 +9,7 @@ export function ButtonRed({
   children?: ReactNode;
   disabled?: boolean;
   loading?: boolean;
-  onClick?: Function;
+  onClick?: () => void;
 }) {
   if (loading) {
     return (

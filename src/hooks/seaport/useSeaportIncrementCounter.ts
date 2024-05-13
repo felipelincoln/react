@@ -27,7 +27,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
     data: writeContractReceiptData,
     isPending: writeContractReceiptIsPendingQuery,
     error: writeContractReceiptError,
-    queryKey: writeContractReceiptQueryKey,
+    queryKey: [writeContractReceiptQueryKey],
   } = useWaitForTransactionReceipt({
     hash,
   });
@@ -41,7 +41,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
       functionName: 'incrementCounter',
       chainId: config.eth.chain.id,
     });
-  }, [run]);
+  }, [run, writeContract]);
 
   useEffect(() => {
     if (!run) {
@@ -66,6 +66,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
     }
   }, [
     run,
+    hash,
     writeContractError,
     writeContractIsPending,
     writeContractReceiptData,
@@ -76,9 +77,9 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
   useEffect(() => {
     if (!run) {
       resetWriteContract();
-      queryClient.resetQueries({ queryKey: writeContractReceiptQueryKey });
+      queryClient.resetQueries({ queryKey: [writeContractReceiptQueryKey] });
     }
-  }, [run]);
+  }, [run, queryClient, resetWriteContract, writeContractReceiptQueryKey]);
 
   return {
     status,

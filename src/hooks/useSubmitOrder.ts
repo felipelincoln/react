@@ -88,13 +88,13 @@ export function useSubmitOrder() {
       message: seaportEip712Message({ ...orderFragment, counter: counter.toString() }),
       ...seaportEip712Default(),
     });
-  }, [orderFragment, isValidChain, isApprovedForAll, counter, orderHash]);
+  }, [orderFragment, isValidChain, isApprovedForAll, counter, orderHash, signTypedData, postOrder]);
 
   useEffect(() => {
     if (orderFragment && orderHash && signature) {
       postOrder();
     }
-  }, [orderFragment, orderHash, signature]);
+  }, [orderFragment, orderHash, signature, postOrder]);
 
   useEffect(() => {
     if (!postOrderData) return;
@@ -110,13 +110,13 @@ export function useSubmitOrder() {
         return false;
       },
     });
-  }, [postOrderData]);
+  }, [postOrderData, contract, queryClient]);
 
   useEffect(() => {
     if (isError || isSuccess) {
       setOrderFragment(undefined);
     }
-  }, [isError]);
+  }, [isError, isSuccess]);
 
   function submitOrder(arg: OrderFragment) {
     setOrderFragment(arg);

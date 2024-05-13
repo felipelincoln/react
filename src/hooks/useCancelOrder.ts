@@ -49,7 +49,7 @@ export function useCancelOrder() {
         },
       });
     }
-  }, [isSuccess]);
+  }, [isSuccess, contract, queryClient]);
 
   useEffect(() => {
     if (isError || isSuccess) {

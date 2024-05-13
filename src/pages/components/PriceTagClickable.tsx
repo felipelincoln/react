@@ -5,7 +5,7 @@ export function PriceTagClickable({
   onClick,
 }: {
   children: ReactNode;
-  onClick?: Function;
+  onClick?: () => void;
 }) {
   return (
     <div

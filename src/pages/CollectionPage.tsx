@@ -3,12 +3,12 @@ import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api/query';
 import { Button, ButtonAccordion, Checkbox } from './components';
 import { Suspense, createContext, useState } from 'react';
-import { CollectionLoadingPage, LoadingPage } from './fallback';
+import { CollectionLoadingPage } from './fallback';
 
 export const FilterContext = createContext<{
   filter: Record<string, string>;
   setFilter: (filter: Record<string, string>) => void;
-}>({ filter: {}, setFilter: (_filter) => {} });
+}>({ filter: {}, setFilter: () => {} });
 
 export function CollectionPage() {
   const contract = useParams().contract!;

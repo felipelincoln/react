@@ -6,7 +6,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { etherToString } from '../../utils';
 import { Button } from './Button';
 import { ActivityButton } from './ActivityButton';
-import { useEffect, useMemo, useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { postViewUserNotifications } from '../../api/mutation';
 
 export function Navbar({
@@ -15,8 +15,8 @@ export function Navbar({
   onClickAccount,
 }: {
   activityTab: boolean;
-  onClickActivity: Function;
-  onClickAccount: Function;
+  onClickActivity: () => void;
+  onClickAccount: () => void;
 }) {
   const contract = useParams().contract!;
   const prevActivityTab = useRef<boolean>(activityTab);
@@ -30,6 +30,7 @@ export function Navbar({
   });
   const { data: userNotificationsResponse } = useQuery({
     enabled: !!address,
+    refetchInterval: 12_000,
     staleTime: 12_000,
     ...fetchUserNotifications(contract, address!),
   });
@@ -52,7 +53,7 @@ export function Navbar({
     }
 
     prevActivityTab.current = activityTab;
-  }, [activityTab]);
+  }, [activityTab, userNotificationsResponse?.data?.notifications.length, viewUserNotifications]);
 
   useEffect(() => {
     if (data) {
@@ -61,7 +62,7 @@ export function Navbar({
       });
       reset();
     }
-  }, [data]);
+  }, [data, contract, address, queryClient, reset]);
 
   useEffect(() => {
     if (userNotificationsResponse?.data?.notifications.length) {
@@ -71,7 +72,7 @@ export function Navbar({
         },
       });
     }
-  }, [userNotificationsResponse?.data?.notifications.map((n) => n._id).join('-')]);
+  }, [userNotificationsResponse?.data?.notifications.length, contract, queryClient]);
 
   const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;

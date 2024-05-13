@@ -6,7 +6,7 @@ export function Input({
 }: {
   disabled?: boolean;
   type?: string;
-  value?: any;
+  value?: string | number;
   onChange?: React.ChangeEventHandler<HTMLInputElement>;
 }) {
   return (

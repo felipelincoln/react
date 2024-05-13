@@ -4,7 +4,7 @@ import { config } from '../../config';
 import { injected } from 'wagmi/connectors';
 import { Button } from './Button';
 
-export function AccountButton({ onClick }: { onClick: Function }) {
+export function AccountButton({ onClick }: { onClick: () => void }) {
   const { connect } = useConnect();
   const { address } = useAccount();
   const { data: ensName } = useEnsName({ address });

@@ -58,6 +58,10 @@ export function OrderCreatePage() {
     isError,
   } = useSubmitOrder();
 
+  const collection = collectionResponse!.data!.collection;
+  const tokenIds = tokenIdsResponse!.data!.tokens;
+  const tokenImages = collectionResponse!.data!.tokenImages;
+
   useEffect(() => {
     if (isError) {
       setDialog(undefined);
@@ -141,11 +145,11 @@ export function OrderCreatePage() {
     postOrderStatus,
     isError,
     isSuccess,
+    collection,
+    contract,
+    navigate,
+    setDialog,
   ]);
-
-  const collection = collectionResponse!.data!.collection;
-  const tokenIds = tokenIdsResponse!.data!.tokens;
-  const tokenImages = collectionResponse!.data!.tokenImages;
 
   function submit() {
     if (!form.expireDays) {

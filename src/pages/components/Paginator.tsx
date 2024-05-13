@@ -10,15 +10,21 @@ export function Paginator({
 }: {
   items: number[];
   page: number;
-  setItems: Function;
-  setPage: Function;
+  setItems: (items: number[]) => void;
+  setPage: (page: number) => void;
   itemsPerPage?: number;
 }) {
   const pages = Array.from({ length: Math.ceil(items.length / itemsPerPage) }, (_, index) => index);
-  const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+
   const lastPage = pages.length - 1;
-  useEffect(() => setItems(paginatedItems), [items.join('-'), page]);
   const n = 4;
+
+  useEffect(() => {
+    const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
+    setItems(paginatedItems);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items.join('-'), page, itemsPerPage, setItems]);
 
   return (
     <div className="flex justify-between">

@@ -1,10 +1,10 @@
-import { useQuery } from '@tanstack/react-query';
+import { QueryKey, useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 
 type QueryUntilStatus = 'idle' | 'pending' | 'success' | 'error';
 
 export function useQueryUntil<T>(query: {
-  queryKey: any[];
+  queryKey: QueryKey;
   queryFn: () => Promise<T>;
   queryUntilFn: (data?: T) => boolean;
   enabled: boolean;
@@ -36,7 +36,7 @@ export function useQueryUntil<T>(query: {
       setStatus('pending');
       return;
     }
-  }, [query.enabled, data, isFetching, isError]);
+  }, [query, data, isFetching, isError]);
 
   return { status, isSuccess: status == 'success', isError: status == 'error' };
 }

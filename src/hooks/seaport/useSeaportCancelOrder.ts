@@ -21,7 +21,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
     data: counter,
     isPending: readCounterIsPending,
     isError: readCounterError,
-    queryKey: readCounterQueryKey,
+    queryKey: [readCounterQueryKey],
   } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
@@ -42,7 +42,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
     data: writeContractReceiptData,
     isPending: writeContractReceiptIsPendingQuery,
     isError: writeContractReceiptIsError,
-    queryKey: writeContractReceiptQueryKey,
+    queryKey: [writeContractReceiptQueryKey],
   } = useWaitForTransactionReceipt({
     hash,
   });
@@ -64,7 +64,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
           })
         : [],
     });
-  }, [order, run, counter]);
+  }, [order, run, counter, writeContract]);
 
   useEffect(() => {
     if (!run || !order) {
@@ -93,6 +93,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
     }
   }, [
     run,
+    hash,
     order,
     readCounterError,
     readCounterIsPending,
@@ -109,13 +110,12 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
       queryClient.invalidateQueries({
         predicate: ({ queryKey }) => {
           return (
-            queryKey[0] === readCounterQueryKey[0] ||
-            queryKey[0] === writeContractReceiptQueryKey[0]
+            queryKey[0] === readCounterQueryKey || queryKey[0] === writeContractReceiptQueryKey
           );
         },
       });
     }
-  }, [run]);
+  }, [run, queryClient, readCounterQueryKey, resetWriteContract, writeContractReceiptQueryKey]);
 
   return {
     status,

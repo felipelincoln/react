@@ -1,4 +1,4 @@
-export function ActivityButton({ count, onClick }: { count?: number; onClick?: Function }) {
+export function ActivityButton({ count, onClick }: { count?: number; onClick?: () => void }) {
   if (count && count > 0) {
     return (
       <button

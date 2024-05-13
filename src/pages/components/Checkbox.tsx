@@ -7,9 +7,9 @@ export function Checkbox({
 }: {
   checked?: boolean;
   label: ReactNode;
-  onClick?: Function;
+  onClick?: () => void;
 }) {
-  let id = crypto.randomUUID();
+  const id = crypto.randomUUID();
   return (
     <div className="flex items-center text-zinc-400 hover:text-zinc-200">
       <input

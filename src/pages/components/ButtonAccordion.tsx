@@ -6,7 +6,7 @@ export function ButtonAccordion({
   children,
 }: {
   closed?: boolean;
-  onClick?: Function;
+  onClick?: () => void;
   children: ReactNode;
 }) {
   let icon = (
@@ -20,7 +20,7 @@ export function ButtonAccordion({
     />
   );
 
-  if (!!closed) {
+  if (closed) {
     icon = (
       <path
         d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"

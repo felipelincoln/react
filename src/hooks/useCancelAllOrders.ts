@@ -52,7 +52,7 @@ export function useCancelAllOrders() {
         },
       });
     }
-  }, [isSuccess]);
+  }, [isSuccess, contract, queryClient]);
 
   useEffect(() => {
     if (isError || isSuccess) {

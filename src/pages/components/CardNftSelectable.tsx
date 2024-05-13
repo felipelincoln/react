@@ -9,15 +9,15 @@ export function CardNftSelectable({
   tokenId: number;
   selected?: boolean;
   disabled?: boolean;
-  onSelect?: Function;
+  onSelect?: () => void;
 }) {
   let cardClass = 'cursor-pointer';
 
-  if (!!selected) {
+  if (selected) {
     cardClass = 'cursor-pointer outline outline-2 outline-cyan-400';
   }
 
-  if (!!disabled) {
+  if (disabled) {
     cardClass = 'grayscale !cursor-default';
   }
 

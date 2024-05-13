@@ -22,12 +22,13 @@ export function CollectionOrdersPage() {
     ...fetchUserTokenIds(contract, address!),
   });
 
-  const collection = collectionResponse!.data!.collection;
-  const tokenImages = collectionResponse!.data!.tokenImages;
-  const orders = ordersResponse?.data?.orders!;
+  const collection = collectionResponse?.data?.collection;
+  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const orders = ordersResponse?.data?.orders;
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
 
   const ordersSorted = useMemo(() => {
+    if (!orders) return [];
     if (!address) return orders;
     if (!userTokenIds) return orders;
     if (!userBalance) return orders;
@@ -62,18 +63,15 @@ export function CollectionOrdersPage() {
     console.log('> [app] sorting feed');
 
     return ordersCopy;
-  }, [
-    orders.map((o) => o.tokenId).join('-'),
-    userTokenIds?.join('-'),
-    userBalance?.value,
-    address,
-  ]);
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [orders?.map((o) => o.tokenId).join('-'), userTokenIds?.join('-'), userBalance, address]);
 
   return (
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">
         <div className="flex items-center gap-2 *:leading-8">
-          <div>{orders.length}</div>
+          <div>{orders?.length}</div>
           <div>Results</div>
         </div>
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
@@ -84,8 +82,8 @@ export function CollectionOrdersPage() {
             key={order.tokenId}
             priceToken={order.fulfillmentCriteria.token.amount}
             priceEth={order.fulfillmentCriteria.coin?.amount}
-            contract={collection.contract}
-            symbol={collection.symbol}
+            contract={collection?.contract || ''}
+            symbol={collection?.symbol || ''}
             src={tokenImages[order.tokenId]}
             tokenId={order.tokenId}
             canFullfill={userCanFulfillOrder(
