@@ -80,14 +80,14 @@ export function CollectionOrdersPage() {
     console.log("> [app] sorting feed");
 
     return ordersCopy;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    /* eslint-disable react-hooks/exhaustive-deps */
   }, [
     orders?.map((o) => o.tokenId).join("-"),
     userTokenIds?.join("-"),
     userBalance,
     address,
   ]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   return (
     <div className="flex-grow p-8">
