@@ -11,8 +11,8 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postOrder as postOrderQuery } from '../api/mutation';
 import { fetchOrders, fetchUserOrders } from '../api/query';
 import { useParams } from 'react-router-dom';
-import { useSeaportAllowance } from './useSeaportAllowance';
-import { useValidateChain } from './useValidateChain';
+import { useValidateChain } from '.';
+import { useSeaportAllowance } from './seaport';
 
 export function useSubmitOrder() {
   const contract = useParams().contract!;

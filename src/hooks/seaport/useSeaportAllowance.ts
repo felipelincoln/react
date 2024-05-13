@@ -1,5 +1,5 @@
 import { useAccount, useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { config } from '../config';
+import { config } from '../../config';
 import { erc721Abi } from 'viem';
 import { useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';

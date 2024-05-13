@@ -1,22 +1,30 @@
 import { useEffect, useState } from 'react';
 import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { seaportAbi, seaportContractAddress } from '../eth';
-import { config } from '../config';
+import { WithSelectedTokenIds, seaportAbi, seaportFulfillAdvancedOrderArgs } from '../../eth';
+import { erc20Abi } from 'viem';
+import { config } from '../../config';
+import { Order } from '../../api/types';
 import { useQueryClient } from '@tanstack/react-query';
-import { fetchOrders, fetchUserOrders } from '../api/query';
+import { fetchCollection } from '../../api/query';
 import { useParams } from 'react-router-dom';
 
-type SeaportIncrementCounterStatus =
+type SeaportFulfillAdvancedOrderStatus =
   | 'idle'
   | 'pending:write'
   | 'pending:receipt'
   | 'success'
   | 'error';
 
-export function useSeaportIncrementCounter({ run }: { run: boolean }) {
+export function useSeaportFulfillAdvancedOrder({
+  run,
+  order,
+}: {
+  run: boolean;
+  order: WithSelectedTokenIds<Order>;
+}) {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SeaportIncrementCounterStatus>('idle');
+  const [status, setStatus] = useState<SeaportFulfillAdvancedOrderStatus>('idle');
 
   const {
     data: hash,
@@ -39,30 +47,14 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
     if (!run) return;
 
     writeContract({
-      abi: seaportAbi(),
-      address: seaportContractAddress(),
-      functionName: 'incrementCounter',
-      chainId: config.eth.chain.id,
+      abi: [...seaportAbi(), ...erc20Abi],
+      address: config.eth.seaport.contract,
+      functionName: 'fulfillAdvancedOrder',
+      args: seaportFulfillAdvancedOrderArgs(order),
+      value:
+        BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
     });
   }, [run]);
-
-  useEffect(() => {
-    if (!writeContractReceiptData) return;
-
-    if (writeContractReceiptData?.transactionHash == hash) {
-      queryClient.invalidateQueries({
-        predicate: ({ queryKey }) => {
-          const ordersQueryKey = fetchOrders(contract, []).queryKey;
-          const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey;
-
-          if (queryKey[0] == ordersQueryKey[0]) return true;
-          if (queryKey[0] == userOrdersQueryKey[0]) return true;
-
-          return false;
-        },
-      });
-    }
-  }, [writeContractReceiptData]);
 
   useEffect(() => {
     if (!run) {

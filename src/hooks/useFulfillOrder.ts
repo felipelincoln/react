@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Order } from '../api/types';
 import { WithSelectedTokenIds } from '../eth';
 import { useValidateChain } from './useValidateChain';
-import { useQueryUntil, useSeaportAllowance, useSeaportFulfillAdvancedOrder } from '.';
 import { useQueryClient } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders } from '../api/query';
 import { useParams } from 'react-router-dom';
+import { useSeaportAllowance, useSeaportFulfillAdvancedOrder } from './seaport';
+import { useQueryUntil } from './core';
 
 export function useFulfillOrder() {
   const contract = useParams().contract!;

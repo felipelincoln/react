@@ -1,17 +1,17 @@
 import { useEffect, useState } from 'react';
 import { useValidateChain } from '.';
-import { useParams } from 'react-router-dom';
-import { useAccount } from 'wagmi';
 import { fetchOrders, fetchUserOrders } from '../api/query';
+import { useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { useSeaportIncrementCounter } from './seaport';
+import { Order } from '../api/types';
+import { useSeaportCancelOrder } from './seaport';
 import { useQueryUntil } from './core';
 
-export function useCancelAllOrders() {
+export function useCancelOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const { address } = useAccount();
-  const [start, setStart] = useState(false);
+  const [order, setOrder] = useState<Order | undefined>();
+  const start = !!order;
 
   const {
     status: isValidChainStatus,
@@ -20,23 +20,23 @@ export function useCancelAllOrders() {
   } = useValidateChain({ run: start });
 
   const {
-    status: seaportIncrementCounterStatus,
-    isSuccess: seaportIncrementCounterIsSuccess,
-    isError: seaportIncrementCounterIsError,
-  } = useSeaportIncrementCounter({ run: start && isValidChain });
+    status: seaportCancelOrderStatus,
+    isSuccess: seaportCancelOrderIsSuccess,
+    isError: seaportCancelOrderIsError,
+  } = useSeaportCancelOrder({ order: order, run: start && isValidChain });
 
   const {
     status: userOrdersQueryStatus,
     isSuccess: userOrdersQueryIsSuccess,
     isError: userOrdersQueryIsError,
   } = useQueryUntil({
-    ...fetchUserOrders(contract, address!),
+    ...fetchOrders(contract, order ? [order.tokenId] : []),
     queryUntilFn: (response) => response?.data?.orders.length === 0,
-    enabled: start && seaportIncrementCounterIsSuccess,
+    enabled: start && isValidChain && seaportCancelOrderIsSuccess,
   });
 
-  const isError = seaportIncrementCounterIsError || isValidChainIsError || userOrdersQueryIsError;
-  const isSuccess = isValidChain && seaportIncrementCounterIsSuccess && userOrdersQueryIsSuccess;
+  const isError = isValidChainIsError || userOrdersQueryIsError || seaportCancelOrderIsError;
+  const isSuccess = isValidChain && userOrdersQueryIsSuccess && seaportCancelOrderIsSuccess;
 
   useEffect(() => {
     if (isSuccess) {
@@ -45,10 +45,7 @@ export function useCancelAllOrders() {
           const ordersQueryKey = fetchOrders(contract, []).queryKey;
           const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey;
 
-          if (queryKey[0] == ordersQueryKey[0]) return true;
-          if (queryKey[0] == userOrdersQueryKey[0]) return true;
-
-          return false;
+          return queryKey[0] === ordersQueryKey[0] || queryKey[0] === userOrdersQueryKey[0];
         },
       });
     }
@@ -56,20 +53,20 @@ export function useCancelAllOrders() {
 
   useEffect(() => {
     if (isError || isSuccess) {
-      setStart(false);
+      setOrder(undefined);
     }
   }, [isError, isSuccess]);
 
-  function cancelAllOrders() {
-    setStart(true);
+  function cancelOrder(order: Order) {
+    setOrder(order);
   }
 
   return {
-    cancelAllOrders,
+    cancelOrder,
     isValidChainStatus,
-    seaportIncrementCounterStatus,
     userOrdersQueryStatus,
-    isSuccess,
+    seaportCancelOrderStatus,
     isError,
+    isSuccess,
   };
 }

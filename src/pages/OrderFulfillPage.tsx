@@ -3,6 +3,7 @@ import { etherToString } from '../utils';
 import {
   ButtonBlue,
   ButtonLight,
+  ButtonRed,
   CardNftSelectable,
   InputDisabledWithLabel,
   Paginator,
@@ -17,7 +18,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { NotFoundPage } from './fallback';
 import { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
-import { useFulfillOrder } from '../hooks';
+import { useCancelOrder, useFulfillOrder } from '../hooks';
 import { DialogContext } from './App';
 import { config } from '../config';
 
@@ -48,6 +49,44 @@ export function OrderFulfillPage() {
     isSuccess,
     isError,
   } = useFulfillOrder();
+
+  const {
+    cancelOrder,
+    isValidChainStatus: cancelOrderisValidChainStatus,
+    seaportCancelOrderStatus,
+    userOrdersQueryStatus,
+    isSuccess: cancelOrderIsSuccess,
+    isError: cancelOrderIsError,
+  } = useCancelOrder();
+
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages;
+  const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
+  const order = orderResponse.data?.orders[0];
+  const isOrderOwner = order?.offerer == (address || '').toLowerCase();
+  const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
+  const ethCost =
+    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
+
+  const orderTokenIdsSorted = useMemo(() => {
+    if (!order) return [];
+
+    const orderTokenIdsCopy = [...order.fulfillmentCriteria.token.identifier];
+    orderTokenIdsCopy.sort((a, b) => {
+      const aIsUserToken = (userTokenIds || []).includes(Number(a));
+      const bIsUserToken = (userTokenIds || []).includes(Number(b));
+      if (aIsUserToken && !bIsUserToken) {
+        return -1;
+      } else if (!aIsUserToken && bIsUserToken) {
+        return 1;
+      } else {
+        return a - b;
+      }
+    });
+    console.log('> [app] sorting tokens');
+
+    return orderTokenIdsCopy;
+  }, [!!order, userTokenIds?.join('-')]);
 
   useEffect(() => {
     if (isError) {
@@ -132,33 +171,85 @@ export function OrderFulfillPage() {
     isSuccess,
   ]);
 
-  const collection = collectionResponse!.data!.collection;
-  const tokenImages = collectionResponse!.data!.tokenImages;
-  const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
-  const order = orderResponse.data?.orders[0];
-  const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
-  const ethCost =
-    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
+  useEffect(() => {
+    if (cancelOrderIsError) {
+      setDialog(undefined);
+    }
 
-  const orderTokenIdsSorted = useMemo(() => {
-    if (!order) return [];
+    if (cancelOrderisValidChainStatus == 'pending') {
+      setDialog(
+        OrderCancelDialog(
+          <div>
+            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
 
-    const orderTokenIdsCopy = [...order.fulfillmentCriteria.token.identifier];
-    orderTokenIdsCopy.sort((a, b) => {
-      const aIsUserToken = (userTokenIds || []).includes(Number(a));
-      const bIsUserToken = (userTokenIds || []).includes(Number(b));
-      if (aIsUserToken && !bIsUserToken) {
-        return -1;
-      } else if (!aIsUserToken && bIsUserToken) {
-        return 1;
-      } else {
-        return a - b;
-      }
-    });
-    console.log('> [app] sorting tokens');
+    if (seaportCancelOrderStatus == 'pending:read') {
+      setDialog(OrderCancelDialog('Reading Seaport counter ...'));
+      return;
+    }
 
-    return orderTokenIdsCopy;
-  }, [!!order, userTokenIds?.join('-')]);
+    if (seaportCancelOrderStatus == 'pending:write') {
+      setDialog(
+        OrderCancelDialog(
+          <div>
+            <div className="text-center">Confirm in your wallet</div>
+          </div>,
+        ),
+      );
+      return;
+    }
+
+    if (seaportCancelOrderStatus == 'pending:receipt') {
+      setDialog(OrderCancelDialog('Waiting for cancel transaction to confirm ...'));
+      return;
+    }
+
+    if (userOrdersQueryStatus == 'pending') {
+      setDialog(OrderCancelDialog());
+      return;
+    }
+
+    if (cancelOrderIsSuccess) {
+      navigate(`/c/${contract}`);
+      setDialog(
+        <div>
+          <div className="flex flex-col items-center gap-4 max-w-lg">
+            <div className="w-full font-medium pb-4">Cancel order</div>
+            <div className="flex flex-col items-center gap-4">
+              <div>Success!</div>
+              <ButtonLight
+                onClick={() => {
+                  navigate(`/c/${contract}`);
+                  setDialog(undefined);
+                }}
+              >
+                Ok
+              </ButtonLight>
+            </div>
+          </div>
+        </div>,
+      );
+    }
+  }, [
+    cancelOrderisValidChainStatus,
+    seaportCancelOrderStatus,
+    userOrdersQueryStatus,
+    cancelOrderIsSuccess,
+    cancelOrderIsError,
+  ]);
+
+  console.log([
+    cancelOrderisValidChainStatus,
+    seaportCancelOrderStatus,
+    userOrdersQueryStatus,
+    cancelOrderIsSuccess,
+    cancelOrderIsError,
+  ]);
 
   function submit() {
     if (!order) return;
@@ -189,7 +280,10 @@ export function OrderFulfillPage() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <h1 className="pb-8">Order</h1>
+      <div className="flex justify-between">
+        <h1 className="pb-8">Order</h1>
+        {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
+      </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
           <div>
@@ -278,6 +372,18 @@ function OrderFulfillDialog(message?: ReactNode) {
     <div>
       <div className="flex flex-col items-center gap-4 max-w-lg">
         <div className="w-full font-medium pb-4">Fulfill order</div>
+        <SpinnerIcon />
+        <div>{message}</div>
+      </div>
+    </div>
+  );
+}
+
+function OrderCancelDialog(message?: ReactNode) {
+  return (
+    <div>
+      <div className="flex flex-col items-center gap-4 max-w-lg">
+        <div className="w-full font-medium pb-4">Cancel order</div>
         <SpinnerIcon />
         <div>{message}</div>
       </div>

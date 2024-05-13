@@ -8,6 +8,7 @@ export * from './Button';
 export * from './ButtonAccordion';
 export * from './ButtonBlue';
 export * from './ButtonLight';
+export * from './ButtonRed';
 export * from './CardNftOrder';
 export * from './CardNftSelectable';
 export * from './CardNftSelectableSkeleton';
