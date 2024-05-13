@@ -1,17 +1,19 @@
-import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { ActivityTableRow, AttributeTags } from './components';
-import { fetchActivities, fetchCollection, fetchTokenIds } from '../api/query';
-import { useParams } from 'react-router-dom';
-import { useContext } from 'react';
-import { FilterContext } from './CollectionPage';
-import { useAccount } from 'wagmi';
+import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
+import { ActivityTableRow, AttributeTags } from "./components";
+import { fetchActivities, fetchCollection, fetchTokenIds } from "../api/query";
+import { useParams } from "react-router-dom";
+import { useContext } from "react";
+import { FilterContext } from "./CollectionPage";
+import { useAccount } from "wagmi";
 
 export function CollectionActivitiesPage() {
   const { filter, setFilter } = useContext(FilterContext);
   const contract = useParams().contract!;
   const { address } = useAccount();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
-  const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, filter));
+  const { data: tokenIdsResponse } = useSuspenseQuery(
+    fetchTokenIds(contract, filter),
+  );
   const { data: activitiesResponse } = useSuspenseQuery(
     fetchActivities(contract, tokenIdsResponse.data?.tokens || []),
   );
@@ -27,7 +29,11 @@ export function CollectionActivitiesPage() {
           <div>{activities?.length}</div>
           <div>Results</div>
         </div>
-        <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
+        <AttributeTags
+          collection={collection}
+          filter={filter}
+          setFilter={setFilter}
+        />
       </div>
       {activities && activities.length > 0 && (
         <table className="m-auto">

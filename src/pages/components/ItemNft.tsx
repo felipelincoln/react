@@ -1,4 +1,4 @@
-import { IconNft, PriceTag } from '.';
+import { IconNft, PriceTag } from ".";
 
 export function ItemNft({ src, tokenId }: { src?: string; tokenId: number }) {
   return (

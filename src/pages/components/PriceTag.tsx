@@ -1,4 +1,4 @@
-import { ReactNode } from 'react';
+import { ReactNode } from "react";
 
 export function PriceTag({ children }: { children: ReactNode }) {
   return (

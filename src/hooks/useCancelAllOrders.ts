@@ -1,11 +1,11 @@
-import { useEffect, useState } from 'react';
-import { useValidateChain } from '.';
-import { useParams } from 'react-router-dom';
-import { useAccount } from 'wagmi';
-import { fetchOrders, fetchUserOrders } from '../api/query';
-import { useQueryClient } from '@tanstack/react-query';
-import { useSeaportIncrementCounter } from './seaport';
-import { useQueryUntil } from './core';
+import { useEffect, useState } from "react";
+import { useValidateChain } from ".";
+import { useParams } from "react-router-dom";
+import { useAccount } from "wagmi";
+import { fetchOrders, fetchUserOrders } from "../api/query";
+import { useQueryClient } from "@tanstack/react-query";
+import { useSeaportIncrementCounter } from "./seaport";
+import { useQueryUntil } from "./core";
 
 export function useCancelAllOrders() {
   const contract = useParams().contract!;
@@ -35,15 +35,21 @@ export function useCancelAllOrders() {
     enabled: start && seaportIncrementCounterIsSuccess,
   });
 
-  const isError = seaportIncrementCounterIsError || isValidChainIsError || userOrdersQueryIsError;
-  const isSuccess = isValidChain && seaportIncrementCounterIsSuccess && userOrdersQueryIsSuccess;
+  const isError =
+    seaportIncrementCounterIsError ||
+    isValidChainIsError ||
+    userOrdersQueryIsError;
+  const isSuccess =
+    isValidChain &&
+    seaportIncrementCounterIsSuccess &&
+    userOrdersQueryIsSuccess;
 
   useEffect(() => {
     if (isSuccess) {
       queryClient.invalidateQueries({
         predicate: ({ queryKey }) => {
           const ordersQueryKey = fetchOrders(contract, []).queryKey;
-          const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey;
+          const userOrdersQueryKey = fetchUserOrders(contract, "").queryKey;
 
           if (queryKey[0] == ordersQueryKey[0]) return true;
           if (queryKey[0] == userOrdersQueryKey[0]) return true;

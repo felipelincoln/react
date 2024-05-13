@@ -1,4 +1,10 @@
-export function ActivityButton({ count, onClick }: { count?: number; onClick?: () => void }) {
+export function ActivityButton({
+  count,
+  onClick,
+}: {
+  count?: number;
+  onClick?: () => void;
+}) {
   if (count && count > 0) {
     return (
       <button
@@ -17,7 +23,11 @@ export function ActivityButton({ count, onClick }: { count?: number; onClick?: (
       className="h-8 w-8 rounded text-zinc-200 bg-zinc-800 hover:bg-zinc-700"
       onClick={() => onClick?.()}
     >
-      <svg className="h-4 w-4 m-auto" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+      <svg
+        className="h-4 w-4 m-auto"
+        xmlns="http://www.w3.org/2000/svg"
+        viewBox="0 0 24 24"
+      >
         <path
           d="M21 21H10C6.70017 21 5.05025 21 4.02513 19.9749C3 18.9497 3 17.2998 3 14V3"
           stroke="currentColor"

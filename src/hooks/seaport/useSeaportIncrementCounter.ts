@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { seaportAbi, seaportContractAddress } from '../../eth';
-import { config } from '../../config';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from "react";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { seaportAbi, seaportContractAddress } from "../../eth";
+import { config } from "../../config";
+import { useQueryClient } from "@tanstack/react-query";
 
 type SeaportIncrementCounterStatus =
-  | 'idle'
-  | 'pending:write'
-  | 'pending:receipt'
-  | 'success'
-  | 'error';
+  | "idle"
+  | "pending:write"
+  | "pending:receipt"
+  | "success"
+  | "error";
 
 export function useSeaportIncrementCounter({ run }: { run: boolean }) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SeaportIncrementCounterStatus>('idle');
+  const [status, setStatus] = useState<SeaportIncrementCounterStatus>("idle");
 
   const {
     data: hash,
@@ -38,30 +38,30 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
     writeContract({
       abi: seaportAbi(),
       address: seaportContractAddress(),
-      functionName: 'incrementCounter',
+      functionName: "incrementCounter",
       chainId: config.eth.chain.id,
     });
   }, [run, writeContract]);
 
   useEffect(() => {
     if (!run) {
-      setStatus('idle');
+      setStatus("idle");
       return;
     }
     if (writeContractError || writeContractReceiptError) {
-      setStatus('error');
+      setStatus("error");
       return;
     }
     if (!!hash && writeContractReceiptData?.transactionHash == hash) {
-      setStatus('success');
+      setStatus("success");
       return;
     }
     if (writeContractIsPending) {
-      setStatus('pending:write');
+      setStatus("pending:write");
       return;
     }
     if (!!hash && writeContractReceiptIsPendingQuery) {
-      setStatus('pending:receipt');
+      setStatus("pending:receipt");
       return;
     }
   }, [
@@ -83,7 +83,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
 
   return {
     status,
-    isSuccess: status === 'success',
-    isError: status === 'error',
+    isSuccess: status === "success",
+    isError: status === "error",
   };
 }

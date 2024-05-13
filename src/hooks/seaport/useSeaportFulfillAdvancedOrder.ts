@@ -1,17 +1,21 @@
-import { useEffect, useState } from 'react';
-import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { WithSelectedTokenIds, seaportAbi, seaportFulfillAdvancedOrderArgs } from '../../eth';
-import { erc20Abi } from 'viem';
-import { config } from '../../config';
-import { Order } from '../../api/types';
-import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from "react";
+import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import {
+  WithSelectedTokenIds,
+  seaportAbi,
+  seaportFulfillAdvancedOrderArgs,
+} from "../../eth";
+import { erc20Abi } from "viem";
+import { config } from "../../config";
+import { Order } from "../../api/types";
+import { useQueryClient } from "@tanstack/react-query";
 
 type SeaportFulfillAdvancedOrderStatus =
-  | 'idle'
-  | 'pending:write'
-  | 'pending:receipt'
-  | 'success'
-  | 'error';
+  | "idle"
+  | "pending:write"
+  | "pending:receipt"
+  | "success"
+  | "error";
 
 export function useSeaportFulfillAdvancedOrder({
   run,
@@ -21,7 +25,8 @@ export function useSeaportFulfillAdvancedOrder({
   order: WithSelectedTokenIds<Order>;
 }) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SeaportFulfillAdvancedOrderStatus>('idle');
+  const [status, setStatus] =
+    useState<SeaportFulfillAdvancedOrderStatus>("idle");
 
   const {
     data: hash,
@@ -46,32 +51,33 @@ export function useSeaportFulfillAdvancedOrder({
     writeContract({
       abi: [...seaportAbi(), ...erc20Abi],
       address: config.eth.seaport.contract,
-      functionName: 'fulfillAdvancedOrder',
+      functionName: "fulfillAdvancedOrder",
       args: seaportFulfillAdvancedOrderArgs(order),
       value:
-        BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
+        BigInt(order.fulfillmentCriteria.coin?.amount || "0") +
+        BigInt(order.fee?.amount || "0"),
     });
   }, [run, order, writeContract]);
 
   useEffect(() => {
     if (!run) {
-      setStatus('idle');
+      setStatus("idle");
       return;
     }
     if (writeContractError || writeContractReceiptError) {
-      setStatus('error');
+      setStatus("error");
       return;
     }
     if (!!hash && writeContractReceiptData?.transactionHash == hash) {
-      setStatus('success');
+      setStatus("success");
       return;
     }
     if (writeContractIsPending) {
-      setStatus('pending:write');
+      setStatus("pending:write");
       return;
     }
     if (!!hash && writeContractReceiptIsPendingQuery) {
-      setStatus('pending:receipt');
+      setStatus("pending:receipt");
       return;
     }
   }, [
@@ -93,7 +99,7 @@ export function useSeaportFulfillAdvancedOrder({
 
   return {
     status,
-    isSuccess: status === 'success',
-    isError: status === 'error',
+    isSuccess: status === "success",
+    isError: status === "error",
   };
 }

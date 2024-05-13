@@ -1,5 +1,5 @@
-import { useContext, useEffect } from 'react';
-import { DialogContext } from '../App';
+import { useContext, useEffect } from "react";
+import { DialogContext } from "../App";
 
 export function Dialog() {
   const { dialog } = useContext(DialogContext);
@@ -13,7 +13,7 @@ export function Dialog() {
     !!dialog && (
       <>
         <div
-          style={{ height: document.getElementById('root')!.scrollHeight }}
+          style={{ height: document.getElementById("root")!.scrollHeight }}
           className="w-full fixed z-40 left-0 top-0 bg-zinc-950 opacity-85"
         ></div>
         <div className="w-full h-full fixed z-50 left-0 top-0 flex items-center justify-center">

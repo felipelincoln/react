@@ -1,4 +1,4 @@
-import { ItemNft } from '.';
+import { ItemNft } from ".";
 
 export function TextBoxWithNfts({
   value,
@@ -7,7 +7,7 @@ export function TextBoxWithNfts({
   value: string;
   tokens: [number, string | undefined][];
 }) {
-  const textBoxRounded = tokens.length > 0 ? 'rounded-t' : 'rounded';
+  const textBoxRounded = tokens.length > 0 ? "rounded-t" : "rounded";
 
   return (
     <div>

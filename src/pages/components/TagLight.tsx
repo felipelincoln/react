@@ -1,7 +1,13 @@
-import { ReactNode } from 'react';
-import { ButtonLight } from '.';
+import { ReactNode } from "react";
+import { ButtonLight } from ".";
 
-export function TagLight({ children, onClick }: { children: ReactNode; onClick?: () => void }) {
+export function TagLight({
+  children,
+  onClick,
+}: {
+  children: ReactNode;
+  onClick?: () => void;
+}) {
   return (
     <ButtonLight onClick={() => onClick?.()}>
       {children}

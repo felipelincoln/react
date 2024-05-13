@@ -1,13 +1,17 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
-import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api/query';
-import { AccountButton } from './AccountButton';
-import { useAccount, useBalance } from 'wagmi';
-import { etherToString } from '../../utils';
-import { Button } from './Button';
-import { ActivityButton } from './ActivityButton';
-import { useEffect, useRef } from 'react';
-import { postViewUserNotifications } from '../../api/mutation';
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useParams } from "react-router-dom";
+import {
+  fetchCollection,
+  fetchUserNotifications,
+  fetchUserTokenIds,
+} from "../../api/query";
+import { AccountButton } from "./AccountButton";
+import { useAccount, useBalance } from "wagmi";
+import { etherToString } from "../../utils";
+import { Button } from "./Button";
+import { ActivityButton } from "./ActivityButton";
+import { useEffect, useRef } from "react";
+import { postViewUserNotifications } from "../../api/mutation";
 
 export function Navbar({
   activityTab,
@@ -22,12 +26,15 @@ export function Navbar({
   const prevActivityTab = useRef<boolean>(activityTab);
   const queryClient = useQueryClient();
   const { address } = useAccount();
-  const { data: userBalance, isPending: userBalanceIsPending } = useBalance({ address });
-  const { data: collectionResponse } = useQuery(fetchCollection(contract));
-  const { data: userTokenIdsResponse, isPending: userTokenIdsIsPending } = useQuery({
-    enabled: !!address,
-    ...fetchUserTokenIds(contract, address!),
+  const { data: userBalance, isPending: userBalanceIsPending } = useBalance({
+    address,
   });
+  const { data: collectionResponse } = useQuery(fetchCollection(contract));
+  const { data: userTokenIdsResponse, isPending: userTokenIdsIsPending } =
+    useQuery({
+      enabled: !!address,
+      ...fetchUserTokenIds(contract, address!),
+    });
   const { data: userNotificationsResponse } = useQuery({
     enabled: !!address,
     refetchInterval: 12_000,
@@ -53,7 +60,11 @@ export function Navbar({
     }
 
     prevActivityTab.current = activityTab;
-  }, [activityTab, userNotificationsResponse?.data?.notifications.length, viewUserNotifications]);
+  }, [
+    activityTab,
+    userNotificationsResponse?.data?.notifications.length,
+    viewUserNotifications,
+  ]);
 
   useEffect(() => {
     if (data) {
@@ -72,12 +83,17 @@ export function Navbar({
         },
       });
     }
-  }, [userNotificationsResponse?.data?.notifications.length, contract, queryClient]);
+  }, [
+    userNotificationsResponse?.data?.notifications.length,
+    contract,
+    queryClient,
+  ]);
 
   const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;
   const userEthBalance = etherToString(userBalance?.value);
-  const userNotifications = userNotificationsResponse?.data?.notifications.length;
+  const userNotifications =
+    userNotificationsResponse?.data?.notifications.length;
 
   return (
     <div className="fixed top-0 z-20 w-full bg-zinc-900">
@@ -93,7 +109,10 @@ export function Navbar({
               <Button disabled loading={userBalanceIsPending}>
                 {userEthBalance}
               </Button>
-              <ActivityButton count={userNotifications} onClick={onClickActivity} />
+              <ActivityButton
+                count={userNotifications}
+                onClick={onClickActivity}
+              />
             </>
           )}
           <AccountButton onClick={onClickAccount}></AccountButton>

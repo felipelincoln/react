@@ -1,9 +1,15 @@
-import { useSuspenseQuery } from '@tanstack/react-query';
-import { Outlet, useParams } from 'react-router-dom';
-import { fetchCollection } from '../api/query';
-import { AccountTab, ActivityTab, CollectionQueued, Dialog, Navbar } from './components';
-import { ReactNode, createContext, useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
+import { useSuspenseQuery } from "@tanstack/react-query";
+import { Outlet, useParams } from "react-router-dom";
+import { fetchCollection } from "../api/query";
+import {
+  AccountTab,
+  ActivityTab,
+  CollectionQueued,
+  Dialog,
+  Navbar,
+} from "./components";
+import { ReactNode, createContext, useEffect, useState } from "react";
+import { useAccount } from "wagmi";
 
 export const DialogContext = createContext<{
   dialog: ReactNode | undefined;
@@ -51,7 +57,10 @@ export function App() {
         onClickAccount={() => setAccountTab(!accountTab)}
       />
       <ActivityTab showTab={activityTab} />
-      <AccountTab showTab={accountTab} onNavigate={() => setAccountTab(false)} />
+      <AccountTab
+        showTab={accountTab}
+        onNavigate={() => setAccountTab(false)}
+      />
       <Outlet />
     </DialogContext.Provider>
   );

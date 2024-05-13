@@ -11,14 +11,14 @@ export function CardNftSelectable({
   disabled?: boolean;
   onSelect?: () => void;
 }) {
-  let cardClass = 'cursor-pointer';
+  let cardClass = "cursor-pointer";
 
   if (selected) {
-    cardClass = 'cursor-pointer outline outline-2 outline-cyan-400';
+    cardClass = "cursor-pointer outline outline-2 outline-cyan-400";
   }
 
   if (disabled) {
-    cardClass = 'grayscale !cursor-default';
+    cardClass = "grayscale !cursor-default";
   }
 
   return (

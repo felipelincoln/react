@@ -1,8 +1,8 @@
-import { useAccount, useConnect, useEnsName } from 'wagmi';
-import { shortAddress } from '../../utils';
-import { config } from '../../config';
-import { injected } from 'wagmi/connectors';
-import { Button } from './Button';
+import { useAccount, useConnect, useEnsName } from "wagmi";
+import { shortAddress } from "../../utils";
+import { config } from "../../config";
+import { injected } from "wagmi/connectors";
+import { Button } from "./Button";
 
 export function AccountButton({ onClick }: { onClick: () => void }) {
   const { connect } = useConnect();
@@ -27,5 +27,9 @@ export function AccountButton({ onClick }: { onClick: () => void }) {
 
   const chainId = config.eth.chain.id;
 
-  return <Button onClick={() => connect({ connector: injected(), chainId })}>Connect</Button>;
+  return (
+    <Button onClick={() => connect({ connector: injected(), chainId })}>
+      Connect
+    </Button>
+  );
 }

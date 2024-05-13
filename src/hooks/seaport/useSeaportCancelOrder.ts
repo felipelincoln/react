@@ -1,21 +1,35 @@
-import { useEffect, useState } from 'react';
-import { Order } from '../../api/types';
-import { useReadContract, useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
-import { seaportAbi, seaportCancelOrderArgs, seaportContractAddress } from '../../eth';
-import { useQueryClient } from '@tanstack/react-query';
-import { config } from '../../config';
+import { useEffect, useState } from "react";
+import { Order } from "../../api/types";
+import {
+  useReadContract,
+  useWaitForTransactionReceipt,
+  useWriteContract,
+} from "wagmi";
+import {
+  seaportAbi,
+  seaportCancelOrderArgs,
+  seaportContractAddress,
+} from "../../eth";
+import { useQueryClient } from "@tanstack/react-query";
+import { config } from "../../config";
 
 type SeaportCancelOrderStatus =
-  | 'idle'
-  | 'pending:read'
-  | 'pending:write'
-  | 'pending:receipt'
-  | 'success'
-  | 'error';
+  | "idle"
+  | "pending:read"
+  | "pending:write"
+  | "pending:receipt"
+  | "success"
+  | "error";
 
-export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Order }) {
+export function useSeaportCancelOrder({
+  run,
+  order,
+}: {
+  run: boolean;
+  order?: Order;
+}) {
   const queryClient = useQueryClient();
-  const [status, setStatus] = useState<SeaportCancelOrderStatus>('idle');
+  const [status, setStatus] = useState<SeaportCancelOrderStatus>("idle");
 
   const {
     data: counter,
@@ -25,7 +39,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
   } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
-    functionName: 'getCounter',
+    functionName: "getCounter",
     args: [order?.offerer],
     query: { enabled: run && !!order },
   });
@@ -56,7 +70,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
       abi: seaportAbi(),
       address: seaportContractAddress(),
       chainId: config.eth.chain.id,
-      functionName: 'cancel',
+      functionName: "cancel",
       args: order
         ? seaportCancelOrderArgs({
             ...order,
@@ -68,27 +82,31 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
 
   useEffect(() => {
     if (!run || !order) {
-      setStatus('idle');
+      setStatus("idle");
       return;
     }
-    if (readCounterError || writeContractIsError || writeContractReceiptIsError) {
-      setStatus('error');
+    if (
+      readCounterError ||
+      writeContractIsError ||
+      writeContractReceiptIsError
+    ) {
+      setStatus("error");
       return;
     }
     if (!!hash && writeContractReceiptData?.transactionHash == hash) {
-      setStatus('success');
+      setStatus("success");
       return;
     }
     if (readCounterIsPending) {
-      setStatus('pending:read');
+      setStatus("pending:read");
       return;
     }
     if (writeContractIsPending) {
-      setStatus('pending:write');
+      setStatus("pending:write");
       return;
     }
     if (!!hash && writeContractReceiptIsPendingQuery) {
-      setStatus('pending:receipt');
+      setStatus("pending:receipt");
       return;
     }
   }, [
@@ -110,16 +128,23 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
       queryClient.invalidateQueries({
         predicate: ({ queryKey }) => {
           return (
-            queryKey[0] === readCounterQueryKey || queryKey[0] === writeContractReceiptQueryKey
+            queryKey[0] === readCounterQueryKey ||
+            queryKey[0] === writeContractReceiptQueryKey
           );
         },
       });
     }
-  }, [run, queryClient, readCounterQueryKey, resetWriteContract, writeContractReceiptQueryKey]);
+  }, [
+    run,
+    queryClient,
+    readCounterQueryKey,
+    resetWriteContract,
+    writeContractReceiptQueryKey,
+  ]);
 
   return {
     status,
-    isError: status === 'error',
-    isSuccess: status === 'success',
+    isError: status === "error",
+    isSuccess: status === "success",
   };
 }
