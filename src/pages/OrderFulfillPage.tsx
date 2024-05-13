@@ -243,14 +243,6 @@ export function OrderFulfillPage() {
     cancelOrderIsError,
   ]);
 
-  console.log([
-    cancelOrderisValidChainStatus,
-    seaportCancelOrderStatus,
-    userOrdersQueryStatus,
-    cancelOrderIsSuccess,
-    cancelOrderIsError,
-  ]);
-
   function submit() {
     if (!order) return;
     if (!userBalance) return;
