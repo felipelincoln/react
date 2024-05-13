@@ -6,7 +6,7 @@ import {
   seaportEip712Default,
   seaportEip712Message,
 } from '../eth';
-import { useAccount, useReadContract, useSignTypedData } from 'wagmi';
+import { useReadContract, useSignTypedData } from 'wagmi';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { postOrder as postOrderQuery } from '../api/mutation';
 import { fetchOrders, fetchUserOrders } from '../api/query';
@@ -17,7 +17,6 @@ import { useValidateChain } from './useValidateChain';
 export function useSubmitOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const { address } = useAccount();
   const [orderFragment, setOrderFragment] = useState<OrderFragment | undefined>();
 
   const {
@@ -27,11 +26,11 @@ export function useSubmitOrder() {
   } = useValidateChain({ run: !!orderFragment });
 
   const {
-    isApprovedForAll,
     status: isApprovedForAllStatus,
+    isSuccess: isApprovedForAll,
     isError: isApprovedForAllIsError,
   } = useSeaportAllowance({
-    enabled: !!orderFragment && isValidChain,
+    run: !!orderFragment && isValidChain,
   });
 
   const { data: counter, isError: counterIsError } = useReadContract({
@@ -69,25 +68,14 @@ export function useSubmitOrder() {
     postOrderQuery({ ...orderFragment!, orderHash: orderHash as string, signature: signature! }),
   );
 
-  useEffect(() => {
-    if (
-      isValidChainIsError ||
-      isApprovedForAllIsError ||
-      counterIsError ||
-      orderHashIsError ||
-      signatureIsError ||
-      postOrderIsError
-    ) {
-      setOrderFragment(undefined);
-    }
-  }, [
-    isValidChainIsError,
-    isApprovedForAllIsError,
-    counterIsError,
-    orderHashIsError,
-    signatureIsError,
-    postOrderIsError,
-  ]);
+  const isSuccess = !!postOrderData;
+  const isError =
+    isValidChainIsError ||
+    isApprovedForAllIsError ||
+    counterIsError ||
+    orderHashIsError ||
+    signatureIsError ||
+    postOrderIsError;
 
   useEffect(() => {
     if (!orderFragment) return;
@@ -113,7 +101,7 @@ export function useSubmitOrder() {
 
     queryClient.invalidateQueries({
       predicate: (query) => {
-        const userOrdersQueryKey = fetchUserOrders(contract, address!).queryKey[0];
+        const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey[0];
         const ordersQueryKey = fetchOrders(contract, []).queryKey[0];
 
         if (query.queryKey[0] == userOrdersQueryKey) return true;
@@ -124,20 +112,20 @@ export function useSubmitOrder() {
     });
   }, [postOrderData]);
 
+  useEffect(() => {
+    if (isError || isSuccess) {
+      setOrderFragment(undefined);
+    }
+  }, [isError]);
+
   function submitOrder(arg: OrderFragment) {
     setOrderFragment(arg);
   }
 
   return {
     submitOrder,
-    isSuccess: !!postOrderData,
-    isError:
-      isValidChainIsError ||
-      isApprovedForAllIsError ||
-      counterIsError ||
-      orderHashIsError ||
-      signatureIsError ||
-      postOrderIsError,
+    isSuccess,
+    isError,
     isValidChainStatus,
     isApprovedForAllStatus,
     signatureStatus,

@@ -30,7 +30,7 @@ export function useFulfillOrder() {
     isError: fulfillAdvancedOrderIsError,
   } = useSeaportFulfillAdvancedOrder({
     order: order!,
-    query: { enabled: !!order && isValidChain && isApprovedForAll },
+    run: !!order && isValidChain && !!isApprovedForAll,
   });
 
   const {

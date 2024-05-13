@@ -3,6 +3,8 @@ import { useWaitForTransactionReceipt, useWriteContract } from 'wagmi';
 import { seaportAbi, seaportContractAddress } from '../eth';
 import { config } from '../config';
 import { useQueryClient } from '@tanstack/react-query';
+import { fetchOrders, fetchUserOrders } from '../api/query';
+import { useParams } from 'react-router-dom';
 
 type SeaportIncrementCounterStatus =
   | 'idle'
@@ -12,6 +14,7 @@ type SeaportIncrementCounterStatus =
   | 'error';
 
 export function useSeaportIncrementCounter({ run }: { run: boolean }) {
+  const contract = useParams().contract!;
   const queryClient = useQueryClient();
   const [status, setStatus] = useState<SeaportIncrementCounterStatus>('idle');
 
@@ -44,6 +47,24 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
   }, [run]);
 
   useEffect(() => {
+    if (!writeContractReceiptData) return;
+
+    if (writeContractReceiptData?.transactionHash == hash) {
+      queryClient.invalidateQueries({
+        predicate: ({ queryKey }) => {
+          const ordersQueryKey = fetchOrders(contract, []).queryKey;
+          const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey;
+
+          if (queryKey[0] == ordersQueryKey[0]) return true;
+          if (queryKey[0] == userOrdersQueryKey[0]) return true;
+
+          return false;
+        },
+      });
+    }
+  }, [writeContractReceiptData]);
+
+  useEffect(() => {
     if (!run) {
       setStatus('idle');
       return;
@@ -68,6 +89,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
     run,
     writeContractError,
     writeContractIsPending,
+    writeContractReceiptData,
     writeContractReceiptError,
     writeContractReceiptIsPendingQuery,
   ]);

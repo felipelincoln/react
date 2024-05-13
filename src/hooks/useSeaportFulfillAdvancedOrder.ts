@@ -15,7 +15,10 @@ type SeaportFulfillAdvancedOrderStatus =
   | 'success'
   | 'error';
 
-export function useSeaportFulfillAdvancedOrder(args: {
+export function useSeaportFulfillAdvancedOrder({
+  run,
+  order,
+}: {
   run: boolean;
   order: WithSelectedTokenIds<Order>;
 }) {
@@ -41,18 +44,17 @@ export function useSeaportFulfillAdvancedOrder(args: {
   });
 
   useEffect(() => {
-    if (!args.query?.enabled) return;
+    if (!run) return;
 
     writeContract({
       abi: [...seaportAbi(), ...erc20Abi],
       address: config.eth.seaport.contract,
       functionName: 'fulfillAdvancedOrder',
-      args: seaportFulfillAdvancedOrderArgs(args.order),
+      args: seaportFulfillAdvancedOrderArgs(order),
       value:
-        BigInt(args.order.fulfillmentCriteria.coin?.amount || '0') +
-        BigInt(args.order.fee?.amount || '0'),
+        BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
     });
-  }, [args.query?.enabled]);
+  }, [run]);
 
   useEffect(() => {
     if (!writeContractReceiptData) return;
@@ -67,7 +69,7 @@ export function useSeaportFulfillAdvancedOrder(args: {
   }, [writeContractReceiptData]);
 
   useEffect(() => {
-    if (!args.query?.enabled) {
+    if (!run) {
       setStatus('idle');
       return;
     }
@@ -88,19 +90,20 @@ export function useSeaportFulfillAdvancedOrder(args: {
       return;
     }
   }, [
-    args.query?.enabled,
+    run,
     writeContractError,
     writeContractIsPending,
+    writeContractReceiptData,
     writeContractReceiptError,
     writeContractReceiptIsPendingQuery,
   ]);
 
   useEffect(() => {
-    if (!args.query?.enabled) {
+    if (!run) {
       resetWriteContract();
       queryClient.resetQueries({ queryKey: writeContractReceiptQueryKey });
     }
-  }, [!!args.query?.enabled]);
+  }, [run]);
 
   return {
     status,
