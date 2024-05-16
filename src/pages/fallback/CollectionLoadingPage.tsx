@@ -1,13 +1,13 @@
-import { useMatch, useParams } from "react-router-dom";
-import { AttributeTags } from "../components";
-import { useContext } from "react";
-import { FilterContext } from "../CollectionPage";
-import { useQuery } from "@tanstack/react-query";
-import { fetchCollection } from "../../api/query";
+import { useMatch, useParams } from 'react-router-dom';
+import { AttributeTags } from '../components';
+import { useContext } from 'react';
+import { FilterContext } from '../CollectionPage';
+import { useQuery } from '@tanstack/react-query';
+import { fetchCollection } from '../../api/query';
 
 export function CollectionLoadingPage() {
   const contract = useParams().contract!;
-  const activityPage = useMatch({ path: "/c/:contract/activity" });
+  const activityPage = useMatch({ path: '/c/:contract/activity' });
   const { filter, setFilter } = useContext(FilterContext);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
 
@@ -19,11 +19,7 @@ export function CollectionLoadingPage() {
           <div className="animate-pulse inline-block w-8 h-6 rounded bg-zinc-800"></div>
           <div>Results</div>
         </div>
-        <AttributeTags
-          collection={collection}
-          filter={filter}
-          setFilter={setFilter}
-        />
+        <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
       {activityPage ? (
         <div className="m-auto max-w-lg flex flex-col gap-2">

@@ -1,25 +1,23 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 import {
   OrderFragment,
   seaportAbi,
   seaportContractAddress,
   seaportEip712Default,
   seaportEip712Message,
-} from "../eth";
-import { useReadContract, useSignTypedData } from "wagmi";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { postOrder as postOrderQuery } from "../api/mutation";
-import { fetchOrders, fetchUserOrders } from "../api/query";
-import { useParams } from "react-router-dom";
-import { useValidateChain } from ".";
-import { useSeaportAllowance } from "./seaport";
+} from '../eth';
+import { useReadContract, useSignTypedData } from 'wagmi';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { postOrder as postOrderQuery } from '../api/mutation';
+import { fetchOrders, fetchUserOrders } from '../api/query';
+import { useParams } from 'react-router-dom';
+import { useValidateChain } from '.';
+import { useSeaportAllowance } from './seaport';
 
 export function useSubmitOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const [orderFragment, setOrderFragment] = useState<
-    OrderFragment | undefined
-  >();
+  const [orderFragment, setOrderFragment] = useState<OrderFragment | undefined>();
 
   const {
     status: isValidChainStatus,
@@ -38,7 +36,7 @@ export function useSubmitOrder() {
   const { data: counter, isError: counterIsError } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
-    functionName: "getCounter",
+    functionName: 'getCounter',
     args: [orderFragment?.offerer],
     query: { enabled: !!orderFragment && isValidChain },
   });
@@ -46,7 +44,7 @@ export function useSubmitOrder() {
   const { data: orderHash, isError: orderHashIsError } = useReadContract({
     address: seaportContractAddress(),
     abi: seaportAbi(),
-    functionName: "getOrderHash",
+    functionName: 'getOrderHash',
     args:
       orderFragment && counter != undefined
         ? [
@@ -102,15 +100,7 @@ export function useSubmitOrder() {
       }),
       ...seaportEip712Default(),
     });
-  }, [
-    orderFragment,
-    isValidChain,
-    isApprovedForAll,
-    counter,
-    orderHash,
-    signTypedData,
-    postOrder,
-  ]);
+  }, [orderFragment, isValidChain, isApprovedForAll, counter, orderHash, signTypedData, postOrder]);
 
   useEffect(() => {
     if (orderFragment && orderHash && signature) {
@@ -123,7 +113,7 @@ export function useSubmitOrder() {
 
     queryClient.invalidateQueries({
       predicate: (query) => {
-        const userOrdersQueryKey = fetchUserOrders(contract, "").queryKey[0];
+        const userOrdersQueryKey = fetchUserOrders(contract, '').queryKey[0];
         const ordersQueryKey = fetchOrders(contract, []).queryKey[0];
 
         if (query.queryKey[0] == userOrdersQueryKey) return true;

@@ -9,30 +9,10 @@ export function SpinnerIcon() {
       color="#ffffff"
       fill="none"
     >
-      <path
-        d="M12 3V6"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M12 18V21"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M21 12L18 12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
-      <path
-        d="M6 12L3 12"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-      />
+      <path d="M12 3V6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M12 18V21" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M21 12L18 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+      <path d="M6 12L3 12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
       <path
         d="M18.3635 5.63672L16.2422 7.75804"
         stroke="currentColor"

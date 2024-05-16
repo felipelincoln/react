@@ -1,4 +1,4 @@
-import { Order } from "../api/types";
+import { Order } from '../api/types';
 
 export function userCanFulfillOrder(
   order: Order,
@@ -7,7 +7,7 @@ export function userCanFulfillOrder(
   userAddress: string,
 ) {
   const tokensCriteria = order.fulfillmentCriteria.token;
-  const coinsCriteria = BigInt(order.fulfillmentCriteria.coin?.amount ?? "0");
+  const coinsCriteria = BigInt(order.fulfillmentCriteria.coin?.amount ?? '0');
   const userCoins = userBalance;
 
   if (userAddress.toLowerCase() === order.offerer) {

@@ -1,5 +1,5 @@
-import moment from "moment";
-import { etherToString } from "../utils";
+import moment from 'moment';
+import { etherToString } from '../utils';
 import {
   ButtonBlue,
   ButtonLight,
@@ -11,16 +11,16 @@ import {
   TextBox,
   TextBoxWithNfts,
   Tootltip,
-} from "./components";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { fetchCollection, fetchOrders, fetchUserTokenIds } from "../api/query";
-import { useNavigate, useParams } from "react-router-dom";
-import { NotFoundPage } from "./fallback";
-import { ReactNode, useContext, useEffect, useMemo, useState } from "react";
-import { useAccount, useBalance } from "wagmi";
-import { useCancelOrder, useFulfillOrder } from "../hooks";
-import { DialogContext } from "./App";
-import { config } from "../config";
+} from './components';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { fetchCollection, fetchOrders, fetchUserTokenIds } from '../api/query';
+import { useNavigate, useParams } from 'react-router-dom';
+import { NotFoundPage } from './fallback';
+import { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { useAccount, useBalance } from 'wagmi';
+import { useCancelOrder, useFulfillOrder } from '../hooks';
+import { DialogContext } from './App';
+import { config } from '../config';
 
 export function OrderFulfillPage() {
   const contract = useParams().contract!;
@@ -30,9 +30,7 @@ export function OrderFulfillPage() {
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
-  const { data: orderResponse } = useSuspenseQuery(
-    fetchOrders(contract, [tokenId]),
-  );
+  const { data: orderResponse } = useSuspenseQuery(fetchOrders(contract, [tokenId]));
   const { data: userTokenIdsResponse } = useQuery({
     enabled: !!address,
     ...fetchUserTokenIds(contract, address!),
@@ -65,11 +63,10 @@ export function OrderFulfillPage() {
   const tokenImages = collectionResponse!.data!.tokenImages;
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
   const order = orderResponse.data?.orders[0];
-  const isOrderOwner = order?.offerer == (address || "").toLowerCase();
+  const isOrderOwner = order?.offerer == (address || '').toLowerCase();
   const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
   const ethCost =
-    BigInt(order?.fulfillmentCriteria.coin?.amount || "0") +
-    BigInt(order?.fee?.amount || "0");
+    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
 
   const orderTokenIdsSorted = useMemo(() => {
     if (!order) return [];
@@ -86,19 +83,19 @@ export function OrderFulfillPage() {
         return a - b;
       }
     });
-    console.log("> [app] sorting tokens");
+    console.log('> [app] sorting tokens');
 
     return orderTokenIdsCopy;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order, userTokenIds?.join("-")]);
+  }, [order, userTokenIds?.join('-')]);
 
   useEffect(() => {
     if (isError) {
       setDialog(undefined);
     }
 
-    if (isValidChainStatus == "pending") {
+    if (isValidChainStatus == 'pending') {
       setDialog(
         OrderFulfillDialog(
           <div>
@@ -110,12 +107,12 @@ export function OrderFulfillPage() {
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:read") {
-      setDialog(OrderFulfillDialog("Verifying Seaport allowance ..."));
+    if (isApprovedForAllStatus == 'pending:read') {
+      setDialog(OrderFulfillDialog('Verifying Seaport allowance ...'));
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:write") {
+    if (isApprovedForAllStatus == 'pending:write') {
       setDialog(
         OrderFulfillDialog(
           <div>
@@ -127,30 +124,22 @@ export function OrderFulfillPage() {
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:receipt") {
-      setDialog(
-        OrderFulfillDialog("Waiting for approval transaction to confirm ..."),
-      );
+    if (isApprovedForAllStatus == 'pending:receipt') {
+      setDialog(OrderFulfillDialog('Waiting for approval transaction to confirm ...'));
       return;
     }
 
-    if (fulfillAdvancedOrderStatus == "pending:write") {
-      setDialog(
-        OrderFulfillDialog(
-          <div className="text-center">Confirm in your wallet</div>,
-        ),
-      );
+    if (fulfillAdvancedOrderStatus == 'pending:write') {
+      setDialog(OrderFulfillDialog(<div className="text-center">Confirm in your wallet</div>));
       return;
     }
 
-    if (fulfillAdvancedOrderStatus == "pending:receipt") {
-      setDialog(
-        OrderFulfillDialog("Waiting for purchase transaction to confirm ..."),
-      );
+    if (fulfillAdvancedOrderStatus == 'pending:receipt') {
+      setDialog(OrderFulfillDialog('Waiting for purchase transaction to confirm ...'));
       return;
     }
 
-    if (orderQueryStatus == "pending") {
+    if (orderQueryStatus == 'pending') {
       setDialog(OrderFulfillDialog());
       return;
     }
@@ -193,7 +182,7 @@ export function OrderFulfillPage() {
       setDialog(undefined);
     }
 
-    if (cancelOrderisValidChainStatus == "pending") {
+    if (cancelOrderisValidChainStatus == 'pending') {
       setDialog(
         OrderCancelDialog(
           <div>
@@ -205,12 +194,12 @@ export function OrderFulfillPage() {
       return;
     }
 
-    if (seaportCancelOrderStatus == "pending:read") {
-      setDialog(OrderCancelDialog("Reading Seaport counter ..."));
+    if (seaportCancelOrderStatus == 'pending:read') {
+      setDialog(OrderCancelDialog('Reading Seaport counter ...'));
       return;
     }
 
-    if (seaportCancelOrderStatus == "pending:write") {
+    if (seaportCancelOrderStatus == 'pending:write') {
       setDialog(
         OrderCancelDialog(
           <div>
@@ -221,14 +210,12 @@ export function OrderFulfillPage() {
       return;
     }
 
-    if (seaportCancelOrderStatus == "pending:receipt") {
-      setDialog(
-        OrderCancelDialog("Waiting for cancel transaction to confirm ..."),
-      );
+    if (seaportCancelOrderStatus == 'pending:receipt') {
+      setDialog(OrderCancelDialog('Waiting for cancel transaction to confirm ...'));
       return;
     }
 
-    if (userOrdersQueryStatus == "pending") {
+    if (userOrdersQueryStatus == 'pending') {
       setDialog(OrderCancelDialog());
       return;
     }
@@ -270,7 +257,7 @@ export function OrderFulfillPage() {
     if (!userBalance) return;
 
     if (moment().unix() > order?.endTime) {
-      setError("Order has expired");
+      setError('Order has expired');
       return;
     }
 
@@ -280,7 +267,7 @@ export function OrderFulfillPage() {
     }
 
     if (userBalance?.value < ethCost) {
-      setError("Insufficient funds");
+      setError('Insufficient funds');
       return;
     }
 
@@ -296,25 +283,16 @@ export function OrderFulfillPage() {
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
         <h1 className="pb-8">Order</h1>
-        {isOrderOwner && (
-          <ButtonRed onClick={() => cancelOrder(order)}>
-            Cancel listing
-          </ButtonRed>
-        )}
+        {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
           <div>
             <span className="flex items-center gap-4 pb-4">
-              <span className="text-sm font-medium">Selected items</span>{" "}
-              <Tootltip>
-                Selected items will be used to fulfill this order
-              </Tootltip>
+              <span className="text-sm font-medium">Selected items</span>{' '}
+              <Tootltip>Selected items will be used to fulfill this order</Tootltip>
             </span>
-            <InputDisabledWithLabel
-              value={selectedTokenIds.length}
-              label={`${tokenPrice}`}
-            />
+            <InputDisabledWithLabel value={selectedTokenIds.length} label={`${tokenPrice}`} />
           </div>
           <div className="flex flex-wrap gap-4">
             {order &&
@@ -353,18 +331,13 @@ export function OrderFulfillPage() {
         </div>
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img
-              className="rounded w-40 h-40 mx-auto"
-              src={tokenImages[tokenId]}
-            />
+            <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
             <div>You pay</div>
             <div>
-              {ethCost > 0 && (
-                <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>
-              )}
+              {ethCost > 0 && <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>}
               {order?.fee && (
                 <div className="text-zinc-400 text-xs pt-1 pl-4">
                   fee: {etherToString(BigInt(order?.fee?.amount), false)}
@@ -384,16 +357,11 @@ export function OrderFulfillPage() {
             <ButtonBlue loading={!order || !userBalance} onClick={submit}>
               Confirm
             </ButtonBlue>
-            <a
-              className="default mx-8"
-              onClick={() => navigate(`/c/${contract}`)}
-            >
+            <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
               Cancel
             </a>
           </div>
-          {error && (
-            <div className="overflow-hidden text-ellipsis red">{error}</div>
-          )}
+          {error && <div className="overflow-hidden text-ellipsis red">{error}</div>}
         </div>
       </div>
     </div>

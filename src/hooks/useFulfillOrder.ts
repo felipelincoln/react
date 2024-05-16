@@ -1,19 +1,17 @@
-import { useEffect, useState } from "react";
-import { Order } from "../api/types";
-import { WithSelectedTokenIds } from "../eth";
-import { useValidateChain } from "./useValidateChain";
-import { useQueryClient } from "@tanstack/react-query";
-import { fetchCollection, fetchOrders } from "../api/query";
-import { useParams } from "react-router-dom";
-import { useSeaportAllowance, useSeaportFulfillAdvancedOrder } from "./seaport";
-import { useQueryUntil } from "./core";
+import { useEffect, useState } from 'react';
+import { Order } from '../api/types';
+import { WithSelectedTokenIds } from '../eth';
+import { useValidateChain } from './useValidateChain';
+import { useQueryClient } from '@tanstack/react-query';
+import { fetchCollection, fetchOrders } from '../api/query';
+import { useParams } from 'react-router-dom';
+import { useSeaportAllowance, useSeaportFulfillAdvancedOrder } from './seaport';
+import { useQueryUntil } from './core';
 
 export function useFulfillOrder() {
   const contract = useParams().contract!;
   const queryClient = useQueryClient();
-  const [order, setOrder] = useState<WithSelectedTokenIds<Order> | undefined>(
-    undefined,
-  );
+  const [order, setOrder] = useState<WithSelectedTokenIds<Order> | undefined>(undefined);
 
   const {
     status: isValidChainStatus,
@@ -43,11 +41,7 @@ export function useFulfillOrder() {
   } = useQueryUntil({
     ...fetchOrders(contract, order ? [order.tokenId] : []),
     queryUntilFn: (response) => response?.data?.orders.length == 0,
-    enabled:
-      !!order &&
-      isValidChain &&
-      !!isApprovedForAll &&
-      fulfillAdvancedOrderIsSuccess,
+    enabled: !!order && isValidChain && !!isApprovedForAll && fulfillAdvancedOrderIsSuccess,
   });
 
   const isError =
@@ -57,16 +51,12 @@ export function useFulfillOrder() {
     orderQueryIsError;
 
   const isSuccess =
-    isValidChain &&
-    isApprovedForAll &&
-    fulfillAdvancedOrderIsSuccess &&
-    orderQueryIsSuccess;
+    isValidChain && isApprovedForAll && fulfillAdvancedOrderIsSuccess && orderQueryIsSuccess;
 
   useEffect(() => {
     if (isSuccess) {
       queryClient.invalidateQueries({
-        predicate: ({ queryKey }) =>
-          queryKey[0] != fetchCollection(contract).queryKey[0],
+        predicate: ({ queryKey }) => queryKey[0] != fetchCollection(contract).queryKey[0],
       });
     }
   }, [isSuccess, queryClient, contract]);

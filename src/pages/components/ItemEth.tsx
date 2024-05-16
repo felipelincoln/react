@@ -1,5 +1,5 @@
-import { IconEth, PriceTag } from ".";
-import { etherToString } from "../../utils";
+import { IconEth, PriceTag } from '.';
+import { etherToString } from '../../utils';
 
 export function ItemEth({ value }: { value: string }) {
   return (

@@ -1,10 +1,4 @@
-export function ExternalLink({
-  children,
-  href,
-}: {
-  children: string;
-  href: string;
-}) {
+export function ExternalLink({ children, href }: { children: string; href: string }) {
   return (
     <a
       href={href}

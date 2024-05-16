@@ -1,17 +1,14 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useParams } from "react-router-dom";
-import {
-  fetchCollection,
-  fetchUserNotifications,
-  fetchUserTokenIds,
-} from "../../api/query";
-import { AccountButton } from "./AccountButton";
-import { useAccount, useBalance } from "wagmi";
-import { etherToString } from "../../utils";
-import { Button } from "./Button";
-import { ActivityButton } from "./ActivityButton";
-import { useEffect, useRef } from "react";
-import { postViewUserNotifications } from "../../api/mutation";
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useParams } from 'react-router-dom';
+import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api/query';
+import { AccountButton } from './AccountButton';
+import { useAccount, useBalance } from 'wagmi';
+import { etherToString } from '../../utils';
+import { Button } from './Button';
+import { ActivityButton } from './ActivityButton';
+import { useEffect, useRef } from 'react';
+import { postViewUserNotifications } from '../../api/mutation';
+import { CollectoorLogo } from './CollectoorLogo';
 
 export function Navbar({
   activityTab,
@@ -30,11 +27,10 @@ export function Navbar({
     address,
   });
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
-  const { data: userTokenIdsResponse, isPending: userTokenIdsIsPending } =
-    useQuery({
-      enabled: !!address,
-      ...fetchUserTokenIds(contract, address!),
-    });
+  const { data: userTokenIdsResponse, isPending: userTokenIdsIsPending } = useQuery({
+    enabled: !!address,
+    ...fetchUserTokenIds(contract, address!),
+  });
   const { data: userNotificationsResponse } = useQuery({
     enabled: !!address,
     refetchInterval: 12_000,
@@ -60,11 +56,7 @@ export function Navbar({
     }
 
     prevActivityTab.current = activityTab;
-  }, [
-    activityTab,
-    userNotificationsResponse?.data?.notifications.length,
-    viewUserNotifications,
-  ]);
+  }, [activityTab, userNotificationsResponse?.data?.notifications.length, viewUserNotifications]);
 
   useEffect(() => {
     if (data) {
@@ -83,22 +75,20 @@ export function Navbar({
         },
       });
     }
-  }, [
-    userNotificationsResponse?.data?.notifications.length,
-    contract,
-    queryClient,
-  ]);
+  }, [userNotificationsResponse?.data?.notifications.length, contract, queryClient]);
 
   const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;
   const userEthBalance = etherToString(userBalance?.value);
-  const userNotifications =
-    userNotificationsResponse?.data?.notifications.length;
+  const userNotifications = userNotificationsResponse?.data?.notifications.length;
 
   return (
     <div className="fixed top-0 z-20 w-full bg-zinc-900">
-      <div className="h-24 flex px-8 border-b-2 border-zinc-800">
-        <div className="my-4 h-16 w-16 bg-zinc-800 rounded"></div>
+      <div className="h-24 flex px-8 box-content border-b-2 border-zinc-800">
+        <div className="my-4 flex items-center gap-2">
+          <CollectoorLogo />
+          <div className="text-xl text-zinc-200">Collectoor</div>
+        </div>
         <div className="flex h-8 my-8 flex-grow justify-end gap-4">
           {address && (
             <>
@@ -109,10 +99,7 @@ export function Navbar({
               <Button disabled loading={userBalanceIsPending}>
                 {userEthBalance}
               </Button>
-              <ActivityButton
-                count={userNotifications}
-                onClick={onClickActivity}
-              />
+              <ActivityButton count={userNotifications} onClick={onClickActivity} />
             </>
           )}
           <AccountButton onClick={onClickAccount}></AccountButton>

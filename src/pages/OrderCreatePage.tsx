@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AttributeTags,
   Button,
@@ -12,17 +12,17 @@ import {
   SpinnerIcon,
   TextBox,
   Tootltip,
-} from "./components";
-import { useQuery, useSuspenseQuery } from "@tanstack/react-query";
-import { fetchCollection, fetchTokenIds } from "../api/query";
-import { ReactNode, useContext, useEffect, useState } from "react";
-import moment from "moment";
-import { parseEther } from "viem";
-import { useAccount } from "wagmi";
-import { config } from "../config";
-import { useSubmitOrder } from "../hooks";
-import { DialogContext } from "./App";
-import { NotFoundPage } from "./fallback";
+} from './components';
+import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import { fetchCollection, fetchTokenIds } from '../api/query';
+import { ReactNode, useContext, useEffect, useState } from 'react';
+import moment from 'moment';
+import { parseEther } from 'viem';
+import { useAccount } from 'wagmi';
+import { config } from '../config';
+import { useSubmitOrder } from '../hooks';
+import { DialogContext } from './App';
+import { NotFoundPage } from './fallback';
 
 interface FormData {
   ethPrice?: string;
@@ -40,9 +40,7 @@ export function OrderCreatePage() {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
-  const { data: tokenIdsResponse } = useSuspenseQuery(
-    fetchTokenIds(contract, {}),
-  );
+  const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, {}));
   const [now] = useState(moment().unix());
   const [form, setForm] = useState<FormData>({
     tokenIds: [],
@@ -69,7 +67,7 @@ export function OrderCreatePage() {
       setDialog(undefined);
     }
 
-    if (isValidChainStatus == "pending") {
+    if (isValidChainStatus == 'pending') {
       setDialog(
         OrderCreateDialog(
           <div>
@@ -81,12 +79,12 @@ export function OrderCreatePage() {
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:read") {
-      setDialog(OrderCreateDialog("Verifying Seaport allowance ..."));
+    if (isApprovedForAllStatus == 'pending:read') {
+      setDialog(OrderCreateDialog('Verifying Seaport allowance ...'));
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:write") {
+    if (isApprovedForAllStatus == 'pending:write') {
       setDialog(
         OrderCreateDialog(
           <div>
@@ -98,14 +96,12 @@ export function OrderCreatePage() {
       return;
     }
 
-    if (isApprovedForAllStatus == "pending:receipt") {
-      setDialog(
-        OrderCreateDialog("Waiting for approval transaction to confirm ..."),
-      );
+    if (isApprovedForAllStatus == 'pending:receipt') {
+      setDialog(OrderCreateDialog('Waiting for approval transaction to confirm ...'));
       return;
     }
 
-    if (signatureStatus == "pending") {
+    if (signatureStatus == 'pending') {
       setDialog(
         OrderCreateDialog(
           <div>
@@ -117,8 +113,8 @@ export function OrderCreatePage() {
       return;
     }
 
-    if (postOrderStatus == "pending") {
-      setDialog(OrderCreateDialog("Creating the order ..."));
+    if (postOrderStatus == 'pending') {
+      setDialog(OrderCreateDialog('Creating the order ...'));
       return;
     }
 
@@ -157,7 +153,7 @@ export function OrderCreatePage() {
 
   function submit() {
     if (!form.expireDays) {
-      setForm({ ...form, error: "Expire days is required" });
+      setForm({ ...form, error: 'Expire days is required' });
       return;
     }
     if (form.tokenPrice > form.tokenIds.length && !form.anyTokenId) {
@@ -167,7 +163,7 @@ export function OrderCreatePage() {
       });
       return;
     }
-    if (parseEther(form.ethPrice || "") == 0n && form.tokenPrice == 0) {
+    if (parseEther(form.ethPrice || '') == 0n && form.tokenPrice == 0) {
       setForm({
         ...form,
         error: `ETH price and ${collection.symbol} price can't be both 0`,
@@ -178,21 +174,19 @@ export function OrderCreatePage() {
     submitOrder({
       tokenId: tokenId,
       contract: collection.contract,
-      offerer: address || "",
+      offerer: address || '',
       endTime: moment(now * 1000)
-        .add(form.expireDays, "days")
+        .add(form.expireDays, 'days')
         .unix(),
       fee: config.fee,
       fulfillmentCriteria: {
-        coin: form.ethPrice
-          ? { amount: parseEther(form.ethPrice).toString() }
-          : undefined,
+        coin: form.ethPrice ? { amount: parseEther(form.ethPrice).toString() } : undefined,
         token: {
           amount: form.tokenPrice.toString(),
           identifier: form.anyTokenId ? tokenIds : form.tokenIds,
         },
       },
-      salt: "0",
+      salt: '0',
     });
   }
 
@@ -204,16 +198,10 @@ export function OrderCreatePage() {
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <h1 className="pb-8">Create Order</h1>
       <div className="flex gap-12">
-        <OrderCreateForm
-          form={form}
-          setForm={(data) => setForm({ ...data, error: undefined })}
-        />
+        <OrderCreateForm form={form} setForm={(data) => setForm({ ...data, error: undefined })} />
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img
-              className="rounded w-40 h-40 mx-auto"
-              src={tokenImages[tokenId]}
-            />
+            <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
@@ -227,9 +215,7 @@ export function OrderCreatePage() {
                 </span>
                 {!!form.tokenPrice && (
                   <span className="text-zinc-400">
-                    {form.anyTokenId
-                      ? "any"
-                      : `${form.tokenIds.length} selected`}
+                    {form.anyTokenId ? 'any' : `${form.tokenIds.length} selected`}
                   </span>
                 )}
               </span>
@@ -240,38 +226,25 @@ export function OrderCreatePage() {
             <TextBox>
               {form.expireDays
                 ? moment(now * 1000)
-                    .add(form.expireDays, "days")
+                    .add(form.expireDays, 'days')
                     .fromNow()
-                : "-"}
+                : '-'}
             </TextBox>
           </div>
           <div className="flex items-center">
             <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
-            <a
-              className="default mx-8"
-              onClick={() => navigate(`/c/${contract}`)}
-            >
+            <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
               Cancel
             </a>
           </div>
-          {!!form.error && (
-            <div className="overflow-hidden text-ellipsis red">
-              {form.error}
-            </div>
-          )}
+          {!!form.error && <div className="overflow-hidden text-ellipsis red">{form.error}</div>}
         </div>
       </div>
     </div>
   );
 }
 
-function OrderCreateForm({
-  form,
-  setForm,
-}: {
-  form: FormData;
-  setForm: (data: FormData) => void;
-}) {
+function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: FormData) => void }) {
   const contract = useParams().contract!;
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const [filter, setFilter] = useState<Record<string, string>>({});
@@ -292,17 +265,14 @@ function OrderCreateForm({
           <span className="text-sm font-medium">ETH price</span>
           <Input
             type="text"
-            value={form.ethPrice || ""}
+            value={form.ethPrice || ''}
             onChange={(e) => {
               const input = e.target.value;
               const validator = /^\d{0,4}(?:\.\d{0,18})?$/;
               const sanitizedInput =
-                input
-                  .replace(",", ".")
-                  .replace(/^\./, "0.")
-                  .match(validator)?.[0] || "";
+                input.replace(',', '.').replace(/^\./, '0.').match(validator)?.[0] || '';
 
-              if (sanitizedInput == "" && input != "") return;
+              if (sanitizedInput == '' && input != '') return;
               setForm({ ...form, ethPrice: sanitizedInput });
             }}
           />
@@ -311,15 +281,14 @@ function OrderCreateForm({
           <span className="text-sm font-medium">{collection.symbol} price</span>
           <Input
             type="text"
-            value={form.tokenPrice ?? ""}
+            value={form.tokenPrice ?? ''}
             onChange={(e) => {
               const input = e.target.value;
               const validator = /^\d{0,4}$/;
-              const sanitizedInput = input.match(validator)?.[0] || "";
+              const sanitizedInput = input.match(validator)?.[0] || '';
 
-              if (sanitizedInput == "" && input != "") return;
-              if (Number(sanitizedInput) > 100 || Number(sanitizedInput) < 0)
-                return;
+              if (sanitizedInput == '' && input != '') return;
+              if (Number(sanitizedInput) > 100 || Number(sanitizedInput) < 0) return;
               setForm({ ...form, tokenPrice: Number(sanitizedInput) });
             }}
           />
@@ -328,15 +297,14 @@ function OrderCreateForm({
           <span className="text-sm font-medium">Expire days</span>
           <Input
             type="text"
-            value={form.expireDays || ""}
+            value={form.expireDays || ''}
             onChange={(e) => {
               const input = e.target.value;
               const validator = /^\d*$/;
-              const sanitizedInput = input.match(validator)?.[0] || "";
+              const sanitizedInput = input.match(validator)?.[0] || '';
 
-              if (sanitizedInput == "" && input != "") return;
-              if (Number(sanitizedInput) > 60 || Number(sanitizedInput) < 0)
-                return;
+              if (sanitizedInput == '' && input != '') return;
+              if (Number(sanitizedInput) > 60 || Number(sanitizedInput) < 0) return;
               setForm({ ...form, expireDays: Number(sanitizedInput) });
             }}
           />
@@ -344,20 +312,12 @@ function OrderCreateForm({
         {!!form.tokenPrice && (
           <div>
             <span className="flex items-center gap-4">
-              <span className="text-sm font-medium">Selected items</span>{" "}
-              <Tootltip>
-                Selected items will be used to fulfill this order
-              </Tootltip>
+              <span className="text-sm font-medium">Selected items</span>{' '}
+              <Tootltip>Selected items will be used to fulfill this order</Tootltip>
             </span>
             <div className="flex gap-2">
-              <Input
-                disabled
-                type="text"
-                value={form.anyTokenId ? "-" : form.tokenIds.length}
-              />
-              <Button onClick={() => setForm({ ...form, tokenIds: [] })}>
-                Clear
-              </Button>
+              <Input disabled type="text" value={form.anyTokenId ? '-' : form.tokenIds.length} />
+              <Button onClick={() => setForm({ ...form, tokenIds: [] })}>Clear</Button>
             </div>
             <Checkbox
               label="Accept any item"
@@ -371,38 +331,32 @@ function OrderCreateForm({
         <div className="flex flex-col gap-6 pt-8">
           <div className="bg-zinc-800 rounded p-8">
             <div className="flex justify-between h-96 pr-8 gap-4 overflow-x-scroll">
-              {Object.entries(collection.attributeSummary).map(
-                ([key, value]) => (
-                  <div key={key}>
-                    <div className="flex flex-col gap-2 pb-4 relative text-sm">
-                      <div className="sticky left-0 top-0 pb-2 bg-zinc-800">
-                        {value.attribute}
-                      </div>
-                      {Object.entries(value.options).map(
-                        ([optionKey, optionValue]) => (
-                          <Checkbox
-                            key={optionKey}
-                            label={optionValue}
-                            checked={filter[key] === optionKey}
-                            onClick={() => {
-                              if (filter[key] === optionKey) {
-                                const selectedFiltersCopy = { ...filter };
-                                delete selectedFiltersCopy[key];
-                                setFilter(selectedFiltersCopy);
-                              } else {
-                                setFilter({
-                                  ...filter,
-                                  [key]: optionKey,
-                                });
-                              }
-                            }}
-                          ></Checkbox>
-                        ),
-                      )}
-                    </div>
+              {Object.entries(collection.attributeSummary).map(([key, value]) => (
+                <div key={key}>
+                  <div className="flex flex-col gap-2 pb-4 relative text-sm">
+                    <div className="sticky left-0 top-0 pb-2 bg-zinc-800">{value.attribute}</div>
+                    {Object.entries(value.options).map(([optionKey, optionValue]) => (
+                      <Checkbox
+                        key={optionKey}
+                        label={optionValue}
+                        checked={filter[key] === optionKey}
+                        onClick={() => {
+                          if (filter[key] === optionKey) {
+                            const selectedFiltersCopy = { ...filter };
+                            delete selectedFiltersCopy[key];
+                            setFilter(selectedFiltersCopy);
+                          } else {
+                            setFilter({
+                              ...filter,
+                              [key]: optionKey,
+                            });
+                          }
+                        }}
+                      ></Checkbox>
+                    ))}
                   </div>
-                ),
-              )}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -416,11 +370,7 @@ function OrderCreateForm({
                 )}
                 <div>Results</div>
               </div>
-              <AttributeTags
-                collection={collection}
-                filter={filter}
-                setFilter={setFilter}
-              />
+              <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
             </div>
             <Button
               onClick={() => {
@@ -449,9 +399,7 @@ function OrderCreateForm({
                     onSelect={() => {
                       let selectedTokens = [...form.tokenIds];
                       if (selectedTokens.includes(tokenId)) {
-                        selectedTokens = selectedTokens.filter(
-                          (t) => t != tokenId,
-                        );
+                        selectedTokens = selectedTokens.filter((t) => t != tokenId);
                       } else {
                         selectedTokens.push(tokenId);
                       }

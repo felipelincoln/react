@@ -1,14 +1,8 @@
-import { ReactNode } from "react";
+import { ReactNode } from 'react';
 
-export function Tab({
-  hidden,
-  children,
-}: {
-  hidden: boolean;
-  children: ReactNode;
-}) {
-  const display = hidden ? "translate-x-96" : "z-10";
-  const containerZIndex = hidden ? "-z-20" : "";
+export function Tab({ hidden, children }: { hidden: boolean; children: ReactNode }) {
+  const display = hidden ? 'translate-x-96' : 'z-10';
+  const containerZIndex = hidden ? '-z-20' : '';
 
   return (
     <div className={`absolute right-0 top-0 w-96 h-screen ${containerZIndex}`}>

@@ -1,5 +1,5 @@
-import { Tag } from ".";
-import { Collection } from "../../api/types";
+import { Tag } from '.';
+import { Collection } from '../../api/types';
 
 export function AttributeTags({
   collection,
@@ -26,9 +26,7 @@ export function AttributeTags({
           }`}
         </Tag>
       ))}
-      {Object.keys(filter).length > 0 && (
-        <a onClick={() => setFilter({})}>Clear</a>
-      )}
+      {Object.keys(filter).length > 0 && <a onClick={() => setFilter({})}>Clear</a>}
     </div>
   );
 }

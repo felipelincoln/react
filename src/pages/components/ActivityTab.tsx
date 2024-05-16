@@ -1,14 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import { ExternalLink, ItemEth, ItemNft, Tab } from ".";
-import {
-  fetchCollection,
-  fetchUserActivities,
-  fetchUserNotifications,
-} from "../../api/query";
-import { useParams } from "react-router-dom";
-import { useAccount } from "wagmi";
-import moment from "moment";
-import { config } from "../../config";
+import { useQuery } from '@tanstack/react-query';
+import { ExternalLink, ItemEth, ItemNft, Tab } from '.';
+import { fetchCollection, fetchUserActivities, fetchUserNotifications } from '../../api/query';
+import { useParams } from 'react-router-dom';
+import { useAccount } from 'wagmi';
+import moment from 'moment';
+import { config } from '../../config';
 
 export function ActivityTab({ showTab }: { showTab: boolean }) {
   const contract = useParams().contract!;
@@ -25,8 +21,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
   });
 
   const userActivities = userActivitiesResponse?.data?.activities || [];
-  const userNotifications =
-    userNotificationsResponse?.data?.notifications || [];
+  const userNotifications = userNotificationsResponse?.data?.notifications || [];
   const tokenImages = collectionResponse?.data?.tokenImages || {};
 
   return (
@@ -38,8 +33,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
             <table>
               <tbody>
                 {userActivities.map((activity) => {
-                  const isOfferer =
-                    activity.offerer == (address || "").toLowerCase();
+                  const isOfferer = activity.offerer == (address || '').toLowerCase();
                   const isNew = userNotifications.find(
                     (notification) => notification.activityId == activity._id,
                   );
@@ -55,13 +49,9 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
                             {isNew && (
                               <div className="absolute bottom-1 -left-5 h-2 w-2 rounded-full bg-cyan-400"></div>
                             )}
-                            <span
-                              className={
-                                isNew ? "font-medium text-zinc-200" : ""
-                              }
-                            >
-                              {" "}
-                              Item {isOfferer ? "sold" : "bought"}
+                            <span className={isNew ? 'font-medium text-zinc-200' : ''}>
+                              {' '}
+                              Item {isOfferer ? 'sold' : 'bought'}
                             </span>
                           </div>
                           <ItemNft
@@ -79,19 +69,15 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
                           </ExternalLink>
                           <div className="flex flex-col gap-2">
                             {activity.fulfillment.coin && (
-                              <ItemEth
-                                value={activity.fulfillment.coin.amount}
+                              <ItemEth value={activity.fulfillment.coin.amount} />
+                            )}
+                            {activity.fulfillment.token.identifier.map((tokenId) => (
+                              <ItemNft
+                                key={activity.txHash + tokenId}
+                                src={tokenImages[tokenId]}
+                                tokenId={tokenId}
                               />
-                            )}
-                            {activity.fulfillment.token.identifier.map(
-                              (tokenId) => (
-                                <ItemNft
-                                  key={activity.txHash + tokenId}
-                                  src={tokenImages[tokenId]}
-                                  tokenId={tokenId}
-                                />
-                              ),
-                            )}
+                            ))}
                           </div>
                         </div>
                       </td>
