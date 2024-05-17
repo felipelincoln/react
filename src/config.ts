@@ -1,11 +1,11 @@
-import { sepolia } from 'viem/chains';
+import { mainnet, sepolia } from 'viem/chains';
 
 export const config = {
   api: {
     url: 'http://localhost:3000',
   },
   eth: {
-    chain: sepolia,
+    chain: mainnet,
     rpc: 'http://localhost:3000/jsonrpc',
     seaport: {
       name: 'Seaport',

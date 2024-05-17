@@ -19,7 +19,7 @@ export function App() {
   const [activityTab, setActivityTab] = useState(false);
   const [accountTab, setAccountTab] = useState(false);
   const [dialog, setDialog] = useState<ReactNode | undefined>(undefined);
-  const { data: response } = useSuspenseQuery(fetchCollection(contract));
+  useSuspenseQuery(fetchCollection(contract));
 
   useEffect(() => {
     if (accountTab) setActivityTab(false);
@@ -35,12 +35,6 @@ export function App() {
       setAccountTab(false);
     }
   }, [isConnected]);
-
-  const isReady = response.data?.isReady;
-
-  if (!isReady) {
-    return <CollectionQueued />;
-  }
 
   return (
     <DialogContext.Provider value={{ dialog, setDialog }}>

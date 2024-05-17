@@ -1,4 +1,5 @@
 export interface Order {
+  _id: string;
   contract: string;
   tokenId: number;
   offerer: string;
@@ -44,6 +45,7 @@ export interface Activity {
 }
 
 export interface Collection {
+  _id: string;
   name: string;
   symbol: string;
   image: string;
@@ -53,7 +55,7 @@ export interface Collection {
 }
 
 export interface Token {
-  contract: string;
+  _id: string;
   tokenId: number;
   image?: string;
   attributes: Record<string, string>;
