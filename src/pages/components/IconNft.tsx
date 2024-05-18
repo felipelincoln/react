@@ -1,3 +1,7 @@
 export function IconNft({ src }: { src?: string }) {
-  return <img src={src} draggable="false" className="w-10 h-10 rounded" />;
+  if (!src) {
+    return <div className="w-12 h-12 rounded bg-zinc-700"></div>;
+  }
+
+  return <img src={src} draggable="false" className="w-12 h-12 rounded" />;
 }

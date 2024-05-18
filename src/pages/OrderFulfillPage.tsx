@@ -59,9 +59,10 @@ export function OrderFulfillPage() {
     isError: cancelOrderIsError,
   } = useCancelOrder();
 
+  const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
-  const tokenImages = collectionResponse!.data!.tokenImages;
-  const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
+  const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
   const order = orderResponse.data?.orders[0];
   const isOrderOwner = order?.offerer == (address || '').toLowerCase();
   const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
@@ -73,8 +74,8 @@ export function OrderFulfillPage() {
 
     const orderTokenIdsCopy = [...order.fulfillmentCriteria.token.identifier];
     orderTokenIdsCopy.sort((a, b) => {
-      const aIsUserToken = (userTokenIds || []).includes(Number(a));
-      const bIsUserToken = (userTokenIds || []).includes(Number(b));
+      const aIsUserToken = userTokenIds.includes(Number(a));
+      const bIsUserToken = userTokenIds.includes(Number(b));
       if (aIsUserToken && !bIsUserToken) {
         return -1;
       } else if (!aIsUserToken && bIsUserToken) {
@@ -88,7 +89,7 @@ export function OrderFulfillPage() {
     return orderTokenIdsCopy;
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order, userTokenIds?.join('-')]);
+  }, [order, userTokenIds.join('-')]);
 
   useEffect(() => {
     if (isError) {
@@ -275,7 +276,7 @@ export function OrderFulfillPage() {
     setError(undefined);
   }
 
-  if (Number.isNaN(tokenId) || !order) {
+  if (Number.isNaN(tokenId) || !order || !isReady) {
     return <NotFoundPage />;
   }
 
@@ -317,7 +318,7 @@ export function OrderFulfillPage() {
                     setSelectedTokenIds(tokenIds);
                   }}
                   selected={selectedTokenIds.includes(tokenId)}
-                  disabled={!userTokenIds?.includes(Number(tokenId))}
+                  disabled={!userTokenIds.includes(Number(tokenId))}
                 />
               ))}
           </div>
@@ -331,7 +332,12 @@ export function OrderFulfillPage() {
         </div>
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+            {tokenImages[tokenId] ? (
+              <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+            ) : (
+              <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
+            )}
+
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
@@ -344,10 +350,12 @@ export function OrderFulfillPage() {
                 </div>
               )}
             </div>
-            <TextBoxWithNfts
-              value={`${order?.fulfillmentCriteria.token.amount} ${collection?.symbol}`}
-              tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
-            />
+            {+order?.fulfillmentCriteria.token.amount > 0 && (
+              <TextBoxWithNfts
+                value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
+                tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
+              />
+            )}
           </div>
           <div className="flex flex-col gap-4">
             <div>Order expires</div>

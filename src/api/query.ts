@@ -9,7 +9,7 @@ export function fetchCollection(contract: string) {
       ApiResponse<{
         collection: Collection;
         isReady: boolean;
-        tokenImages: Record<string, string>;
+        tokenImages?: Record<string, string>;
       }>
     > => {
       console.log('> [api] fetch collection');

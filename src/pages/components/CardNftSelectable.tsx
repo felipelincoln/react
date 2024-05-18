@@ -26,7 +26,12 @@ export function CardNftSelectable({
       className={`rounded w-24 bg-zinc-800 ${cardClass}`}
       onClick={() => !disabled && onSelect?.()}
     >
-      <img src={src} draggable="false" className="w-24 h-24 rounded-t" />
+      {src ? (
+        <img src={src} draggable="false" className="w-24 h-24 rounded-t" />
+      ) : (
+        <div className="w-24 h-24 rounded-t bg-zinc-700"></div>
+      )}
+
       <div className="h-6 w-24 text-sm text-center text-zinc-200 bg-zinc-800 rounded-b">
         <span className="leading-6">{tokenId}</span>
       </div>

@@ -6,7 +6,7 @@ export function AttributeTags({
   filter,
   setFilter,
 }: {
-  collection?: Collection;
+  collection: Collection;
   filter: Record<string, string>;
   setFilter: (filter: Record<string, string>) => void;
 }) {
@@ -21,8 +21,8 @@ export function AttributeTags({
             setFilter(filteredAttributesCopy);
           }}
         >
-          {`${collection?.attributeSummary[key].attribute}: ${
-            collection?.attributeSummary[key].options[filter[key]]
+          {`${collection.attributeSummary[key].attribute}: ${
+            collection.attributeSummary[key].options[filter[key]]
           }`}
         </Tag>
       ))}

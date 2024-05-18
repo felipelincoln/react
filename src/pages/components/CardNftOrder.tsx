@@ -30,11 +30,15 @@ export function CardNftOrder({
         {canFullfill && <PriceTagClickable>Buy</PriceTagClickable>}
       </div>
       <div className="h-48 rounded overflow-hidden">
-        <img
-          src={src}
-          className="h-48 group-hover:scale-110 transition bg-zinc-700"
-          draggable="false"
-        />
+        {src ? (
+          <img
+            src={src}
+            className="h-48 group-hover:scale-110 transition bg-zinc-700"
+            draggable="false"
+          />
+        ) : (
+          <div className="h-48 bg-zinc-700"></div>
+        )}
       </div>
       <div className="px-4 py-2 text-sm flex flex-wrap gap-2">
         {priceToken != '0' && <PriceTag>{`${priceToken} ${symbol}`}</PriceTag>}

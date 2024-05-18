@@ -1,9 +1,10 @@
 import { useQuery } from '@tanstack/react-query';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api/query';
-import { Button, ButtonAccordion, Checkbox } from './components';
-import { Suspense, createContext, useState } from 'react';
+import { Button, ButtonAccordion, ButtonLight, Checkbox, Tootltip } from './components';
+import { Suspense, createContext, useContext, useEffect, useState } from 'react';
 import { CollectionLoadingPage } from './fallback';
+import { DialogContext } from './App';
 
 export const FilterContext = createContext<{
   filter: Record<string, string>;
@@ -13,10 +14,23 @@ export const FilterContext = createContext<{
 export function CollectionPage() {
   const contract = useParams().contract!;
   const navigate = useNavigate();
+  const { setDialog } = useContext(DialogContext);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const [openAttribute, setOpenAttribute] = useState<string | undefined>(undefined);
   const [filter, setFilter] = useState<Record<string, string>>({});
 
+  useEffect(() => {
+    if (!collectionResponse!.data!.isReady) {
+      setDialog(
+        <div className="flex gap-4 flex-col items-center">
+          <div>This collection is being processed and will be ready in a few minutes.</div>
+          <ButtonLight onClick={() => setDialog(undefined)}>Ok</ButtonLight>
+        </div>,
+      );
+    }
+  });
+
+  const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
   return (
     <div className="flex flex-grow">
@@ -26,7 +40,10 @@ export function CollectionPage() {
             <div className="flex gap-4">
               <img src={collection.image} className="w-16 h-16 rounded" />
               <div>
-                <div className="text-lg font-medium">{collection.name}</div>
+                <div className="text-lg font-medium flex items-baseline gap-2">
+                  <div>{collection.name}</div>
+                  {!isReady && <Tootltip>This collection is being processed.</Tootltip>}
+                </div>
                 <div className="text-sm text-zinc-400">{collection.totalSupply} items</div>
               </div>
             </div>

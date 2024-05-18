@@ -1,7 +1,7 @@
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Outlet, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api/query';
-import { AccountTab, ActivityTab, CollectionQueued, Dialog, Navbar } from './components';
+import { AccountTab, ActivityTab, Dialog, Navbar } from './components';
 import { ReactNode, createContext, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 

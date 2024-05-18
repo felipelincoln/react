@@ -22,7 +22,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
 
   const userActivities = userActivitiesResponse?.data?.activities || [];
   const userNotifications = userNotificationsResponse?.data?.notifications || [];
-  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
 
   return (
     <Tab hidden={!showTab}>

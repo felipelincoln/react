@@ -30,6 +30,7 @@ export * from './Paginator';
 export * from './PriceTag';
 export * from './PriceTagClickable';
 export * from './SpinnerIcon';
+export * from './SpinnerIconSmall';
 export * from './Tab';
 export * from './Tag';
 export * from './TagLight';

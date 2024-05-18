@@ -22,8 +22,8 @@ export function CollectionOrdersPage() {
     ...fetchUserTokenIds(contract, address!),
   });
 
-  const collection = collectionResponse?.data?.collection;
-  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
   const orders = ordersResponse?.data?.orders;
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
 
@@ -82,8 +82,8 @@ export function CollectionOrdersPage() {
             key={order.tokenId}
             priceToken={order.fulfillmentCriteria.token.amount}
             priceEth={order.fulfillmentCriteria.coin?.amount}
-            contract={collection?.contract || ''}
-            symbol={collection?.symbol || ''}
+            contract={collection.contract}
+            symbol={collection.symbol}
             src={tokenImages[order.tokenId]}
             tokenId={order.tokenId}
             canFullfill={userCanFulfillOrder(

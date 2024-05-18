@@ -24,7 +24,7 @@ export function ListedNft({
       <div className="flex-grow max-w-64 overflow-hidden">
         <div>{`${name} #${tokenId}`}</div>
         <div className="flex gap-2 *:max-w-28 *:overflow-x-hidden *:text-ellipsis">
-          <PriceTagClickable>{`${tokenPrice} ${symbol}`}</PriceTagClickable>
+          {+tokenPrice > 0 && <PriceTagClickable>{`${tokenPrice} ${symbol}`}</PriceTagClickable>}
           {ethPrice && (
             <PriceTagClickable>{etherToString(BigInt(ethPrice), true)}</PriceTagClickable>
           )}

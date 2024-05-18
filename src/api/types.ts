@@ -1,5 +1,4 @@
 export interface Order {
-  _id: string;
   contract: string;
   tokenId: number;
   offerer: string;

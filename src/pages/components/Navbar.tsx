@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { fetchCollection, fetchUserNotifications, fetchUserTokenIds } from '../../api/query';
 import { AccountButton } from './AccountButton';
 import { useAccount, useBalance } from 'wagmi';
@@ -20,6 +20,7 @@ export function Navbar({
   onClickAccount: () => void;
 }) {
   const contract = useParams().contract!;
+  const navigate = useNavigate();
   const prevActivityTab = useRef<boolean>(activityTab);
   const queryClient = useQueryClient();
   const { address } = useAccount();
@@ -85,7 +86,10 @@ export function Navbar({
   return (
     <div className="fixed top-0 z-20 w-full bg-zinc-900">
       <div className="h-24 flex px-8 box-content border-b-2 border-zinc-800">
-        <div className="my-4 flex items-center gap-2">
+        <div
+          className="my-4 flex items-center gap-2 cursor-pointer"
+          onClick={() => navigate(`/c/${collection.contract}`)}
+        >
           <CollectoorLogo />
           <div className="text-xl text-zinc-200">Collectoor</div>
         </div>

@@ -14,7 +14,7 @@ import {
   Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
-import { fetchCollection, fetchTokenIds } from '../api/query';
+import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
 import { ReactNode, useContext, useEffect, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
@@ -48,6 +48,12 @@ export function OrderCreatePage() {
     tokenPrice: 1,
     expireDays: 7,
   });
+
+  const { data: userTokenIdsResponse } = useQuery({
+    enabled: !!address,
+    ...fetchUserTokenIds(contract, address!),
+  });
+
   const {
     submitOrder,
     isValidChainStatus,
@@ -58,9 +64,11 @@ export function OrderCreatePage() {
     isError,
   } = useSubmitOrder();
 
+  const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
-  const tokenIds = tokenIdsResponse!.data!.tokens;
-  const tokenImages = collectionResponse!.data!.tokenImages;
+  const tokenIds = tokenIdsResponse?.data?.tokens || [];
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
+  const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
 
   useEffect(() => {
     if (isError) {
@@ -152,11 +160,13 @@ export function OrderCreatePage() {
   ]);
 
   function submit() {
+    const selectedTokenIds = form.anyTokenId ? tokenIds : form.tokenIds;
+
     if (!form.expireDays) {
       setForm({ ...form, error: 'Expire days is required' });
       return;
     }
-    if (form.tokenPrice > form.tokenIds.length && !form.anyTokenId) {
+    if (form.tokenPrice > selectedTokenIds.length) {
       setForm({
         ...form,
         error: `Must select at least ${form.tokenPrice} ${collection.symbol}`,
@@ -183,14 +193,14 @@ export function OrderCreatePage() {
         coin: form.ethPrice ? { amount: parseEther(form.ethPrice).toString() } : undefined,
         token: {
           amount: form.tokenPrice.toString(),
-          identifier: form.anyTokenId ? tokenIds : form.tokenIds,
+          identifier: selectedTokenIds,
         },
       },
       salt: '0',
     });
   }
 
-  if (Number.isNaN(tokenId)) {
+  if (Number.isNaN(tokenId) || !userTokenIds.includes(tokenId) || !isReady) {
     return <NotFoundPage />;
   }
 
@@ -201,7 +211,12 @@ export function OrderCreatePage() {
         <OrderCreateForm form={form} setForm={(data) => setForm({ ...data, error: undefined })} />
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
           <div>
-            <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+            {tokenImages[tokenId] ? (
+              <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+            ) : (
+              <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
+            )}
+
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
@@ -255,8 +270,8 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
   );
 
   const collection = collectionResponse!.data!.collection;
-  const tokenImages = collectionResponse!.data!.tokenImages;
-  const tokenIds = tokenIdsResponse?.data?.tokens;
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
+  const tokenIds = tokenIdsResponse?.data?.tokens || [];
 
   return (
     <div style={{ width: 656 }} className="flex-grow">
@@ -366,7 +381,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
                 {tokenIdsIsPending ? (
                   <div className="animate-pulse inline-block w-8 h-6 rounded bg-zinc-800"></div>
                 ) : (
-                  <div>{tokenIds!.length}</div>
+                  <div>{tokenIds.length}</div>
                 )}
                 <div>Results</div>
               </div>
@@ -374,7 +389,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
             </div>
             <Button
               onClick={() => {
-                const filteredTokenIds = tokenIds || [];
+                const filteredTokenIds = tokenIds;
                 const selectedTokenIds = Array.from(
                   new Set([...filteredTokenIds, ...form.tokenIds]),
                 );
@@ -409,7 +424,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
                 ))}
           </div>
           <Paginator
-            items={tokenIds || []}
+            items={tokenIds}
             page={page}
             setItems={setPaginatedTokenIds}
             setPage={setPage}

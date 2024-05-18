@@ -109,8 +109,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     setDialog,
   ]);
 
-  const collection = collectionResponse?.data?.collection;
-  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const isReady = collectionResponse!.data!.isReady;
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
   const userOrders = userOrdersResponse?.data?.orders;
   const userUnlistedTokens = userTokenIds?.filter(
@@ -142,53 +143,59 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           </div>
           <hr className="border-zinc-800 border-2 border-t-0 -mx-8" />
           <div className="flex flex-col gap-4">
-            <div className="overflow-x-hidden text-ellipsis font-medium">{collection?.name}</div>
-            <div className="flex flex-col gap-8">
-              {!!userOrders && userOrders.length > 0 && (
-                <div className="flex flex-col gap-4">
-                  <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
-                  <div className="flex flex-col flex-wrap gap-4">
-                    {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
-                      <ListedNft
-                        tokenId={tokenId}
-                        name={collection?.name || ''}
-                        symbol={collection?.symbol || ''}
-                        src={tokenImages[tokenId]}
-                        key={tokenId}
-                        tokenPrice={fulfillmentCriteria.token.amount}
-                        ethPrice={fulfillmentCriteria.coin?.amount}
-                        onClick={() => {
-                          navigate('order/' + tokenId);
-                          onNavigate();
-                          setSelectedTokenId(undefined);
-                        }}
-                      />
-                    ))}
+            <div className="overflow-x-hidden text-ellipsis font-medium">{collection.name}</div>
+            {isReady ? (
+              <div className="flex flex-col gap-8">
+                {!!userOrders && userOrders.length > 0 && (
+                  <div className="flex flex-col gap-4">
+                    <div className="text-sm text-zinc-400">Listed ({userOrders.length})</div>
+                    <div className="flex flex-col flex-wrap gap-4">
+                      {userOrders.map(({ tokenId, fulfillmentCriteria }) => (
+                        <ListedNft
+                          tokenId={tokenId}
+                          name={collection.name}
+                          symbol={collection.symbol}
+                          src={tokenImages[tokenId]}
+                          key={tokenId}
+                          tokenPrice={fulfillmentCriteria.token.amount}
+                          ethPrice={fulfillmentCriteria.coin?.amount}
+                          onClick={() => {
+                            navigate('order/' + tokenId);
+                            onNavigate();
+                            setSelectedTokenId(undefined);
+                          }}
+                        />
+                      ))}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
-                <div className="flex flex-col gap-4">
-                  <div className="text-sm text-zinc-400">
-                    Unlisted ({userUnlistedTokens.length})
+                {!!userUnlistedTokens && userUnlistedTokens.length > 0 && (
+                  <div className="flex flex-col gap-4">
+                    <div className="text-sm text-zinc-400">
+                      Unlisted ({userUnlistedTokens.length})
+                    </div>
+                    <div className="grid grid-cols-3 gap-4">
+                      {userUnlistedTokens.map((tokenId) => (
+                        <CardNftSelectable
+                          key={tokenId}
+                          src={tokenImages[tokenId]}
+                          selected={selectedTokenId === tokenId}
+                          onSelect={() =>
+                            setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
+                          }
+                          tokenId={tokenId}
+                        />
+                      ))}
+                    </div>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    {userUnlistedTokens.map((tokenId) => (
-                      <CardNftSelectable
-                        key={tokenId}
-                        src={tokenImages[tokenId]}
-                        selected={selectedTokenId === tokenId}
-                        onSelect={() =>
-                          setSelectedTokenId(selectedTokenId == tokenId ? undefined : tokenId)
-                        }
-                        tokenId={tokenId}
-                      />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <div className="text-sm text-zinc-400">
+                This collection is still being processed. Come back in a few minutes.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -198,7 +205,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           selectedTokenId ? '' : 'translate-y-16'
         }`}
       >
-        <Button disabled>{`${collection?.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
+        <Button disabled>{`${collection.name} #${selectedTokenId || lastSelectedTokenId}`}</Button>
         <ButtonBlue
           onClick={() => {
             navigate('order/create/' + selectedTokenId);
