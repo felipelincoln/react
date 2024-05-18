@@ -91,7 +91,9 @@ export function Navbar({
           onClick={() => navigate(`/c/${collection.contract}`)}
         >
           <CollectoorLogo />
-          <div className="text-xl text-zinc-200">Collectoor</div>
+          <div className="text-xl text-zinc-200">
+            Collectoor<span className="text-zinc-400 text-xs mr-1"> (beta)</span>
+          </div>
         </div>
         <div className="flex h-8 my-8 flex-grow justify-end gap-4">
           {address && (
