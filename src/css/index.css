@@ -6,17 +6,15 @@
   html,
   body,
   #root {
-    color-scheme: dark light;
+    color-scheme: dark;
     @apply h-full;
   }
   #root {
     @apply flex flex-col pt-24;
   }
-  html.dark > body {
-    @apply bg-zinc-900 text-zinc-200;
-  }
-  html.light > body {
-    @apply bg-white text-black;
+  body {
+    background-color: #121212;
+    @apply text-zinc-200;
   }
   a {
     @apply cursor-pointer text-blue-400;
