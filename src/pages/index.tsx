@@ -5,3 +5,4 @@ export { CollectionPage, FilterContext } from './CollectionPage';
 export { OrderCreatePage } from './OrderCreatePage';
 export { OrderFulfillPage } from './OrderFulfillPage';
 export { OrderPage } from './OrderPage';
+export { HomePage } from './HomePage';

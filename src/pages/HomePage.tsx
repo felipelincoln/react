@@ -1,9 +1,9 @@
-import { CollectoorLogo } from '../components';
+import { CollectoorLogo } from './components';
 
-export function LoadingPage() {
+export function HomePage() {
   return (
     <div className="h-full flex items-center justify-center -mt-24">
-      <div className="flex flex-col items-center animate-bounce">
+      <div className="flex flex-col items-center gap-1">
         <CollectoorLogo />
         <div>Collectoor</div>
       </div>

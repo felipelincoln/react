@@ -49,8 +49,7 @@ export function OrderCreatePage() {
     expireDays: 7,
   });
 
-  const { data: userTokenIdsResponse } = useQuery({
-    enabled: !!address,
+  const { data: userTokenIdsResponse, isSuccess: userTokenIdsIsSuccess } = useSuspenseQuery({
     ...fetchUserTokenIds(contract, address!),
   });
 
@@ -66,7 +65,7 @@ export function OrderCreatePage() {
 
   const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
-  const tokenIds = tokenIdsResponse?.data?.tokens || [];
+  const tokenIds = tokenIdsResponse.data?.tokens || [];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
 
@@ -200,7 +199,11 @@ export function OrderCreatePage() {
     });
   }
 
-  if (Number.isNaN(tokenId) || !userTokenIds.includes(tokenId) || !isReady) {
+  if (
+    Number.isNaN(tokenId) ||
+    (userTokenIdsIsSuccess && !userTokenIds.includes(tokenId)) ||
+    !isReady
+  ) {
     return <NotFoundPage />;
   }
 

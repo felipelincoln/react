@@ -14,12 +14,13 @@ export const FilterContext = createContext<{
 export function CollectionPage() {
   const contract = useParams().contract!;
   const navigate = useNavigate();
-  const { setDialog } = useContext(DialogContext);
+  const { dialog, setDialog } = useContext(DialogContext);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const [openAttribute, setOpenAttribute] = useState<string | undefined>(undefined);
   const [filter, setFilter] = useState<Record<string, string>>({});
 
   useEffect(() => {
+    if (dialog) return;
     if (!collectionResponse!.data!.isReady) {
       setDialog(
         <div className="flex gap-4 flex-col items-center">
@@ -28,7 +29,7 @@ export function CollectionPage() {
         </div>,
       );
     }
-  });
+  }, [collectionResponse, setDialog, dialog]);
 
   const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;

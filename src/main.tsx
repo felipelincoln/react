@@ -12,6 +12,7 @@ import {
   CollectionActivitiesPage,
   CollectionOrdersPage,
   CollectionPage,
+  HomePage,
   OrderCreatePage,
   OrderFulfillPage,
   OrderPage,
@@ -40,6 +41,7 @@ root.render(
         <ErrorBoundary fallbackRender={({ error }) => <ErrorPage error={error} />}>
           <Suspense fallback={<LoadingPage />}>
             <Routes>
+              <Route path="/" Component={HomePage} />
               <Route
                 path="/c/:contract"
                 element={
