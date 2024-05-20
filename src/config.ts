@@ -2,7 +2,7 @@ import { mainnet } from 'viem/chains';
 
 export const config = {
   api: {
-    url: 'http://localhost:3000',
+    url: 'https://api.collectoor.com',
   },
   eth: {
     chain: mainnet,
