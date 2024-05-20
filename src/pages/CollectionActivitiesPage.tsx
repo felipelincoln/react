@@ -16,8 +16,8 @@ export function CollectionActivitiesPage() {
     fetchActivities(contract, tokenIdsResponse.data?.tokens || []),
   );
 
-  const collection = collectionResponse?.data?.collection;
-  const tokenImages = collectionResponse?.data?.tokenImages || {};
+  const collection = collectionResponse!.data!.collection;
+  const tokenImages = collectionResponse!.data!.tokenImages || {};
   const activities = activitiesResponse.data?.activities;
 
   return (

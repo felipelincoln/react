@@ -1,4 +1,4 @@
-import { mainnet, sepolia } from 'viem/chains';
+import { mainnet } from 'viem/chains';
 
 export const config = {
   api: {

@@ -1,0 +1,16 @@
+version: 0.2
+phases:
+  install:
+    runtime-versions:
+      nodejs: 20
+    commands:
+      - npm install
+  build:
+    commands:
+      - npm run build
+  post_build:
+    commands:
+      - echo "Copying files to S3"
+      - aws s3 cp dist s3://collectoor-frontend --recursive
+      - echo "Invalidating CloudFront cache"
+      - aws cloudfront create-invalidation --distribution-id E1C8LT0NLQNSV0 --paths '/*'
