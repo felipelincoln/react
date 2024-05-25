@@ -11,7 +11,7 @@ export function ButtonBlue({
   loading?: boolean;
   onClick?: () => void;
 }) {
-  if (loading) {
+  if (loading && !disabled) {
     return (
       <button
         type="button"
