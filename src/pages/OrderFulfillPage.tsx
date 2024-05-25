@@ -362,7 +362,7 @@ export function OrderFulfillPage() {
             <TextBox>{moment(order.endTime * 1000).fromNow()}</TextBox>
           </div>
           <div className="flex items-center">
-            <ButtonBlue loading={!order || !userBalance} onClick={submit}>
+            <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
               Confirm
             </ButtonBlue>
             <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
