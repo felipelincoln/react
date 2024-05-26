@@ -33,7 +33,6 @@ export function fetchCollectionList(query?: { limit?: number }) {
       }>
     > => {
       console.log('> [api] fetch collection list');
-      await new Promise((resolve) => setTimeout(resolve, 4000));
       return fetch(`${config.api.url}/collections/list?${fetchQuery ?? ''}`).then(handleFetchError);
     },
   };
