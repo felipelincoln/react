@@ -18,6 +18,27 @@ export function fetchCollection(contract: string) {
   };
 }
 
+export function fetchCollectionList(query?: { limit?: number }) {
+  let fetchQuery = undefined;
+
+  if (query?.limit) {
+    fetchQuery = new URLSearchParams({ limit: query.limit.toString() }).toString();
+  }
+
+  return {
+    queryKey: ['collectionList'],
+    queryFn: async (): Promise<
+      ApiResponse<{
+        collections: Collection[];
+      }>
+    > => {
+      console.log('> [api] fetch collection list');
+      await new Promise((resolve) => setTimeout(resolve, 4000));
+      return fetch(`${config.api.url}/collections/list?${fetchQuery ?? ''}`).then(handleFetchError);
+    },
+  };
+}
+
 export function fetchTokenIds(contract: string, filter: Record<string, string>) {
   return {
     queryKey: ['tokenIds', contract, filter],
