@@ -6,7 +6,7 @@ export const config = {
   },
   eth: {
     chain: mainnet,
-    rpc: 'http://localhost:3000/jsonrpc',
+    rpc: 'https://api.collectoor.com/jsonrpc',
     seaport: {
       name: 'Seaport',
       version: '1.6',

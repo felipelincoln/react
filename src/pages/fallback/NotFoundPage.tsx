@@ -1,14 +1,15 @@
+import { getNavigateBackPath } from '../../utils';
 import { CollectoorLogo } from '../components';
 
 export function NotFoundPage() {
-  const contract = window.location.pathname.split('/').at(2);
+  const navigateBackPath = getNavigateBackPath(window.location.pathname);
 
   return (
     <div className="h-full flex items-center justify-center -mt-24">
       <div className="flex flex-col items-center gap-1">
         <CollectoorLogo />
         <div>Not Found</div>
-        {contract?.startsWith('0x') && <a href={`/c/${contract}`}>back</a>}
+        {navigateBackPath && <a href={navigateBackPath}>back</a>}
       </div>
     </div>
   );

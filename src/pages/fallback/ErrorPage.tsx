@@ -1,7 +1,8 @@
+import { getNavigateBackPath } from '../../utils';
 import { CollectoorLogo } from '../components';
 
 export function ErrorPage({ error }: { error: Error }) {
-  const contract = window.location.pathname.split('/').at(2);
+  const navigateBackPath = getNavigateBackPath(window.location.pathname);
 
   return (
     <div className="h-full flex items-center justify-center -mt-24">
@@ -9,7 +10,7 @@ export function ErrorPage({ error }: { error: Error }) {
         <CollectoorLogo />
         <div>Unexpected error</div>
         <div className="font-mono bg-zinc-800 px-1">{error.message}</div>
-        {contract?.startsWith('0x') && <a href={`/c/${contract}`}>back</a>}
+        {navigateBackPath && <a href={navigateBackPath}>back</a>}
       </div>
     </div>
   );
