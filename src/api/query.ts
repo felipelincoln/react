@@ -19,7 +19,7 @@ export function fetchCollection(contract: string) {
 }
 
 export function fetchCollectionList(query?: { limit?: number }) {
-  let fetchQuery = undefined;
+  let fetchQuery: string | undefined = undefined;
 
   if (query?.limit) {
     fetchQuery = new URLSearchParams({ limit: query.limit.toString() }).toString();
