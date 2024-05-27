@@ -9,7 +9,7 @@ export function NotFoundPage() {
       <div className="flex flex-col items-center gap-1">
         <CollectoorLogo />
         <div>Not Found</div>
-        {navigateBackPath && <a href={navigateBackPath}>back</a>}
+        {navigateBackPath ? <a href={navigateBackPath}>back</a> : <a href="/">home</a>}
       </div>
     </div>
   );

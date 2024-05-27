@@ -10,7 +10,7 @@ export function ErrorPage({ error }: { error: Error }) {
         <CollectoorLogo />
         <div>Unexpected error</div>
         <div className="font-mono bg-zinc-800 px-1">{error.message}</div>
-        {navigateBackPath && <a href={navigateBackPath}>back</a>}
+        {navigateBackPath ? <a href={navigateBackPath}>back</a> : <a href="/">home</a>}
       </div>
     </div>
   );
