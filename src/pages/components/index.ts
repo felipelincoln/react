@@ -26,6 +26,7 @@ export * from './ItemEth';
 export * from './ItemNft';
 export * from './ListedNft';
 export * from './Navbar';
+export * from './NavbarHome';
 export * from './Paginator';
 export * from './PriceTag';
 export * from './PriceTagClickable';

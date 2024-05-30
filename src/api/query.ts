@@ -18,6 +18,7 @@ export function fetchCollection(contract: string) {
   };
 }
 
+// deprecated
 export function fetchCollectionList(query?: { limit?: number }) {
   let fetchQuery: string | undefined = undefined;
 
@@ -34,6 +35,25 @@ export function fetchCollectionList(query?: { limit?: number }) {
     > => {
       console.log('> [api] fetch collection list');
       return fetch(`${config.api.url}/collections/list?${fetchQuery ?? ''}`).then(handleFetchError);
+    },
+  };
+}
+
+export function fetchCollectionTrending() {
+  return {
+    queryKey: ['collectionTrending'],
+    queryFn: async (): Promise<
+      ApiResponse<{
+        trending: {
+          collection: Collection;
+          floor_price?: { coin_amount?: bigint; token_amount: number };
+          listings: number;
+          trades: number;
+        }[];
+      }>
+    > => {
+      console.log('> [api] fetch collection trending');
+      return fetch(`${config.api.url}/collections/trending`).then(handleFetchError);
     },
   };
 }

@@ -1,67 +1,65 @@
-import { Button, CollectoorLogo, Input } from './components';
+import { NavbarHome, PriceTag, SpinnerIcon } from './components';
 import { useQuery } from '@tanstack/react-query';
-import { fetchCollectionList } from '../api/query';
+import { fetchCollectionTrending } from '../api/query';
 import { useNavigate } from 'react-router-dom';
-import { useState } from 'react';
-import { isAddress } from 'viem';
 
 export function HomePage() {
   const navigate = useNavigate();
-  const [contract, setContract] = useState('');
-  const [error, setError] = useState<string | undefined>();
-  const { data: fetchCollectionListResponse, isLoading } = useQuery(fetchCollectionList());
-  const collections = fetchCollectionListResponse?.data?.collections;
+  const { data: fetchCollectionListResponse, isLoading } = useQuery(fetchCollectionTrending());
+  const trendingList = fetchCollectionListResponse?.data?.trending;
 
   return (
-    <div className="min-h-full flex items-center justify-center -mt-24">
-      <div className="flex flex-col items-center gap-16">
-        <div className="flex flex-col items-center gap-1">
-          <CollectoorLogo />
-          <div>Collectoor</div>
-        </div>
-
-        <div className="flex flex-wrap gap-1 max-w-5xl">
-          {isLoading &&
-            Array.from({ length: 9 }).map((_, index) => (
-              <div key={index} className="w-16 h-16 rounded bg-zinc-800 animate-pulse"></div>
-            ))}
-          {collections?.map((collection) => (
-            <img
-              key={collection.contract}
-              src={collection.image}
-              className="w-16 h-16 rounded cursor-pointer hover:scale-125"
-              onClick={() => navigate(`/c/${collection.contract}`)}
-            />
-          ))}
-        </div>
-
-        <div className="flex flex-col gap-2">
-          <div>Go to collection</div>
-          <div className="flex gap-2">
-            <Input
-              placeholder="0x00123..."
-              onChange={(e) => {
-                setContract(e.target.value);
-                setError(undefined);
-              }}
-              value={contract}
-            />
-            <Button
-              onClick={() => {
-                if (isAddress(contract)) {
-                  navigate(`/c/${contract}`);
-                  return;
-                }
-
-                setError('Invalid contract address');
-              }}
-            >
-              Go
-            </Button>
+    <>
+      <NavbarHome />
+      <div className="max-w-screen-lg w-full mx-auto">
+        <div className="p-8 flex flex-col gap-8">
+          <div>
+            <h1>Trending collections</h1>
           </div>
-          {error && <div className="text-red-400">{error}</div>}
+
+          {isLoading && <SpinnerIcon />}
+          {trendingList && (
+            <div className="flex flex-col gap-2">
+              <table>
+                <thead>
+                  <tr className="*:font-normal text-sm text-zinc-400 text-left">
+                    <th className="pl-4"></th>
+                    <th className="pr-8">Collection</th>
+                    <th className="pr-8">Floor price</th>
+                    <th className="pr-8">Listings</th>
+                    <th>Trades</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {trendingList?.map((trending, index) => (
+                    <tr
+                      key={trending.collection.contract}
+                      onClick={() => navigate(`/c/${trending.collection.contract}`)}
+                      className="cursor-pointer hover:bg-zinc-800 *:py-2"
+                    >
+                      <td className="pl-4 text-zinc-400 text-sm">{index + 1}</td>
+                      <td className="pr-8">
+                        <div className="flex items-center gap-2">
+                          <img src={trending.collection.image} className="w-10 h-10 rounded" />
+                          {trending.collection.name}
+                        </div>
+                      </td>
+                      <td className="pr-8">
+                        <div className="flex flex-nowrap gap-2">
+                          <PriceTag>0 ETH</PriceTag>
+                          <PriceTag>0 {trending.collection.symbol}</PriceTag>
+                        </div>
+                      </td>
+                      <td className="pr-8">{trending.listings}</td>
+                      <td>{trending.trades}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
