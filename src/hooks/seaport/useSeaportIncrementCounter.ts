@@ -39,7 +39,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
       abi: seaportAbi(),
       address: seaportContractAddress(),
       functionName: 'incrementCounter',
-      chainId: config.eth.chain.id,
+      chainId: config.web3.chain.id,
     });
   }, [run, writeContract]);
 

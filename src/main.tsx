@@ -20,10 +20,10 @@ import {
 import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
 
 const wagmiConfig = createConfig({
-  chains: [config.eth.chain],
+  chains: [config.web3.chain],
   connectors: [injected()],
   transports: {
-    [config.eth.chain.id]: fallback([unstable_connector(injected), http(config.eth.rpc)]),
+    [config.web3.chain.id]: fallback([unstable_connector(injected), http(config.web3.rpc)]),
   },
 });
 

@@ -25,7 +25,7 @@ export function AccountButton({ onClick }: { onClick: () => void }) {
     );
   }
 
-  const chainId = config.eth.chain.id;
+  const chainId = config.web3.chain.id;
 
   return <Button onClick={() => connect({ connector: injected(), chainId })}>Connect</Button>;
 }

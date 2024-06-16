@@ -4,7 +4,7 @@ export const config = {
   api: {
     url: 'https://api.collectoor.com',
   },
-  eth: {
+  web3: {
     chain: mainnet,
     rpc: 'https://api.collectoor.com/jsonrpc',
     seaport: {

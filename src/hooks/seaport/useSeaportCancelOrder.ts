@@ -55,7 +55,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
     writeContract({
       abi: seaportAbi(),
       address: seaportContractAddress(),
-      chainId: config.eth.chain.id,
+      chainId: config.web3.chain.id,
       functionName: 'cancel',
       args: order
         ? seaportCancelOrderArgs({

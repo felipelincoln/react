@@ -63,7 +63,7 @@ export function ActivityTab({ showTab }: { showTab: boolean }) {
                       <td>
                         <div className="flex flex-col gap-4">
                           <ExternalLink
-                            href={`${config.eth.chain.blockExplorers.default.url}/tx/${activity.txHash}`}
+                            href={`${config.web3.chain.blockExplorers.default.url}/tx/${activity.txHash}`}
                           >
                             {moment(activity.createdAt * 1000).fromNow()}
                           </ExternalLink>

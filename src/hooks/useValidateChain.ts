@@ -8,13 +8,13 @@ export function useValidateChain({ run }: { run: boolean }) {
   const { chainId } = useAccount();
   const { switchChain, isPending, isError, reset } = useSwitchChain();
   const [status, setStatus] = useState<ValidateChainStatus>('idle');
-  const isValidChain = chainId == config.eth.chain.id;
+  const isValidChain = chainId == config.web3.chain.id;
 
   useEffect(() => {
     if (!run) return;
     if (isValidChain) return;
 
-    switchChain({ chainId: config.eth.chain.id });
+    switchChain({ chainId: config.web3.chain.id });
   }, [run, isValidChain, switchChain]);
 
   useEffect(() => {

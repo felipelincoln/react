@@ -45,7 +45,7 @@ export function useSeaportFulfillAdvancedOrder({
 
     writeContract({
       abi: [...seaportAbi(), ...erc20Abi],
-      address: config.eth.seaport.contract,
+      address: config.web3.seaport.contract,
       functionName: 'fulfillAdvancedOrder',
       args: seaportFulfillAdvancedOrderArgs(order),
       value:

@@ -78,7 +78,7 @@ export function OrderCreatePage() {
       setDialog(
         OrderCreateDialog(
           <div>
-            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),

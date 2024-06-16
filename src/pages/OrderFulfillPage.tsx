@@ -100,7 +100,7 @@ export function OrderFulfillPage() {
       setDialog(
         OrderFulfillDialog(
           <div>
-            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),
@@ -187,7 +187,7 @@ export function OrderFulfillPage() {
       setDialog(
         OrderCancelDialog(
           <div>
-            <div className="text-center">{`Switching to ${config.eth.chain.name} network`}</div>
+            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
             <div className="text-center">Confirm in your wallet</div>
           </div>,
         ),

@@ -21,13 +21,13 @@ function merkleTree(data: number[]) {
   return { root, proof };
 }
 
-const seaport = config.eth.seaport;
+const seaport = config.web3.seaport;
 
 function seaportEip712Domain() {
   return {
     name: seaport.name,
     version: seaport.version,
-    chainId: config.eth.chain.id,
+    chainId: config.web3.chain.id,
     verifyingContract: seaport.contract,
   };
 }

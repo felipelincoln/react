@@ -28,7 +28,7 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
     address: contract as `0x${string}`,
     abi: erc721Abi,
     functionName: 'isApprovedForAll',
-    args: [address!, config.eth.seaport.conduit],
+    args: [address!, config.web3.seaport.conduit],
     query: { enabled: run },
   });
 
@@ -57,7 +57,7 @@ export function useSeaportAllowance({ run }: { run: boolean }) {
       address: contract as `0x${string}`,
       abi: erc721Abi,
       functionName: 'setApprovalForAll',
-      args: [config.eth.seaport.conduit, true],
+      args: [config.web3.seaport.conduit, true],
     });
   }, [run, isApprovedForAll, contract, setApprovalForAll]);
 
