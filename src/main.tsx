@@ -18,12 +18,16 @@ import {
   OrderPage,
 } from './pages';
 import { ErrorPage, LoadingPage, NotFoundPage } from './pages/fallback';
+import { createClient } from 'viem';
 
 const wagmiConfig = createConfig({
   chains: [config.web3.chain],
   connectors: [injected()],
-  transports: {
-    [config.web3.chain.id]: fallback([unstable_connector(injected), http(config.web3.rpc)]),
+  client({ chain }) {
+    return createClient({
+      chain,
+      transport: fallback([unstable_connector(injected), http(config.web3.rpc)]),
+    });
   },
 });
 

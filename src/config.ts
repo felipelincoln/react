@@ -1,12 +1,33 @@
-import { mainnet } from 'viem/chains';
+import { base, mainnet, sepolia } from 'viem/chains';
+
+const api = process.env.API_URL || 'http://localhost:3000';
+const chainStr = process.env.CHAIN || 'sepolia';
+let chain;
+
+switch (chainStr) {
+  case 'mainnet':
+    chain = mainnet;
+    break;
+
+  case 'sepolia':
+    chain = sepolia;
+    break;
+
+  case 'base':
+    chain = base;
+    break;
+
+  default:
+    chain = mainnet;
+}
 
 export const config = {
   api: {
-    url: 'https://api.collectoor.com',
+    url: api,
   },
   web3: {
-    chain: mainnet,
-    rpc: 'https://api.collectoor.com/jsonrpc',
+    chain,
+    rpc: api + '/jsonrpc',
     seaport: {
       name: 'Seaport',
       version: '1.6',
@@ -20,6 +41,6 @@ export const config = {
   },
   fee: {
     recipient: '0x88FE6ED81c6fb5620265B227574ea8e0C8d08E9c',
-    amount: '5000000000000000', // 0.005 ETH
+    amount: '1000000000000000', // 0.001 ETH
   },
 };
