@@ -1,24 +1,22 @@
-import { base, mainnet, sepolia } from 'viem/chains';
+import { Chain, base, mainnet, sepolia } from 'viem/chains';
 
 const api = process.env.API_URL || 'http://localhost:3000';
 const chainStr = process.env.CHAIN || 'sepolia';
-let chain;
 
-switch (chainStr) {
-  case 'mainnet':
-    chain = mainnet;
-    break;
+function getChain(chainStr: string): Chain {
+  switch (chainStr) {
+    case 'mainnet':
+      return mainnet;
 
-  case 'sepolia':
-    chain = sepolia;
-    break;
+    case 'sepolia':
+      return sepolia;
 
-  case 'base':
-    chain = base;
-    break;
+    case 'base':
+      return base;
 
-  default:
-    chain = mainnet;
+    default:
+      return mainnet;
+  }
 }
 
 export const config = {
@@ -26,7 +24,7 @@ export const config = {
     url: api,
   },
   web3: {
-    chain,
+    chain: getChain(chainStr),
     rpc: api + '/jsonrpc',
     seaport: {
       name: 'Seaport',
