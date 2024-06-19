@@ -38,7 +38,7 @@ export function ActivityTableRow({
       </td>
       <td className="text-xs align-top">
         <ExternalLink
-          href={`${config.web3.chain.blockExplorers.default.url}/tx/${activity.txHash}`}
+          href={`${config.web3.chain.blockExplorers?.default.url}/tx/${activity.txHash}`}
         >
           {moment(activity.createdAt * 1000).fromNow()}
         </ExternalLink>
