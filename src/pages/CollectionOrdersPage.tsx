@@ -72,7 +72,7 @@ export function CollectionOrdersPage() {
       <div className="flex h-8 gap-4 items-center">
         <div className="flex items-center gap-2 *:leading-8">
           <div>{orders?.length}</div>
-          <div>Results</div>
+          <div>Listings</div>
         </div>
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
