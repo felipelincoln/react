@@ -17,6 +17,7 @@ export * from './CollectionQueued';
 export * from './CollectoorLogo';
 export * from './Dialog';
 export * from './ExternalLink';
+export * from './Footer';
 export * from './IconEth';
 export * from './IconNft';
 export * from './IconNftLarge';
