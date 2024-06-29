@@ -1,4 +1,4 @@
-import { Footer, NavbarHome, PriceTag, SpinnerIcon } from './components';
+import { Footer, HomeBanner, NavbarHome, PriceTag, SpinnerIcon } from './components';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionTrending } from '../api/query';
 import { useNavigate } from 'react-router-dom';
@@ -12,6 +12,7 @@ export function HomePage() {
     <>
       <NavbarHome />
       <div className="flex flex-col h-full">
+        <HomeBanner />
         <div className="max-w-screen-lg w-full mx-auto flex-grow">
           <div className="p-8 flex flex-col gap-8">
             <div>

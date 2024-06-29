@@ -8,13 +8,13 @@ export function Footer() {
 
   return (
     <div className="w-full bg-zinc-900">
-      <div className="flex flex-wrap p-8 justify-between text-zinc-400">
+      <div className="flex flex-wrap gap-4 p-8 justify-between text-zinc-400">
         <div className="flex flex-col">
           <div className="font-bold">Collectoor</div>
           <div>
             Created by{' '}
             <a target="_blank" href={felipeLinkedin} className="underline cursor-pointer">
-              Felipe Lincoln.
+              Felipe Lincoln
             </a>
           </div>
         </div>
