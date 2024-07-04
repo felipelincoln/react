@@ -40,3 +40,4 @@ export * from './TagLight';
 export * from './TextBox';
 export * from './TextBoxWithNfts';
 export * from './Tooltip';
+export * from './VerifiedBadge';

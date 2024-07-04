@@ -21,6 +21,7 @@ import { useAccount, useBalance } from 'wagmi';
 import { useCancelOrder, useFulfillOrder } from '../hooks';
 import { DialogContext } from './App';
 import { config } from '../config';
+import { verifiedCollections } from '../verifiedCollections';
 
 export function OrderFulfillPage() {
   const contract = useParams().contract!;
@@ -61,13 +62,16 @@ export function OrderFulfillPage() {
 
   const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
+  const verifiedCollection = verifiedCollections[collection.contract];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
   const order = orderResponse.data?.orders[0];
   const isOrderOwner = order?.offerer == (address || '').toLowerCase();
   const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
   const ethCost =
-    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') + BigInt(order?.fee?.amount || '0');
+    BigInt(verifiedCollection?.royalty.amount || '0') +
+    BigInt(order?.fulfillmentCriteria.coin?.amount || '0') +
+    BigInt(order?.fee?.amount || '0');
 
   const orderTokenIdsSorted = useMemo(() => {
     if (!order) return [];
@@ -346,7 +350,12 @@ export function OrderFulfillPage() {
               {ethCost > 0 && <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>}
               {order?.fee && (
                 <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  fee: {etherToString(BigInt(order?.fee?.amount), false)}
+                  marketplace fee: {etherToString(BigInt(order?.fee?.amount), false)}
+                </div>
+              )}
+              {verifiedCollection?.royalty && (
+                <div className="text-zinc-400 text-xs pt-1 pl-4">
+                  creator fee: {etherToString(BigInt(verifiedCollection.royalty?.amount), false)}
                 </div>
               )}
             </div>

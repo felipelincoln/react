@@ -20,6 +20,7 @@ function getChain(chainStr: string): Chain {
 }
 
 export const config = {
+  chain: chainStr,
   api: {
     url: api,
   },

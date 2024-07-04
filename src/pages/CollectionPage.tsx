@@ -1,10 +1,18 @@
 import { useQuery } from '@tanstack/react-query';
 import { Outlet, useNavigate, useParams } from 'react-router-dom';
 import { fetchCollection } from '../api/query';
-import { Button, ButtonAccordion, ButtonLight, Checkbox, Tootltip } from './components';
+import {
+  Button,
+  ButtonAccordion,
+  ButtonLight,
+  Checkbox,
+  Tootltip,
+  VerifiedBadge,
+} from './components';
 import { Suspense, createContext, useContext, useEffect, useState } from 'react';
 import { CollectionLoadingPage } from './fallback';
 import { DialogContext } from './App';
+import { verifiedCollections } from '../verifiedCollections';
 
 export const FilterContext = createContext<{
   filter: Record<string, string>;
@@ -32,6 +40,7 @@ export function CollectionPage() {
 
   const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
+  const isVerified = !!verifiedCollections[collection.contract];
   return (
     <div className="flex flex-grow">
       <div className="w-80 bg-zinc-900 p-8 flex-shrink-0 gap-8 border-r border-zinc-800">
@@ -41,7 +50,9 @@ export function CollectionPage() {
               <img src={collection.image} className="w-16 h-16 rounded" />
               <div>
                 <div className="text-lg font-medium flex items-baseline gap-2">
-                  <div>{collection.name}</div>
+                  <div className="flex items-center gap-2">
+                    {collection.name} {isVerified && <VerifiedBadge />}
+                  </div>
                   {!isReady && <Tootltip>This collection is being processed.</Tootltip>}
                 </div>
                 <div className="text-sm text-zinc-400">{collection.totalSupply} items</div>

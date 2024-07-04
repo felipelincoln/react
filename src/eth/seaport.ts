@@ -3,6 +3,7 @@ import { keccak256, toHex } from 'viem';
 import seaportAbiJson from './seaport.abi.json';
 import { config } from '../config';
 import { Order } from '../api/types';
+import { verifiedCollections } from '../verifiedCollections';
 
 export type OrderFragment = Omit<Order, 'signature' | 'orderHash'>;
 export type WithCounter<T> = T & { counter: string };
@@ -133,6 +134,20 @@ export function seaportFulfillAdvancedOrderArgs(
     counter: '',
   });
   const consideration = fulfillAdvancedOrderMessage.consideration.map((obj) => Object.values(obj));
+
+  const verifiedCollection = verifiedCollections[order.contract];
+  if (verifiedCollection) {
+    const royalty = {
+      itemType: '0',
+      token: '0x0000000000000000000000000000000000000000',
+      identifierOrCriteria: '0',
+      startAmount: verifiedCollection.royalty.amount,
+      endAmount: verifiedCollection.royalty.amount,
+      recipient: verifiedCollection.royalty.recipient,
+    };
+
+    consideration.push(Object.values(royalty));
+  }
 
   const orderParameters = [
     order.offerer,

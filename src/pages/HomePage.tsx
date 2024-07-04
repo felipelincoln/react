@@ -1,12 +1,16 @@
-import { Footer, HomeBanner, NavbarHome, PriceTag, SpinnerIcon } from './components';
+import { Footer, HomeBanner, NavbarHome, PriceTag, SpinnerIcon, VerifiedBadge } from './components';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionTrending } from '../api/query';
 import { useNavigate } from 'react-router-dom';
+import { verifiedCollections } from '../verifiedCollections';
 
 export function HomePage() {
   const navigate = useNavigate();
   const { data: fetchCollectionListResponse, isLoading } = useQuery(fetchCollectionTrending());
-  const trendingList = fetchCollectionListResponse?.data?.trending;
+  const trendingList = fetchCollectionListResponse?.data?.trending.map((collection) => {
+    const isVerified = !!verifiedCollections[collection.collection.contract];
+    return { ...collection, isVerified };
+  });
 
   return (
     <>
@@ -44,6 +48,7 @@ export function HomePage() {
                           <div className="flex items-center gap-2">
                             <img src={trending.collection.image} className="w-10 h-10 rounded" />
                             {trending.collection.name}
+                            {trending.isVerified && <VerifiedBadge />}
                           </div>
                         </td>
                         <td className="pr-8">

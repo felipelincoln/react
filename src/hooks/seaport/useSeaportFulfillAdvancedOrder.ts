@@ -5,6 +5,7 @@ import { erc20Abi } from 'viem';
 import { config } from '../../config';
 import { Order } from '../../api/types';
 import { useQueryClient } from '@tanstack/react-query';
+import { verifiedCollections } from '../../verifiedCollections';
 
 type SeaportFulfillAdvancedOrderStatus =
   | 'idle'
@@ -43,13 +44,17 @@ export function useSeaportFulfillAdvancedOrder({
   useEffect(() => {
     if (!run) return;
 
+    const verifiedCollection = verifiedCollections[order.contract];
+
     writeContract({
       abi: [...seaportAbi(), ...erc20Abi],
       address: config.web3.seaport.contract,
       functionName: 'fulfillAdvancedOrder',
       args: seaportFulfillAdvancedOrderArgs(order),
       value:
-        BigInt(order.fulfillmentCriteria.coin?.amount || '0') + BigInt(order.fee?.amount || '0'),
+        BigInt(verifiedCollection?.royalty.amount || '0') +
+        BigInt(order.fulfillmentCriteria.coin?.amount || '0') +
+        BigInt(order.fee?.amount || '0'),
     });
   }, [run, order, writeContract]);
 
