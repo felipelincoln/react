@@ -349,13 +349,17 @@ export function OrderFulfillPage() {
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
-          {order.fulfillmentCriteria.token.amount != '0' && (
+          {order.fulfillmentCriteria.token.amount != '0' ? (
             <div className="flex gap-2 text-lg">
               Select{' '}
               <PriceTag>
                 {order.fulfillmentCriteria.token.amount} {collection.symbol}
               </PriceTag>{' '}
               to fulfill this order:
+            </div>
+          ) : (
+            <div className="flex gap-2 text-lg">
+              No <PriceTag>{collection.symbol}</PriceTag> required to fulfill this order.
             </div>
           )}
           <div className="flex flex-wrap gap-4">
@@ -393,49 +397,53 @@ export function OrderFulfillPage() {
             itemsPerPage={30}
           />
         </div>
-        <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
-          <div>
-            {tokenImages[tokenId] ? (
-              <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
-            ) : (
-              <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
-            )}
-
-            <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div className="font-bold">You pay</div>
-            {+order?.fulfillmentCriteria.token.amount > 0 && (
-              <TextBoxWithNfts
-                value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
-                tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
-              />
-            )}
+        <div>
+          <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
             <div>
-              {ethCost > 0 && (
-                <TextBox>
-                  <div className="flex justify-between items-center">
-                    <div>{`${etherToString(ethCost, false)}`}</div>
-                    <div
-                      className="text-zinc-400 cursor-pointer"
-                      onClick={() => setDialog(priceDetailsDialog())}
-                    >
-                      details
-                    </div>
-                  </div>
-                </TextBox>
+              {tokenImages[tokenId] ? (
+                <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+              ) : (
+                <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
               )}
+
+              <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div className="font-bold">You pay</div>
+              {+order?.fulfillmentCriteria.token.amount > 0 && (
+                <TextBoxWithNfts
+                  value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
+                  tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
+                />
+              )}
+              <div>
+                {ethCost > 0 && (
+                  <TextBox>
+                    <div className="flex justify-between items-center">
+                      <div>{`${etherToString(ethCost, false)}`}</div>
+                      <div
+                        className="text-zinc-400 cursor-pointer"
+                        onClick={() => setDialog(priceDetailsDialog())}
+                      >
+                        details
+                      </div>
+                    </div>
+                  </TextBox>
+                )}
+              </div>
+            </div>
+            <div className="flex flex-col gap-4 items-center">
+              <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
+                Confirm
+              </ButtonBlue>
+              <div className="text-zinc-400 text-sm">
+                Expires {moment(order.endTime * 1000).fromNow()}
+              </div>
             </div>
           </div>
-          <div>
-            <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
-              Confirm
-            </ButtonBlue>
-            <div className="text-zinc-400 text-sm pt-4 text-center">
-              Expires {moment(order.endTime * 1000).fromNow()}
-            </div>
-          </div>
-          {error && <div className="overflow-hidden text-ellipsis red">{error}</div>}
+          {error && (
+            <div className="overflow-hidden text-ellipsis red pt-8 text-center">{error}</div>
+          )}
         </div>
       </div>
     </div>

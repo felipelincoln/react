@@ -1,6 +1,5 @@
 import { useNavigate } from 'react-router-dom';
 import { PriceTag, PriceTagClickable } from '.';
-import { etherToString } from '../../utils';
 
 export function CardNftOrder({
   contract,
@@ -42,7 +41,7 @@ export function CardNftOrder({
       </div>
       <div className="h-20 px-4 py-2 flex flex-col gap-2 justify-start">
         {priceToken != '0' && <PriceTag>{`${priceToken} ${symbol}`}</PriceTag>}
-        {!!priceEth && <PriceTag>{etherToString(BigInt(priceEth))}</PriceTag>}
+        {!!priceEth && <PriceTag>{priceEth}</PriceTag>}
       </div>
     </div>
   );

@@ -5,7 +5,8 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchTokenIds, fetchUserTokenIds } from '../api/query';
 import { useAccount, useBalance } from 'wagmi';
-import { userCanFulfillOrder } from '../utils';
+import { etherToString, userCanFulfillOrder } from '../utils';
+import { verifiedCollections } from '../verifiedCollections';
 
 export function CollectionOrdersPage() {
   const { filter, setFilter } = useContext(FilterContext);
@@ -23,6 +24,7 @@ export function CollectionOrdersPage() {
   });
 
   const collection = collectionResponse!.data!.collection;
+  const verifiedCollection = verifiedCollections[collection.contract];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const orders = ordersResponse?.data?.orders;
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds;
@@ -81,7 +83,11 @@ export function CollectionOrdersPage() {
           <CardNftOrder
             key={order.tokenId}
             priceToken={order.fulfillmentCriteria.token.amount}
-            priceEth={order.fulfillmentCriteria.coin?.amount}
+            priceEth={etherToString(
+              BigInt(verifiedCollection?.royalty.amount || '0') +
+                BigInt(order?.fulfillmentCriteria.coin?.amount || '0') +
+                BigInt(order?.fee?.amount || '0'),
+            )}
             contract={collection.contract}
             symbol={collection.symbol}
             src={tokenImages[order.tokenId]}
