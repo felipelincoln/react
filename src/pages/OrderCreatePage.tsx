@@ -288,8 +288,8 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
 
   return (
     <div style={{ width: 656 }} className="flex-grow">
-      <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-4 *:text-lg">
-        <div>
+      <div className="flex flex-col gap-4 *:flex *:flex-col *:gap-4 *:text-lg">
+        <div className="w-52">
           <span className="text-lg font-medium">ETH price</span>
           <Input
             type="text"
@@ -305,7 +305,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
             }}
           />
         </div>
-        <div>
+        <div className="w-52">
           <span className="text-lg font-medium">{collection.symbol} price</span>
           <Input
             type="text"
@@ -323,22 +323,47 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
         </div>
         <div>
           <span className="text-lg font-medium">Expire days</span>
-          <Input
-            type="text"
-            value={form.expireDays || ''}
-            onChange={(e) => {
-              const input = e.target.value;
-              const validator = /^\d*$/;
-              const sanitizedInput = input.match(validator)?.[0] || '';
-
-              if (sanitizedInput == '' && input != '') return;
-              if (Number(sanitizedInput) > 60 || Number(sanitizedInput) < 0) return;
-              setForm({ ...form, expireDays: Number(sanitizedInput) });
-            }}
-          />
+          <div className="flex flex-rap gap-2">
+            <Button
+              disabled={form.expireDays == 1}
+              onClick={() => setForm({ ...form, expireDays: 1 })}
+            >
+              1 day
+            </Button>
+            <Button
+              disabled={form.expireDays == 3}
+              onClick={() => setForm({ ...form, expireDays: 3 })}
+            >
+              3 days
+            </Button>
+            <Button
+              disabled={form.expireDays == 7}
+              onClick={() => setForm({ ...form, expireDays: 7 })}
+            >
+              7 days
+            </Button>
+            <Button
+              disabled={form.expireDays == 14}
+              onClick={() => setForm({ ...form, expireDays: 14 })}
+            >
+              14 days
+            </Button>
+            <Button
+              disabled={form.expireDays == 30}
+              onClick={() => setForm({ ...form, expireDays: 30 })}
+            >
+              30 days
+            </Button>
+            <Button
+              disabled={form.expireDays == 60}
+              onClick={() => setForm({ ...form, expireDays: 60 })}
+            >
+              60 days
+            </Button>
+          </div>
         </div>
         {!!form.tokenPrice && (
-          <div>
+          <div className="w-52">
             <span className="flex items-center gap-4">
               <span className="text-lg font-medium">Selected items</span>{' '}
               <Tootltip>Any of the selected items can fulfill this order</Tootltip>
