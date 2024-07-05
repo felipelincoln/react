@@ -8,6 +8,7 @@ import {
   CardNftSelectableSkeleton,
   Checkbox,
   Input,
+  OpenSeaButton,
   Paginator,
   SpinnerIcon,
   TextBox,
@@ -209,7 +210,10 @@ export function OrderCreatePage() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <h1 className="pb-8">Create Order</h1>
+      <div className="flex justify-between">
+        <h1 className="pb-8">Create Order</h1>
+        <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
+      </div>
       <div className="flex gap-12">
         <OrderCreateForm form={form} setForm={(data) => setForm({ ...data, error: undefined })} />
         <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
