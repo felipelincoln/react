@@ -30,7 +30,7 @@ export function CollectionActivitiesPage() {
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
       {activities && activities.length > 0 && (
-        <table className="m-auto">
+        <table className="m-auto mt-8">
           <thead>
             <tr className="*:font-normal text-sm text-zinc-400 text-left">
               <th>Item</th>

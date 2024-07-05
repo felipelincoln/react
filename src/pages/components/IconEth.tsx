@@ -1,6 +1,6 @@
 export function IconEth() {
   return (
-    <div className="w-10 h-10 flex bg-zinc-800 text-zinc-200 rounded">
+    <div className="w-12 h-12 flex bg-zinc-800 text-zinc-200 rounded">
       <svg
         className="h-6 w-6 m-auto"
         xmlns="http://www.w3.org/2000/svg"

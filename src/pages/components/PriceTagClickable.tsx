@@ -9,7 +9,7 @@ export function PriceTagClickable({
 }) {
   return (
     <div
-      className="h-6 w-fit px-2 rounded text-xs whitespace-nowrap bg-inherit border border-zinc-700 cursor-pointer"
+      className="h-6 w-fit px-2 rounded text-sm whitespace-nowrap bg-inherit border border-zinc-700 cursor-pointer"
       onClick={() => onClick?.()}
     >
       <span className="align-middle">{children}</span>
