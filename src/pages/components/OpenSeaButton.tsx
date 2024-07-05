@@ -18,12 +18,12 @@ export function OpenSeaButton({ contract, tokenId }: { contract: string; tokenId
   }
 
   return (
-    <div className="bg-[#1868B7] rounded">
+    <div className="bg-[#1868B7] rounded p-0.5">
       <a href={`https://opensea.io/assets/${chain}/${contract}/${tokenId}`} target="_blank">
         <svg
           xmlns="http://www.w3.org/2000/svg"
-          width="32"
-          height="32"
+          width="28"
+          height="28"
           viewBox="0 0 360 360"
           fill="none"
         >

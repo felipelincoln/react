@@ -1,17 +1,17 @@
 import moment from 'moment';
 import { etherToString } from '../utils';
 import {
+  Button,
   ButtonBlue,
   ButtonLight,
   ButtonRed,
   CardNftSelectable,
-  InputDisabledWithLabel,
   OpenSeaButton,
   Paginator,
+  PriceTag,
   SpinnerIcon,
   TextBox,
   TextBoxWithNfts,
-  Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchUserTokenIds } from '../api/query';
@@ -281,6 +281,56 @@ export function OrderFulfillPage() {
     setError(undefined);
   }
 
+  function priceDetailsDialog() {
+    return (
+      <div>
+        <div className="flex justify-between">
+          <div className="text-lg font-bold">ETH payment details</div>
+          <div className="cursor-pointer" onClick={() => setDialog(undefined)}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              fill="none"
+            >
+              <path
+                d="M19.0005 4.99988L5.00045 18.9999M5.00045 4.99988L19.0005 18.9999"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+        <div className="pt-4 flex flex-col gap-2">
+          {order?.fulfillmentCriteria.coin && (
+            <div className="flex gap-2">
+              Price:
+              <PriceTag>
+                {etherToString(BigInt(order.fulfillmentCriteria.coin.amount), false)}
+              </PriceTag>
+            </div>
+          )}
+
+          {order?.fee && (
+            <div className="flex gap-2">
+              Marketplace fee:
+              <PriceTag>{etherToString(BigInt(order.fee.amount), false)}</PriceTag>
+            </div>
+          )}
+          {verifiedCollection?.royalty && (
+            <div className="flex gap-2">
+              Creator fee:
+              <PriceTag>{etherToString(BigInt(verifiedCollection.royalty.amount), false)}</PriceTag>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   if (Number.isNaN(tokenId) || !order || !isReady) {
     return <NotFoundPage />;
   }
@@ -290,6 +340,7 @@ export function OrderFulfillPage() {
       <div className="flex justify-between">
         <h1 className="pb-8">Order</h1>
         <div className="flex gap-4">
+          <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
           {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
           <div>
             <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
@@ -298,13 +349,15 @@ export function OrderFulfillPage() {
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
-          <div>
-            <span className="flex items-center gap-4 pb-4">
-              <span className="text-sm font-medium">Selected items</span>{' '}
-              <Tootltip>Selected items will be used to fulfill this order</Tootltip>
-            </span>
-            <InputDisabledWithLabel value={selectedTokenIds.length} label={`${tokenPrice}`} />
-          </div>
+          {order.fulfillmentCriteria.token.amount != '0' && (
+            <div className="flex gap-2 text-lg">
+              Select{' '}
+              <PriceTag>
+                {order.fulfillmentCriteria.token.amount} {collection.symbol}
+              </PriceTag>{' '}
+              to fulfill this order:
+            </div>
+          )}
           <div className="flex flex-wrap gap-4">
             {order &&
               paginatedTokenIds.map((tokenId) => (
@@ -351,56 +404,36 @@ export function OrderFulfillPage() {
             <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
           </div>
           <div className="flex flex-col gap-4">
-            <div>You pay</div>
-            <div>
-              {ethCost > 0 && <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>}
-              {order.fulfillmentCriteria.coin && (
-                <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  <span className="font-bold">
-                    {etherToString(BigInt(order.fulfillmentCriteria.coin?.amount), false)}
-                  </span>
-                  {' - '}
-                  price
-                </div>
-              )}
-
-              {order.fee && (
-                <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  <span className="font-bold">
-                    {etherToString(BigInt(order?.fee?.amount), false)}
-                  </span>
-                  {' - '}
-                  marketplace fee
-                </div>
-              )}
-              {verifiedCollection?.royalty && (
-                <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  <span className="font-bold">
-                    {etherToString(BigInt(verifiedCollection.royalty?.amount), false)}
-                  </span>
-                  {' - '}
-                  creator fee
-                </div>
-              )}
-            </div>
+            <div className="font-bold">You pay</div>
             {+order?.fulfillmentCriteria.token.amount > 0 && (
               <TextBoxWithNfts
                 value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
                 tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
               />
             )}
+            <div>
+              {ethCost > 0 && (
+                <TextBox>
+                  <div className="flex justify-between items-center">
+                    <div>{`${etherToString(ethCost, false)}`}</div>
+                    <div
+                      className="text-zinc-400 cursor-pointer"
+                      onClick={() => setDialog(priceDetailsDialog())}
+                    >
+                      details
+                    </div>
+                  </div>
+                </TextBox>
+              )}
+            </div>
           </div>
-          <div className="flex flex-col gap-4">
-            <div>Order expires</div>
-            <TextBox>{moment(order.endTime * 1000).fromNow()}</TextBox>
-          </div>
-          <div className="flex items-center">
+          <div>
             <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
               Confirm
             </ButtonBlue>
-            <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
-              Cancel
-            </a>
+            <div className="text-zinc-400 text-sm pt-4 text-center">
+              Expires {moment(order.endTime * 1000).fromNow()}
+            </div>
           </div>
           {error && <div className="overflow-hidden text-ellipsis red">{error}</div>}
         </div>

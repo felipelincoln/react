@@ -12,13 +12,15 @@ export function CardNftSelectable({
   onSelect?: () => void;
 }) {
   let cardClass = 'cursor-pointer';
+  let imgClass = '';
 
   if (selected) {
     cardClass = 'cursor-pointer outline outline-2 outline-cyan-400';
   }
 
   if (disabled) {
-    cardClass = 'grayscale !cursor-default';
+    cardClass = '!cursor-default';
+    imgClass = 'grayscale opacity-50';
   }
 
   return (
@@ -27,7 +29,7 @@ export function CardNftSelectable({
       onClick={() => !disabled && onSelect?.()}
     >
       {src ? (
-        <img src={src} draggable="false" className="w-24 h-24 rounded-t" />
+        <img src={src} draggable="false" className={`w-24 h-24 rounded-t ${imgClass}`} />
       ) : (
         <div className="w-24 h-24 rounded-t bg-zinc-700"></div>
       )}
