@@ -10,9 +10,9 @@ import {
   Input,
   OpenSeaButton,
   Paginator,
+  PriceTag,
   SpinnerIcon,
   TextBox,
-  Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
@@ -288,7 +288,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
 
   return (
     <div style={{ width: 656 }} className="flex-grow">
-      <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-4 *:text-lg">
+      <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-2 *:text-lg">
         <div>
           <span className="text-lg font-medium">ETH price</span>
           <Input
@@ -337,24 +337,23 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
             }}
           />
         </div>
-        {!!form.tokenPrice && (
-          <div>
-            <span className="flex items-center gap-4">
-              <span className="text-lg font-medium">Selected items</span>{' '}
-              <Tootltip>Selected items will be used to fulfill this order</Tootltip>
-            </span>
-            <div className="flex gap-2">
-              <Input disabled type="text" value={form.anyTokenId ? '-' : form.tokenIds.length} />
-              <Button onClick={() => setForm({ ...form, tokenIds: [] })}>Clear</Button>
-            </div>
-            <Checkbox
-              label="Accept any item"
-              checked={form.anyTokenId}
-              onClick={() => setForm({ ...form, anyTokenId: !form.anyTokenId })}
-            />
-          </div>
-        )}
       </div>
+      {!!form.tokenPrice && (
+        <div className="flex flex-col pt-4 gap-2">
+          <span className="flex gap-2 text-lg font-medium">
+            Select all the <PriceTag>{collection.symbol}</PriceTag> accepted by this order:
+          </span>
+          <div className="flex gap-2 w-52">
+            <Input disabled type="text" value={form.anyTokenId ? '-' : form.tokenIds.length} />
+            <Button onClick={() => setForm({ ...form, tokenIds: [] })}>Clear</Button>
+          </div>
+          <Checkbox
+            label="Accept any"
+            checked={form.anyTokenId}
+            onClick={() => setForm({ ...form, anyTokenId: !form.anyTokenId })}
+          />
+        </div>
+      )}
       {!form.anyTokenId && !!form.tokenPrice && (
         <div className="flex flex-col gap-6 pt-8">
           <div className="bg-zinc-800 rounded p-8">
