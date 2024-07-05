@@ -233,7 +233,7 @@ export function OrderCreatePage() {
               <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
             </div>
             <div className="flex flex-col gap-4">
-              <div>You receive</div>
+              <div className="font-bold">You receive</div>
               <TextBox>{form.ethPrice || 0} ETH</TextBox>
 
               <TextBox>
@@ -250,7 +250,7 @@ export function OrderCreatePage() {
               </TextBox>
             </div>
             <div className="flex flex-col gap-4">
-              <div>Order expires</div>
+              <div className="font-bold">Order expires</div>
               <TextBox>
                 {form.expireDays
                   ? moment(now * 1000)
