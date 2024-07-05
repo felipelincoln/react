@@ -6,6 +6,7 @@ import {
   ButtonRed,
   CardNftSelectable,
   InputDisabledWithLabel,
+  OpenSeaButton,
   Paginator,
   SpinnerIcon,
   TextBox,
@@ -288,7 +289,12 @@ export function OrderFulfillPage() {
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
         <h1 className="pb-8">Order</h1>
-        {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
+        <div className="flex gap-4">
+          {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
+          <div>
+            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
+          </div>
+        </div>
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
@@ -348,14 +354,32 @@ export function OrderFulfillPage() {
             <div>You pay</div>
             <div>
               {ethCost > 0 && <TextBox>{`${etherToString(ethCost, false)}`}</TextBox>}
-              {order?.fee && (
+              {order.fulfillmentCriteria.coin && (
                 <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  marketplace fee: {etherToString(BigInt(order?.fee?.amount), false)}
+                  <span className="font-bold">
+                    {etherToString(BigInt(order.fulfillmentCriteria.coin?.amount), false)}
+                  </span>
+                  {' - '}
+                  price
+                </div>
+              )}
+
+              {order.fee && (
+                <div className="text-zinc-400 text-xs pt-1 pl-4">
+                  <span className="font-bold">
+                    {etherToString(BigInt(order?.fee?.amount), false)}
+                  </span>
+                  {' - '}
+                  marketplace fee
                 </div>
               )}
               {verifiedCollection?.royalty && (
                 <div className="text-zinc-400 text-xs pt-1 pl-4">
-                  creator fee: {etherToString(BigInt(verifiedCollection.royalty?.amount), false)}
+                  <span className="font-bold">
+                    {etherToString(BigInt(verifiedCollection.royalty?.amount), false)}
+                  </span>
+                  {' - '}
+                  creator fee
                 </div>
               )}
             </div>
