@@ -212,56 +212,60 @@ export function OrderCreatePage() {
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
         <h1 className="pb-8">Create Order</h1>
-        <div>
-          <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
+        <div className="flex gap-4">
+          <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
+          <div>
+            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
+          </div>
         </div>
       </div>
       <div className="flex gap-12">
         <OrderCreateForm form={form} setForm={(data) => setForm({ ...data, error: undefined })} />
-        <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
-          <div>
-            {tokenImages[tokenId] ? (
-              <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
-            ) : (
-              <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
-            )}
+        <div>
+          <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
+            <div>
+              {tokenImages[tokenId] ? (
+                <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+              ) : (
+                <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
+              )}
 
-            <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
-          </div>
-          <div className="flex flex-col gap-4">
-            <div>You receive</div>
-            <TextBox>{form.ethPrice || 0} ETH</TextBox>
+              <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div>You receive</div>
+              <TextBox>{form.ethPrice || 0} ETH</TextBox>
 
-            <TextBox>
-              <span className="flex justify-between">
-                <span className="flex-grow">
-                  {form.tokenPrice} {collection.symbol}
-                </span>
-                {!!form.tokenPrice && (
-                  <span className="text-zinc-400">
-                    {form.anyTokenId ? 'any' : `${form.tokenIds.length} selected`}
+              <TextBox>
+                <span className="flex justify-between">
+                  <span className="flex-grow">
+                    {form.tokenPrice} {collection.symbol}
                   </span>
-                )}
-              </span>
-            </TextBox>
+                  {!!form.tokenPrice && (
+                    <span className="text-zinc-400">
+                      {form.anyTokenId ? 'any' : `${form.tokenIds.length} selected`}
+                    </span>
+                  )}
+                </span>
+              </TextBox>
+            </div>
+            <div className="flex flex-col gap-4">
+              <div>Order expires</div>
+              <TextBox>
+                {form.expireDays
+                  ? moment(now * 1000)
+                      .add(form.expireDays, 'days')
+                      .fromNow()
+                  : '-'}
+              </TextBox>
+            </div>
+            <div className="flex items-center">
+              <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
+            </div>
           </div>
-          <div className="flex flex-col gap-4">
-            <div>Order expires</div>
-            <TextBox>
-              {form.expireDays
-                ? moment(now * 1000)
-                    .add(form.expireDays, 'days')
-                    .fromNow()
-                : '-'}
-            </TextBox>
-          </div>
-          <div className="flex items-center">
-            <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
-            <a className="default mx-8" onClick={() => navigate(`/c/${contract}`)}>
-              Cancel
-            </a>
-          </div>
-          {!!form.error && <div className="overflow-hidden text-ellipsis red">{form.error}</div>}
+          {!!form.error && (
+            <div className="overflow-hidden text-ellipsis red pt-8 text-center">{form.error}</div>
+          )}
         </div>
       </div>
     </div>
@@ -284,9 +288,9 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
 
   return (
     <div style={{ width: 656 }} className="flex-grow">
-      <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-4 *:text-sm">
+      <div className="flex flex-col gap-4 w-52 *:flex *:flex-col *:gap-4 *:text-lg">
         <div>
-          <span className="text-sm font-medium">ETH price</span>
+          <span className="text-lg font-medium">ETH price</span>
           <Input
             type="text"
             value={form.ethPrice || ''}
@@ -302,7 +306,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           />
         </div>
         <div>
-          <span className="text-sm font-medium">{collection.symbol} price</span>
+          <span className="text-lg font-medium">{collection.symbol} price</span>
           <Input
             type="text"
             value={form.tokenPrice ?? ''}
@@ -318,7 +322,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           />
         </div>
         <div>
-          <span className="text-sm font-medium">Expire days</span>
+          <span className="text-lg font-medium">Expire days</span>
           <Input
             type="text"
             value={form.expireDays || ''}
@@ -336,7 +340,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
         {!!form.tokenPrice && (
           <div>
             <span className="flex items-center gap-4">
-              <span className="text-sm font-medium">Selected items</span>{' '}
+              <span className="text-lg font-medium">Selected items</span>{' '}
               <Tootltip>Selected items will be used to fulfill this order</Tootltip>
             </span>
             <div className="flex gap-2">
@@ -357,7 +361,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
             <div className="flex justify-between h-96 pr-8 gap-4 overflow-x-scroll">
               {Object.entries(collection.attributeSummary).map(([key, value]) => (
                 <div key={key}>
-                  <div className="flex flex-col gap-2 pb-4 relative text-sm">
+                  <div className="flex flex-col gap-2 pb-4 relative text-lg">
                     <div className="sticky left-0 top-0 pb-2 bg-zinc-800">{value.attribute}</div>
                     {Object.entries(value.options).map(([optionKey, optionValue]) => (
                       <Checkbox
