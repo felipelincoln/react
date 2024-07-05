@@ -40,7 +40,7 @@ export function CardNftOrder({
           <div className="h-48 bg-zinc-700"></div>
         )}
       </div>
-      <div className="px-4 py-2 text-sm flex flex-wrap gap-2">
+      <div className="h-20 px-4 py-2 flex flex-col gap-2 justify-start">
         {priceToken != '0' && <PriceTag>{`${priceToken} ${symbol}`}</PriceTag>}
         {!!priceEth && <PriceTag>{etherToString(BigInt(priceEth))}</PriceTag>}
       </div>
