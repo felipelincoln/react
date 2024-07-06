@@ -2,7 +2,7 @@ import verifiedCollectionsRaw from './verifiedCollections.json';
 import { config } from './config';
 
 interface VerifiedCollection {
-  royalty: {
+  royalty?: {
     recipient: string;
     amount: string;
   };

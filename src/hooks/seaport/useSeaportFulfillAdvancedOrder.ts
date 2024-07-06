@@ -52,7 +52,7 @@ export function useSeaportFulfillAdvancedOrder({
       functionName: 'fulfillAdvancedOrder',
       args: seaportFulfillAdvancedOrderArgs(order),
       value:
-        BigInt(verifiedCollection?.royalty.amount || '0') +
+        BigInt(verifiedCollection?.royalty?.amount || '0') +
         BigInt(order.fulfillmentCriteria.coin?.amount || '0') +
         BigInt(order.fee?.amount || '0'),
     });

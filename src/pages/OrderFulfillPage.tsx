@@ -70,7 +70,7 @@ export function OrderFulfillPage() {
   const isOrderOwner = order?.offerer == (address || '').toLowerCase();
   const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
   const ethCost =
-    BigInt(verifiedCollection?.royalty.amount || '0') +
+    BigInt(verifiedCollection?.royalty?.amount || '0') +
     BigInt(order?.fulfillmentCriteria.coin?.amount || '0') +
     BigInt(order?.fee?.amount || '0');
 

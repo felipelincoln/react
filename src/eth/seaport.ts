@@ -136,7 +136,7 @@ export function seaportFulfillAdvancedOrderArgs(
   const consideration = fulfillAdvancedOrderMessage.consideration.map((obj) => Object.values(obj));
 
   const verifiedCollection = verifiedCollections[order.contract];
-  if (verifiedCollection) {
+  if (verifiedCollection?.royalty) {
     const royalty = {
       itemType: '0',
       token: '0x0000000000000000000000000000000000000000',
