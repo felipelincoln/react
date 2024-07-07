@@ -41,7 +41,7 @@ export function CardNftOrder({
       </div>
       <div className="h-20 px-4 py-2 flex flex-col gap-2 justify-start">
         {priceToken != '0' && <PriceTag>{`${priceToken} ${symbol}`}</PriceTag>}
-        {!!priceEth && priceEth != '0' && <PriceTag>{priceEth}</PriceTag>}
+        {!!priceEth && priceEth != '0 ETH' && <PriceTag>{priceEth}</PriceTag>}
       </div>
     </div>
   );
