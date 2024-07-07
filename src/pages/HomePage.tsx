@@ -59,9 +59,20 @@ export function HomePage() {
                                 {trending.floorPrice.tokenPrice} {trending.collection.symbol}
                               </PriceTag>
                             )}
-                            {trending.floorPrice.ethPrice !== '0' && (
+                            {BigInt(trending.floorPrice.ethPrice) +
+                              BigInt(
+                                verifiedCollections[trending.collection.contract]?.royalty
+                                  ?.amount || '0',
+                              ) !==
+                              0n && (
                               <PriceTag>
-                                {etherToString(BigInt(trending.floorPrice.ethPrice))}
+                                {etherToString(
+                                  BigInt(trending.floorPrice.ethPrice) +
+                                    BigInt(
+                                      verifiedCollections[trending.collection.contract]?.royalty
+                                        ?.amount || '0',
+                                    ),
+                                )}
                               </PriceTag>
                             )}
                           </div>
