@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { fetchCollectionTrending } from '../api/query';
 import { useNavigate } from 'react-router-dom';
 import { verifiedCollections } from '../verifiedCollections';
+import { etherToString } from '../utils';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -53,8 +54,16 @@ export function HomePage() {
                         </td>
                         <td className="pr-8">
                           <div className="flex flex-nowrap gap-2">
-                            <PriceTag>0 ETH</PriceTag>
-                            <PriceTag>0 {trending.collection.symbol}</PriceTag>
+                            {trending.floorPrice.tokenPrice !== 0 && (
+                              <PriceTag>
+                                {trending.floorPrice.tokenPrice} {trending.collection.symbol}
+                              </PriceTag>
+                            )}
+                            {trending.floorPrice.ethPrice !== '0' && (
+                              <PriceTag>
+                                {etherToString(BigInt(trending.floorPrice.ethPrice))}
+                              </PriceTag>
+                            )}
                           </div>
                         </td>
                         <td className="pr-8">{trending.listings}</td>

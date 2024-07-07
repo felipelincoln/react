@@ -46,7 +46,7 @@ export function fetchCollectionTrending() {
       ApiResponse<{
         trending: {
           collection: Collection;
-          floor_price?: { coin_amount?: bigint; token_amount: number };
+          floorPrice: { ethPrice: string; tokenPrice: number };
           listings: number;
           trades: number;
         }[];
