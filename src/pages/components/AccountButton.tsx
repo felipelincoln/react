@@ -9,6 +9,14 @@ export function AccountButton({ onClick }: { onClick: () => void }) {
   const { address } = useAccount();
   const { data: ensName } = useEnsName({ address });
 
+  if (!window.ethereum) {
+    return (
+      <div>
+        <Button disabled>No wallet detected</Button>
+      </div>
+    );
+  }
+
   if (ensName) {
     return (
       <Button onClick={onClick}>
