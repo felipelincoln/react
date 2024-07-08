@@ -110,6 +110,20 @@ export function fetchUserTokenIds(contract: string, address: string) {
   };
 }
 
+export function fetchUserCollections(address: string) {
+  return {
+    queryKey: ['userCollections', address],
+    queryFn: async (): Promise<
+      ApiResponse<{
+        collections: { name: string; image: string; contract: string; count: number }[];
+      }>
+    > => {
+      console.log('> [api] fetch user collections');
+      return fetch(`${config.api.url}/eth/collections/list/${address}`).then(handleFetchError);
+    },
+  };
+}
+
 export function fetchActivities(contract: string, tokenIds: number[]) {
   return {
     queryKey: ['activities', contract, tokenIds.join('-')],
