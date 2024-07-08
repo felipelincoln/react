@@ -56,10 +56,10 @@ function ExploreSection() {
   if (connectStatus === 'error' || connectStatus === 'idle') {
     return (
       <div
-        className="text-xl bg-cyan-400 font-bold rounded px-8 py-2 text-zinc-950 cursor-pointer"
+        className="text-xl content-center bg-cyan-400 font-bold rounded px-8 py-2 text-zinc-950 cursor-pointer"
         onClick={() => connect({ connector: injected(), chainId })}
       >
-        <span className="align-middle">Explore</span>
+        Explore
       </div>
     );
   }
