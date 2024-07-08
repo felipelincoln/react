@@ -14,7 +14,7 @@ export function HomeBanner() {
           <div className="flex flex-col items-center gap-4">
             <h1 className="font-bold text-5xl">The marketplace to swap NFTs</h1>
             <h2 className="text-xl text-zinc-400">
-              Create and fulfill trait-based listings using the OpenSea smart contract
+              Create and fulfill trait-based listings powered by the OpenSea smart contract
             </h2>
           </div>
           <ExploreSection />
