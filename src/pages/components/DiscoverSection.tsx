@@ -42,9 +42,9 @@ export function DiscoverSection() {
             {[1, 2].map((idx) => (
               <div key={idx}>
                 <div className="flex items-center gap-2">
-                  <div className="bg-zinc-800 w-10 h-10 rounded" />
+                  <div className="bg-zinc-700 w-10 h-10 rounded" />
                   <div className="w-40">
-                    <div className="h-6 w-28 bg-zinc-800 rounded"></div>
+                    <div className="h-6 w-28 bg-zinc-700 rounded"></div>
                   </div>
                 </div>
               </div>
@@ -66,9 +66,9 @@ export function DiscoverSection() {
             {[1, 2].map((idx) => (
               <div key={idx}>
                 <div className="flex items-center gap-2">
-                  <div className="bg-zinc-800 w-10 h-10 rounded animate-pulse" />
+                  <div className="bg-zinc-700 w-10 h-10 rounded animate-pulse" />
                   <div className="w-40">
-                    <div className="h-6 w-28 bg-zinc-800 animate-pulse rounded"></div>
+                    <div className="h-6 w-28 bg-zinc-700 animate-pulse rounded"></div>
                   </div>
                 </div>
               </div>
