@@ -1,4 +1,5 @@
 export { App, DialogContext } from './App';
+export { AboutPage } from './AboutPage';
 export { CollectionActivitiesPage } from './CollectionActivitiesPage';
 export { CollectionOrdersPage } from './CollectionOrdersPage';
 export { CollectionPage, FilterContext } from './CollectionPage';

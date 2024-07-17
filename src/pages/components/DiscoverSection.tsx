@@ -128,10 +128,13 @@ export function DiscoverSection() {
 }
 
 function ReadMoreButton() {
+  const navigate = useNavigate();
+
   return (
     <button
       type="button"
       className="h-12 px-12 text-lg rounded bg-zinc-700 text-zinc-200 whitespace-nowrap hover:bg-zinc-600"
+      onClick={() => navigate('/about')}
     >
       Read more
     </button>

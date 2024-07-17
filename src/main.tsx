@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode, Suspense } from 'react';
 import { config } from './config';
 import {
+  AboutPage,
   App,
   CollectionActivitiesPage,
   CollectionOrdersPage,
@@ -46,6 +47,7 @@ root.render(
           <Suspense fallback={<LoadingPage />}>
             <Routes>
               <Route path="/" Component={HomePage} />
+              <Route path="about" Component={AboutPage} />
               <Route
                 path="/c/:contract"
                 element={
