@@ -12,7 +12,7 @@ export function BulletPointItem({
   if (disabled) {
     return (
       <div className="flex gap-4 items-center text-zinc-400">
-        <div className="h-4 w-4 bg-zinc-800 rounded-full"></div>
+        <div className="h-4 w-4 bg-zinc-700 rounded-full"></div>
         <div>{children}</div>
       </div>
     );
