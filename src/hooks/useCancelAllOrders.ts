@@ -20,6 +20,7 @@ export function useCancelAllOrders() {
   } = useValidateChain({ run: start });
 
   const {
+    data: seaportIncrementCounterData,
     status: seaportIncrementCounterStatus,
     isSuccess: seaportIncrementCounterIsSuccess,
     isError: seaportIncrementCounterIsError,
@@ -65,6 +66,7 @@ export function useCancelAllOrders() {
   }
 
   return {
+    cancelAllOrdersTxHash: seaportIncrementCounterData,
     cancelAllOrders,
     isValidChainStatus,
     seaportIncrementCounterStatus,

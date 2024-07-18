@@ -82,6 +82,7 @@ export function useSeaportIncrementCounter({ run }: { run: boolean }) {
   }, [run, queryClient, resetWriteContract, writeContractReceiptQueryKey]);
 
   return {
+    data: hash,
     status,
     isSuccess: status === 'success',
     isError: status === 'error',

@@ -7,14 +7,15 @@ import {
   ButtonBlue,
   ButtonLight,
   CardNftSelectable,
+  CheckIcon,
+  ExternalLink,
   ListedNft,
-  SpinnerIcon,
   Tab,
 } from '.';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { ReactNode, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { shortAddress } from '../../utils';
 import { DialogContext } from '../App';
 import { config } from '../../config';
@@ -39,6 +40,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
   const {
+    cancelAllOrdersTxHash,
     cancelAllOrders,
     isError,
     isSuccess,
@@ -60,10 +62,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel all orders</div>
-          <BulletPointItem ping>Check network</BulletPointItem>
+          <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Wrong network.</div>
               <div>Confirm in your wallet to switch to {config.web3.chain.name}</div>
             </div>
           </BulletPointContent>
@@ -105,39 +106,81 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem ping>Wait confirmation</BulletPointItem>
-          <BulletPointContent>0/1 confirmation</BulletPointContent>
+          <BulletPointItem ping>Wait confirmation (0/1)</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              {cancelAllOrdersTxHash && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
+                >
+                  {cancelAllOrdersTxHash}
+                </ExternalLink>
+              )}
+            </div>
+          </BulletPointContent>
         </BulletPointList>,
       );
       return;
     }
 
     if (userOrdersQueryStatus == 'pending') {
-      setDialog(CancelAllOrdersDialog());
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Wait confirmation (1/1)</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              {cancelAllOrdersTxHash && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
+                >
+                  {cancelAllOrdersTxHash}
+                </ExternalLink>
+              )}
+              <div>Processing transaction...</div>
+            </div>
+          </BulletPointContent>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (isSuccess) {
       setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel all orders</div>
-            <div className="flex flex-col items-center gap-4">
-              <div>Success!</div>
-              <ButtonLight
-                onClick={() => {
-                  navigate(`/c/${contract}`);
-                  setDialog(undefined);
-                }}
-              >
-                Ok
-              </ButtonLight>
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Wait confirmation</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col gap-2 text-sm text-zinc-400">
+              <div className="flex gap-1 items-center">
+                All orders have been canceled
+                <CheckIcon />
+              </div>
+              <div>
+                <ButtonLight
+                  onClick={() => {
+                    navigate(`/c/${contract}`);
+                    setDialog(undefined);
+                  }}
+                >
+                  Ok
+                </ButtonLight>
+              </div>
             </div>
-          </div>
-        </div>,
+          </BulletPointContent>
+        </BulletPointList>,
       );
     }
   }, [
+    cancelAllOrdersTxHash,
     isValidChainStatus,
     seaportIncrementCounterStatus,
     userOrdersQueryStatus,
@@ -256,23 +299,5 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
         </ButtonBlue>
       </div>
     </Tab>
-  );
-}
-
-function CancelAllOrdersDialog(message?: ReactNode) {
-  return (
-    <div>
-      <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Cancel all orders</div>
-        <SpinnerIcon />
-        <div>{message}</div>
-        <div className="text-sx text-zinc-400 flex gap-2">
-          <div>⚠️</div>
-          <div>
-            Warning: This will also cancel all your Opensea orders and offers, for all collections.
-          </div>
-        </div>
-      </div>
-    </div>
   );
 }

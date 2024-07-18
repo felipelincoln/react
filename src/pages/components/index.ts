@@ -16,6 +16,7 @@ export * from './CardNftOrder';
 export * from './CardNftSelectable';
 export * from './CardNftSelectableSkeleton';
 export * from './Checkbox';
+export * from './CheckIcon';
 export * from './CollectionQueued';
 export * from './CollectoorLogo';
 export * from './Dialog';
