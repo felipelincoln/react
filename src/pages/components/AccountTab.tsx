@@ -157,9 +157,16 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem>Wait confirmation</BulletPointItem>
+          <BulletPointItem>Wait confirmation (1/1)</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col gap-2 text-sm text-zinc-400">
+              {cancelAllOrdersTxHash && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
+                >
+                  {cancelAllOrdersTxHash}
+                </ExternalLink>
+              )}
               <div className="flex gap-1 items-center">
                 All orders have been canceled
                 <CheckIcon />
