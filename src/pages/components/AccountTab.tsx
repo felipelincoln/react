@@ -1,5 +1,16 @@
 import { useAccount, useDisconnect, useEnsName } from 'wagmi';
-import { Button, ButtonBlue, ButtonLight, CardNftSelectable, ListedNft, SpinnerIcon, Tab } from '.';
+import {
+  BulletPointContent,
+  BulletPointItem,
+  BulletPointList,
+  Button,
+  ButtonBlue,
+  ButtonLight,
+  CardNftSelectable,
+  ListedNft,
+  SpinnerIcon,
+  Tab,
+} from '.';
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -47,29 +58,57 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
 
     if (isValidChainStatus == 'pending') {
       setDialog(
-        CancelAllOrdersDialog(
-          <div>
-            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <BulletPointItem ping>Check network</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              <div>Wrong network.</div>
+              <div>Confirm in your wallet to switch to {config.web3.chain.name}</div>
+            </div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (seaportIncrementCounterStatus == 'pending:write') {
       setDialog(
-        CancelAllOrdersDialog(
-          <div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              <div>Confirm in your wallet to cancel all orders</div>
+              <div className="text-red-400">
+                Warning: This will also cancel all your Opensea orders and offers, for all
+                collections.
+              </div>
+            </div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (seaportIncrementCounterStatus == 'pending:receipt') {
-      setDialog(CancelAllOrdersDialog('Waiting for transaction to confirm ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Wait confirmation</BulletPointItem>
+          <BulletPointContent>0/1 confirmation</BulletPointContent>
+        </BulletPointList>,
+      );
       return;
     }
 
