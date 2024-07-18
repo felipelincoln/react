@@ -35,7 +35,9 @@ export function DiscoverSection() {
     return (
       <BulletPointList>
         <BulletPointItem ping>Connect your wallet</BulletPointItem>
-        <BulletPointContent />
+        <BulletPointContent>
+          <div className="text-sm text-zinc-400">Continue in your wallet</div>
+        </BulletPointContent>
         <BulletPointItem disabled>Select a collection</BulletPointItem>{' '}
         <BulletPointContent>
           <div className="grid grid-cols-2 gap-2">
