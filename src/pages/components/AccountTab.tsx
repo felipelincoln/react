@@ -15,7 +15,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useRef, useState } from 'react';
 import { shortAddress } from '../../utils';
 import { DialogContext } from '../App';
 import { config } from '../../config';
@@ -29,6 +29,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
+  const cancelAllOrdersTxHashRef = useRef<string | undefined>(undefined);
   const { data: userTokenIdsResponse } = useQuery({
     enabled: !!address,
     ...fetchUserTokenIds(contract, address!),
@@ -48,6 +49,12 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     seaportIncrementCounterStatus,
     userOrdersQueryStatus,
   } = useCancelAllOrders();
+
+  useEffect(() => {
+    if (!cancelAllOrdersTxHash) return;
+
+    cancelAllOrdersTxHashRef.current = cancelAllOrdersTxHash;
+  }, [cancelAllOrdersTxHash]);
 
   useEffect(() => {
     if (selectedTokenId) setLastSelectedTokenId(selectedTokenId);
@@ -141,7 +148,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                   {cancelAllOrdersTxHash}
                 </ExternalLink>
               )}
-              <div>Processing transaction...</div>
+              <div>Processing the transaction...</div>
             </div>
           </BulletPointContent>
         </BulletPointList>,
@@ -160,11 +167,11 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointItem>Wait confirmation (1/1)</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col gap-2 text-sm text-zinc-400">
-              {cancelAllOrdersTxHash && (
+              {cancelAllOrdersTxHashRef.current && (
                 <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHashRef.current}`}
                 >
-                  {cancelAllOrdersTxHash}
+                  {cancelAllOrdersTxHashRef.current}
                 </ExternalLink>
               )}
               <div className="flex gap-1 items-center">

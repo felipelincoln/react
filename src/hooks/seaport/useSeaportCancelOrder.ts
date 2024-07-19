@@ -118,6 +118,7 @@ export function useSeaportCancelOrder({ run, order }: { run: boolean; order?: Or
   }, [run, queryClient, readCounterQueryKey, resetWriteContract, writeContractReceiptQueryKey]);
 
   return {
+    data: hash,
     status,
     isError: status === 'error',
     isSuccess: status === 'success',

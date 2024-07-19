@@ -1,11 +1,17 @@
 import moment from 'moment';
 import { etherToString } from '../utils';
 import {
+  BulletPointContent,
+  BulletPointItem,
+  BulletPointList,
   Button,
   ButtonBlue,
   ButtonLight,
   ButtonRed,
   CardNftSelectable,
+  CheckIcon,
+  ExternalLink,
+  ListedNft,
   OpenSeaButton,
   Paginator,
   PriceTag,
@@ -17,12 +23,13 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchUserTokenIds } from '../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NotFoundPage } from './fallback';
-import { ReactNode, useContext, useEffect, useMemo, useState } from 'react';
+import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { useCancelOrder, useFulfillOrder } from '../hooks';
 import { DialogContext } from './App';
 import { config } from '../config';
 import { verifiedCollections } from '../verifiedCollections';
+import { Order } from '../api/types';
 
 export function OrderFulfillPage() {
   const contract = useParams().contract!;
@@ -31,6 +38,8 @@ export function OrderFulfillPage() {
   const navigate = useNavigate();
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
+  const orderRef = useRef<Order | undefined>(undefined);
+  const cancelOrderTxHashRef = useRef<string | undefined>(undefined);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: orderResponse } = useSuspenseQuery(fetchOrders(contract, [tokenId]));
   const { data: userTokenIdsResponse } = useQuery({
@@ -53,6 +62,7 @@ export function OrderFulfillPage() {
   } = useFulfillOrder();
 
   const {
+    cancelOrderTxHash,
     cancelOrder,
     isValidChainStatus: cancelOrderisValidChainStatus,
     seaportCancelOrderStatus,
@@ -66,6 +76,7 @@ export function OrderFulfillPage() {
   const verifiedCollection = verifiedCollections[collection.contract];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
+  const tokenImage = tokenImages[tokenId];
   const order = orderResponse.data?.orders[0];
   const isOrderOwner = order?.offerer == (address || '').toLowerCase();
   const tokenPrice = Number(order?.fulfillmentCriteria.token.amount);
@@ -73,6 +84,18 @@ export function OrderFulfillPage() {
     BigInt(verifiedCollection?.royalty?.amount || '0') +
     BigInt(order?.fulfillmentCriteria.coin?.amount || '0') +
     BigInt(order?.fee?.amount || '0');
+
+  useEffect(() => {
+    if (!order) return;
+
+    orderRef.current = order;
+  }, [order]);
+
+  useEffect(() => {
+    if (!cancelOrderTxHash) return;
+
+    cancelOrderTxHashRef.current = cancelOrderTxHash;
+  }, [cancelOrderTxHash]);
 
   const orderTokenIdsSorted = useMemo(() => {
     if (!order) return [];
@@ -192,61 +215,210 @@ export function OrderFulfillPage() {
 
     if (cancelOrderisValidChainStatus == 'pending') {
       setDialog(
-        OrderCancelDialog(
-          <div>
-            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={order?.fulfillmentCriteria.coin?.amount}
+            />
+          </div>
+
+          <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              <div>Continue in your wallet</div>
+            </div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (seaportCancelOrderStatus == 'pending:read') {
-      setDialog(OrderCancelDialog('Reading Seaport counter ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={order?.fulfillmentCriteria.coin?.amount}
+            />
+          </div>
+
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              <div>Creating transaction...</div>
+            </div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (seaportCancelOrderStatus == 'pending:write') {
       setDialog(
-        OrderCancelDialog(
-          <div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={order?.fulfillmentCriteria.coin?.amount}
+            />
+          </div>
+
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              <div>Continue in your wallet</div>
+            </div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (seaportCancelOrderStatus == 'pending:receipt') {
-      setDialog(OrderCancelDialog('Waiting for cancel transaction to confirm ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={order?.fulfillmentCriteria.coin?.amount}
+            />
+          </div>
+
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Wait confirmation (0/1)</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              {cancelOrderTxHash && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHash}`}
+                >
+                  {cancelOrderTxHash}
+                </ExternalLink>
+              )}
+            </div>
+          </BulletPointContent>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (userOrdersQueryStatus == 'pending') {
-      setDialog(OrderCancelDialog());
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={order?.fulfillmentCriteria.coin?.amount}
+            />
+          </div>
+
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Wait confirmation (1/1)</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              {cancelOrderTxHash && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHash}`}
+                >
+                  {cancelOrderTxHash}
+                </ExternalLink>
+              )}
+              <div>Processing the transaction...</div>
+            </div>
+          </BulletPointContent>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (cancelOrderIsSuccess) {
       navigate(`/c/${contract}`);
       setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel listing</div>
-            <div className="flex flex-col items-center gap-4">
-              <div>Success!</div>
-              <ButtonLight
-                onClick={() => {
-                  navigate(`/c/${contract}`);
-                  setDialog(undefined);
-                }}
-              >
-                Ok
-              </ButtonLight>
-            </div>
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Cancel listing</div>
+          <div className="pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={orderRef.current?.fulfillmentCriteria.token.amount || '0'}
+              ethPrice={orderRef.current?.fulfillmentCriteria.coin?.amount}
+            />
           </div>
-        </div>,
+
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Wait confirmation (1/1)</BulletPointItem>
+          <BulletPointContent>
+            <div className="flex flex-col text-zinc-400 text-sm">
+              {cancelOrderTxHashRef.current && (
+                <ExternalLink
+                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHashRef.current}`}
+                >
+                  {cancelOrderTxHashRef.current}
+                </ExternalLink>
+              )}
+              <div className="flex gap-1 items-center">
+                Your listing have been canceled
+                <CheckIcon />
+              </div>
+              <div>
+                <ButtonLight onClick={() => setDialog(undefined)}>Ok</ButtonLight>
+              </div>
+            </div>
+          </BulletPointContent>
+        </BulletPointList>,
       );
     }
   }, [
@@ -258,6 +430,11 @@ export function OrderFulfillPage() {
     contract,
     navigate,
     setDialog,
+    cancelOrderTxHash,
+    collection,
+    order,
+    tokenId,
+    tokenImage,
   ]);
 
   function submit() {
@@ -402,8 +579,8 @@ export function OrderFulfillPage() {
         <div>
           <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
             <div>
-              {tokenImages[tokenId] ? (
-                <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+              {tokenImage ? (
+                <img className="rounded w-40 h-40 mx-auto" src={tokenImage} />
               ) : (
                 <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
               )}
@@ -457,18 +634,6 @@ function OrderFulfillDialog(message?: ReactNode) {
     <div>
       <div className="flex flex-col items-center gap-4 max-w-lg">
         <div className="w-full font-medium pb-4">Fulfill listing</div>
-        <SpinnerIcon />
-        <div>{message}</div>
-      </div>
-    </div>
-  );
-}
-
-function OrderCancelDialog(message?: ReactNode) {
-  return (
-    <div>
-      <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Cancel listing</div>
         <SpinnerIcon />
         <div>{message}</div>
       </div>
