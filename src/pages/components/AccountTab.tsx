@@ -61,7 +61,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     if (isValidChainStatus == 'pending') {
       setDialog(
         <BulletPointList>
-          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col text-zinc-400 text-sm">
@@ -79,7 +79,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     if (seaportIncrementCounterStatus == 'pending:write') {
       setDialog(
         <BulletPointList>
-          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
@@ -87,8 +87,8 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
             <div className="flex flex-col text-zinc-400 text-sm">
               <div>Continue in your wallet</div>
               <div className="text-red-400">
-                Warning: This will also cancel all your Opensea orders and offers, for all
-                collections.
+                Warning: All your listings from all collections will be canceled, including those
+                created on OpenSea
               </div>
             </div>
           </BulletPointContent>
@@ -101,7 +101,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     if (seaportIncrementCounterStatus == 'pending:receipt') {
       setDialog(
         <BulletPointList>
-          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
@@ -126,7 +126,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     if (userOrdersQueryStatus == 'pending') {
       setDialog(
         <BulletPointList>
-          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
@@ -152,7 +152,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     if (isSuccess) {
       setDialog(
         <BulletPointList>
-          <div className="text-lg font-bold pb-8">Cancel all orders</div>
+          <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
@@ -168,7 +168,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                 </ExternalLink>
               )}
               <div className="flex gap-1 items-center">
-                All your orders have been canceled
+                All your listings have been canceled
                 <CheckIcon />
               </div>
               <div>
@@ -223,11 +223,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
               <div className="hover:text-zinc-200" onClick={() => disconnect()}>
                 Disconnect
               </div>
-              {!!userOrders && (
-                <div className="hover:text-zinc-200" onClick={cancelAllOrders}>
-                  Cancel all orders ({userOrders.length})
-                </div>
-              )}
+              <div className="hover:text-zinc-200" onClick={cancelAllOrders}>
+                Cancel all listings
+              </div>
             </div>
           </div>
           <hr className="border-zinc-800 border-2 border-t-0 -mx-8" />
