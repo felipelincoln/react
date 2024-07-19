@@ -65,7 +65,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Confirm in your wallet to switch to {config.web3.chain.name}</div>
+              <div>Continue in your wallet to change the network to {config.web3.chain.name}</div>
             </div>
           </BulletPointContent>
           <BulletPointItem disabled>Send transaction</BulletPointItem>
@@ -85,7 +85,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointItem ping>Send transaction</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Confirm in your wallet to cancel all orders</div>
+              <div>Continue in your wallet</div>
               <div className="text-red-400">
                 Warning: This will also cancel all your Opensea orders and offers, for all
                 collections.
@@ -168,7 +168,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
                 </ExternalLink>
               )}
               <div className="flex gap-1 items-center">
-                All orders have been canceled
+                All your orders have been canceled
                 <CheckIcon />
               </div>
               <div>
