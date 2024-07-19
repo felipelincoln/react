@@ -65,7 +65,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
           <BulletPointContent>
             <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Continue in your wallet to change the network to {config.web3.chain.name}</div>
+              <div>Continue in your wallet</div>
             </div>
           </BulletPointContent>
           <BulletPointItem disabled>Send transaction</BulletPointItem>

@@ -96,6 +96,7 @@ export function OrderFulfillPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order, userTokenIds.join('-')]);
 
+  // order fulfill dialog
   useEffect(() => {
     if (isError) {
       setDialog(undefined);
@@ -154,7 +155,7 @@ export function OrderFulfillPage() {
       setDialog(
         <div>
           <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Order fulfill</div>
+            <div className="w-full font-medium pb-4">Listing fulfill</div>
             <div className="flex flex-col items-center gap-4">
               <div>Success!</div>
               <ButtonLight
@@ -183,6 +184,7 @@ export function OrderFulfillPage() {
     setDialog,
   ]);
 
+  // order cancel dialog
   useEffect(() => {
     if (cancelOrderIsError) {
       setDialog(undefined);
@@ -231,7 +233,7 @@ export function OrderFulfillPage() {
       setDialog(
         <div>
           <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Cancel order</div>
+            <div className="w-full font-medium pb-4">Cancel listing</div>
             <div className="flex flex-col items-center gap-4">
               <div>Success!</div>
               <ButtonLight
@@ -263,7 +265,7 @@ export function OrderFulfillPage() {
     if (!userBalance) return;
 
     if (moment().unix() > order?.endTime) {
-      setError('Order has expired');
+      setError('Listing has expired');
       return;
     }
 
@@ -338,7 +340,7 @@ export function OrderFulfillPage() {
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
-        <h1 className="pb-8">Order</h1>
+        <h1 className="pb-8">Listing</h1>
         <div className="flex gap-4">
           <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
           {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
@@ -355,11 +357,11 @@ export function OrderFulfillPage() {
               <PriceTag>
                 {order.fulfillmentCriteria.token.amount} {collection.symbol}
               </PriceTag>{' '}
-              to fulfill this order:
+              to fulfill this listing:
             </div>
           ) : (
             <div className="flex gap-2 text-lg">
-              No <PriceTag>{collection.symbol}</PriceTag> required to fulfill this order.
+              No <PriceTag>{collection.symbol}</PriceTag> required to fulfill this listing.
             </div>
           )}
           <div className="flex flex-wrap gap-4">
@@ -454,7 +456,7 @@ function OrderFulfillDialog(message?: ReactNode) {
   return (
     <div>
       <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Fulfill order</div>
+        <div className="w-full font-medium pb-4">Fulfill listing</div>
         <SpinnerIcon />
         <div>{message}</div>
       </div>
@@ -466,7 +468,7 @@ function OrderCancelDialog(message?: ReactNode) {
   return (
     <div>
       <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Cancel order</div>
+        <div className="w-full font-medium pb-4">Cancel listing</div>
         <SpinnerIcon />
         <div>{message}</div>
       </div>
