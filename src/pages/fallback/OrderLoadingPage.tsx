@@ -2,7 +2,7 @@ export function OrderLoadingPage() {
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
-        <h1 className="pb-8">Order</h1>
+        <h1 className="pb-8">Listing</h1>
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">

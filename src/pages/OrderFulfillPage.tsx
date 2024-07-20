@@ -13,7 +13,6 @@ import {
   OpenSeaButton,
   Paginator,
   PriceTag,
-  SpinnerIcon,
   TextBox,
   TextBoxWithNfts,
 } from './components';
@@ -21,11 +20,10 @@ import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchOrders, fetchUserTokenIds } from '../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
 import { NotFoundPage } from './fallback';
-import { ReactNode, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { useAccount, useBalance } from 'wagmi';
 import { useCancelOrder, useFulfillOrder } from '../hooks';
 import { DialogContext } from './App';
-import { config } from '../config';
 import { verifiedCollections } from '../verifiedCollections';
 import { Order } from '../api/types';
 
@@ -37,7 +35,6 @@ export function OrderFulfillPage() {
   const { address } = useAccount();
   const { data: userBalance } = useBalance({ address });
   const orderRef = useRef<Order | undefined>(undefined);
-  const cancelOrderTxHashRef = useRef<string | undefined>(undefined);
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: orderResponse } = useSuspenseQuery(fetchOrders(contract, [tokenId]));
   const { data: userTokenIdsResponse } = useQuery({
@@ -60,7 +57,6 @@ export function OrderFulfillPage() {
   } = useFulfillOrder();
 
   const {
-    cancelOrderTxHash,
     cancelOrder,
     isValidChainStatus: cancelOrderisValidChainStatus,
     seaportCancelOrderStatus,
@@ -89,12 +85,6 @@ export function OrderFulfillPage() {
     orderRef.current = order;
   }, [order]);
 
-  useEffect(() => {
-    if (!cancelOrderTxHash) return;
-
-    cancelOrderTxHashRef.current = cancelOrderTxHash;
-  }, [cancelOrderTxHash]);
-
   const orderTokenIdsSorted = useMemo(() => {
     if (!order) return [];
 
@@ -117,6 +107,25 @@ export function OrderFulfillPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [order, userTokenIds.join('-')]);
 
+  const ListingDetails = useCallback(() => {
+    return (
+      <div className="pb-8">
+        <ListedNft
+          tokenId={tokenId}
+          name={collection.name}
+          symbol={collection.symbol}
+          src={tokenImage}
+          key={tokenId}
+          tokenPrice={orderRef.current?.fulfillmentCriteria.token.amount || '0'}
+          ethPrice={orderRef.current?.fulfillmentCriteria.coin?.amount}
+        />
+      </div>
+    );
+
+    /* eslint-disable react-hooks/exhaustive-deps */
+  }, []);
+  /* eslint-enable react-hooks/exhaustive-deps */
+
   // order fulfill dialog
   useEffect(() => {
     if (isError) {
@@ -125,71 +134,150 @@ export function OrderFulfillPage() {
 
     if (isValidChainStatus == 'pending') {
       setDialog(
-        OrderFulfillDialog(
-          <div>
-            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem ping>Check network</BulletPointItem>
+          <BulletPointContent>
+            <div className="text-red-400">Wrong network</div>
+            <div>Continue in your wallet</div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:read') {
-      setDialog(OrderFulfillDialog('Verifying Seaport allowance ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>Verifying allowance...</BulletPointContent>
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:write') {
       setDialog(
-        OrderFulfillDialog(
-          <div>
-            <div className="text-center">{`Allowing Seaport to access your ${collection.symbol}`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>
+            <div className="text-red-400">No allowance</div>
+            <div>Continue in your wallet</div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:receipt') {
-      setDialog(OrderFulfillDialog('Waiting for approval transaction to confirm ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>Transaction is pending...</BulletPointContent>
+          <BulletPointItem disabled>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (fulfillAdvancedOrderStatus == 'pending:write') {
-      setDialog(OrderFulfillDialog(<div className="text-center">Confirm in your wallet</div>));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>Continue in your wallet</BulletPointContent>
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (fulfillAdvancedOrderStatus == 'pending:receipt') {
-      setDialog(OrderFulfillDialog('Waiting for purchase transaction to confirm ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>Transaction is pending...</BulletPointContent>
+          <BulletPointItem disabled>Listing fulfilled</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (orderQueryStatus == 'pending') {
-      setDialog(OrderFulfillDialog());
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Listing fulfilled</BulletPointItem>
+          <BulletPointContent>Processing purchase...</BulletPointContent>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (isSuccess) {
+      navigate(`/c/${contract}`);
+
       setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Listing fulfill</div>
-            <div className="flex flex-col items-center gap-4">
-              <div>Success!</div>
-              <ButtonLight
-                onClick={() => {
-                  navigate(`/c/${contract}`);
-                  setDialog(undefined);
-                }}
-              >
-                Ok
-              </ButtonLight>
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">Fulfill listing</div>
+          <ListingDetails />
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Send transaction</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Listing fulfilled</BulletPointItem>
+          <BulletPointContent>
+            <div>
+              <ButtonLight onClick={() => setDialog(undefined)}>Ok</ButtonLight>
             </div>
-          </div>
-        </div>,
+          </BulletPointContent>
+        </BulletPointList>,
       );
     }
   }, [
@@ -203,6 +291,7 @@ export function OrderFulfillPage() {
     contract,
     navigate,
     setDialog,
+    ListingDetails,
   ]);
 
   // order cancel dialog
@@ -215,18 +304,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={order?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
             <div className="text-red-400">Wrong network</div>
@@ -244,18 +322,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={order?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
@@ -270,18 +337,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={order?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
@@ -296,18 +352,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={order?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
@@ -322,18 +367,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={order?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={order?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
@@ -350,18 +384,7 @@ export function OrderFulfillPage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel listing</div>
-          <div className="pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={orderRef.current?.fulfillmentCriteria.token.amount || '0'}
-              ethPrice={orderRef.current?.fulfillmentCriteria.coin?.amount}
-            />
-          </div>
-
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
@@ -384,11 +407,7 @@ export function OrderFulfillPage() {
     contract,
     navigate,
     setDialog,
-    cancelOrderTxHash,
-    collection,
-    order,
-    tokenId,
-    tokenImage,
+    ListingDetails,
   ]);
 
   function submit() {
@@ -578,18 +597,6 @@ export function OrderFulfillPage() {
             <div className="overflow-hidden text-ellipsis red pt-8 text-center">{error}</div>
           )}
         </div>
-      </div>
-    </div>
-  );
-}
-
-function OrderFulfillDialog(message?: ReactNode) {
-  return (
-    <div>
-      <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Fulfill listing</div>
-        <SpinnerIcon />
-        <div>{message}</div>
       </div>
     </div>
   );

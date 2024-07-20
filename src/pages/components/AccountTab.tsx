@@ -13,7 +13,7 @@ import {
 import { useQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchUserOrders, fetchUserTokenIds } from '../../api/query';
 import { useNavigate, useParams } from 'react-router-dom';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import { shortAddress } from '../../utils';
 import { DialogContext } from '../App';
 import { useCancelAllOrders } from '../../hooks';
@@ -26,7 +26,6 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   const { address } = useAccount();
   const { disconnect } = useDisconnect();
   const { data: ensName } = useEnsName({ address });
-  const cancelAllOrdersTxHashRef = useRef<string | undefined>(undefined);
   const { data: userTokenIdsResponse } = useQuery({
     enabled: !!address,
     ...fetchUserTokenIds(contract, address!),
@@ -38,7 +37,6 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
   const [selectedTokenId, setSelectedTokenId] = useState<number | undefined>(undefined);
   const [lastSelectedTokenId, setLastSelectedTokenId] = useState<number | undefined>(undefined);
   const {
-    cancelAllOrdersTxHash,
     cancelAllOrders,
     isError,
     isSuccess,
@@ -46,12 +44,6 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
     seaportIncrementCounterStatus,
     userOrdersQueryStatus,
   } = useCancelAllOrders();
-
-  useEffect(() => {
-    if (!cancelAllOrdersTxHash) return;
-
-    cancelAllOrdersTxHashRef.current = cancelAllOrdersTxHash;
-  }, [cancelAllOrdersTxHash]);
 
   useEffect(() => {
     if (selectedTokenId) setLastSelectedTokenId(selectedTokenId);
@@ -155,7 +147,6 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
       );
     }
   }, [
-    cancelAllOrdersTxHash,
     isValidChainStatus,
     seaportIncrementCounterStatus,
     userOrdersQueryStatus,

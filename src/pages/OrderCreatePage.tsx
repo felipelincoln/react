@@ -93,22 +93,22 @@ export function OrderCreatePage() {
           <div className="flex flex-col gap-2">
             <div className="flex gap-1">
               <span className="font-bold">Listing price:</span>
-              <PriceTag>{etherToString(totalEthPrice, false)}</PriceTag>
-              <PriceTag>
-                {form.tokenPrice} {collection.symbol}
-              </PriceTag>
+              {totalEthPrice > 0 && <PriceTag>{etherToString(totalEthPrice, false)}</PriceTag>}
+              {form.tokenPrice > 0 && (
+                <PriceTag>
+                  {form.tokenPrice} {collection.symbol}
+                </PriceTag>
+              )}
             </div>
 
             <div className="text-xs text-zinc-400">
-              {form.ethPrice && (
-                <div>- Price: {etherToString(parseEther(form.ethPrice || '0'), false)}</div>
-              )}
-              {fee && <div>- Marketplace fee: {etherToString(BigInt(fee), false)}</div>}
-              {royalty && <div>- Creator fee: {etherToString(BigInt(royalty), false)}</div>}
+              <div>- Price: {etherToString(parseEther(form.ethPrice || '0'), false)}</div>
+              <div>- Marketplace fee: {etherToString(BigInt(fee || '0'), false)}</div>
+              <div>- Creator fee: {etherToString(BigInt(royalty || '0'), false)}</div>
 
               {form.tokenPrice > 0 && (
                 <div>
-                  - Token price: {form.tokenPrice} {collection.symbol} (any from the selected items)
+                  - Token price: {form.tokenPrice} {collection.symbol}
                 </div>
               )}
             </div>
@@ -358,7 +358,7 @@ export function OrderCreatePage() {
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
       <div className="flex justify-between">
-        <h1 className="pb-8">Create Order</h1>
+        <h1 className="pb-8">New listing</h1>
         <div className="flex gap-4">
           <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
           <div>
@@ -397,7 +397,7 @@ export function OrderCreatePage() {
               </TextBox>
             </div>
             <div className="flex flex-col gap-4">
-              <div className="font-bold">Order expires</div>
+              <div className="font-bold">Listing expires</div>
               <TextBox>
                 {form.expireDays
                   ? moment(now * 1000)
@@ -513,7 +513,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           <div className="w-52">
             <span className="flex items-center gap-4">
               <span className="text-lg font-medium">Selected items</span>{' '}
-              <Tootltip>Any of the selected items can fulfill this order</Tootltip>
+              <Tootltip>Any of the selected items can fulfill this listing</Tootltip>
             </span>
             <div className="flex gap-2">
               <Input disabled type="text" value={form.anyTokenId ? '-' : form.tokenIds.length} />
