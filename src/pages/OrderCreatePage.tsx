@@ -115,21 +115,25 @@ export function OrderCreatePage() {
           </div>
         </div>
 
-        <div className="font-bold">Selected tokens:</div>
         {selectedTokenIds.length > 0 && (
-          <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-auto">
-            {selectedTokenIds.map((t) => {
-              if (!tokenImages[t])
-                return (
-                  <div className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs">
-                    {t}
-                  </div>
-                );
+          <div className="flex flex-col gap-2">
+            <div>
+              <span className="font-bold">Selected items:</span> {selectedTokenIds.length}
+            </div>
+            <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-auto">
+              {selectedTokenIds.map((t) => {
+                if (!tokenImages[t])
+                  return (
+                    <div className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs">
+                      {t}
+                    </div>
+                  );
 
-              return (
-                <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
-              );
-            })}
+                return (
+                  <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
+                );
+              })}
+            </div>
           </div>
         )}
       </div>
