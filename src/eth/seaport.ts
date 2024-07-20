@@ -187,15 +187,29 @@ export function seaportFulfillAdvancedOrderArgs(
 }
 
 export function seaportCancelOrderArgs(order: WithCounter<OrderFragment>) {
-  const advancedOrder = seaportFulfillAdvancedOrderArgs({
+  const offer = [['2', order.contract, order.tokenId, 1, 1]]; // itemType, token, identifierOrCriteria, startAmount, endAmount
+
+  const fulfillAdvancedOrderMessage = seaportEip712Message({
     ...order,
-    selectedTokenIds: [],
-    signature: '',
-  })[0][0] as (string | number | (string | number)[][] | string[])[]; // order.advancedOrder.orderParameters
+    counter: '',
+  });
+  const consideration = fulfillAdvancedOrderMessage.consideration.map((obj) => Object.values(obj));
 
-  advancedOrder[10] = [order.counter];
+  const orderParameters = [
+    order.offerer,
+    seaport.zone,
+    offer,
+    consideration,
+    '0', // order type
+    seaport.startTime,
+    order.endTime,
+    seaport.zoneHash,
+    order.salt,
+    seaport.conduitKey,
+    [order.counter],
+  ];
 
-  return [[advancedOrder]];
+  return [[orderParameters]];
 }
 
 export function seaportAbi() {

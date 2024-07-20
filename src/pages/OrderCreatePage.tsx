@@ -1,6 +1,9 @@
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   AttributeTags,
+  BulletPointContent,
+  BulletPointItem,
+  BulletPointList,
   Button,
   ButtonBlue,
   ButtonLight,
@@ -10,13 +13,12 @@ import {
   Input,
   OpenSeaButton,
   Paginator,
-  SpinnerIcon,
   TextBox,
   Tootltip,
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
-import { ReactNode, useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -69,6 +71,7 @@ export function OrderCreatePage() {
   const tokenIds = tokenIdsResponse.data?.tokens || [];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
+  // const tokenImage = tokenImages[tokenId]; // TODO
 
   useEffect(() => {
     if (isError) {
@@ -77,62 +80,118 @@ export function OrderCreatePage() {
 
     if (isValidChainStatus == 'pending') {
       setDialog(
-        OrderCreateDialog(
-          <div>
-            <div className="text-center">{`Switching to ${config.web3.chain.name} network`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem ping>Check network</BulletPointItem>
+          <BulletPointContent>
+            <div className="text-red-400">Wrong network</div>
+            <div>Continue in your wallet</div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:read') {
-      setDialog(OrderCreateDialog('Verifying Seaport allowance ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>Verifying allowance...</BulletPointContent>
+          <BulletPointItem disabled>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:write') {
       setDialog(
-        OrderCreateDialog(
-          <div>
-            <div className="text-center">{`Allowing Seaport to access your ${collection.symbol}`}</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>
+            <div className="text-red-400">No allowance</div>
+            <div>Continue in your wallet</div>
+          </BulletPointContent>
+          <BulletPointItem disabled>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (isApprovedForAllStatus == 'pending:receipt') {
-      setDialog(OrderCreateDialog('Waiting for approval transaction to confirm ...'));
-      return;
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Check allowance</BulletPointItem>
+          <BulletPointContent>Transaction is pending...</BulletPointContent>
+          <BulletPointItem disabled>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
+      );
     }
 
     if (signatureStatus == 'pending') {
       setDialog(
-        OrderCreateDialog(
-          <div>
-            <div className="text-center">Signing the order</div>
-            <div className="text-center">Confirm in your wallet</div>
-          </div>,
-        ),
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Sign listing</BulletPointItem>
+          <BulletPointContent>Continue in your wallet</BulletPointContent>
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
       );
       return;
     }
 
     if (postOrderStatus == 'pending') {
-      setDialog(OrderCreateDialog('Creating the order ...'));
+      setDialog(
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Sign listing</BulletPointItem>
+          <BulletPointContent>Creating the listing...</BulletPointContent>
+          <BulletPointItem disabled>Listing created</BulletPointItem>
+        </BulletPointList>,
+      );
       return;
     }
 
     if (isSuccess) {
       setDialog(
-        <div>
-          <div className="flex flex-col items-center gap-4 max-w-lg">
-            <div className="w-full font-medium pb-4">Create order</div>
-            <div className="flex flex-col items-center gap-4">
-              <div>Order created!</div>
+        <BulletPointList>
+          <div className="text-lg font-bold pb-8">List item</div>
+          <BulletPointItem>Check network</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Check allowance</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem>Listing created</BulletPointItem>
+          <BulletPointContent>
+            <div>
               <ButtonLight
                 onClick={() => {
                   navigate(`/c/${contract}`);
@@ -142,8 +201,8 @@ export function OrderCreatePage() {
                 Ok
               </ButtonLight>
             </div>
-          </div>
-        </div>,
+          </BulletPointContent>
+        </BulletPointList>,
       );
     }
   }, [
@@ -470,18 +529,6 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           />
         </div>
       )}
-    </div>
-  );
-}
-
-function OrderCreateDialog(message?: ReactNode) {
-  return (
-    <div>
-      <div className="flex flex-col items-center gap-4 max-w-lg">
-        <div className="w-full font-medium pb-4">Create order</div>
-        <SpinnerIcon />
-        <div>{message}</div>
-      </div>
     </div>
   );
 }

@@ -9,8 +9,6 @@ import {
   ButtonLight,
   ButtonRed,
   CardNftSelectable,
-  CheckIcon,
-  ExternalLink,
   ListedNft,
   OpenSeaButton,
   Paginator,
@@ -229,15 +227,14 @@ export function OrderFulfillPage() {
             />
           </div>
 
-          <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
+          <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Continue in your wallet</div>
-            </div>
+            <div className="text-red-400">Wrong network</div>
+            <div>Continue in your wallet</div>
           </BulletPointContent>
           <BulletPointItem disabled>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+          <BulletPointItem disabled>Listing canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -262,12 +259,8 @@ export function OrderFulfillPage() {
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Creating transaction...</div>
-            </div>
-          </BulletPointContent>
-          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+          <BulletPointContent>Creating transaction...</BulletPointContent>
+          <BulletPointItem disabled>Listing canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -292,12 +285,8 @@ export function OrderFulfillPage() {
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Send transaction</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Continue in your wallet</div>
-            </div>
-          </BulletPointContent>
-          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+          <BulletPointContent>Continue in your wallet</BulletPointContent>
+          <BulletPointItem disabled>Listing canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -321,20 +310,9 @@ export function OrderFulfillPage() {
 
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem>Send transaction</BulletPointItem>
-          <BulletPointContent />
-          <BulletPointItem ping>Wait confirmation (0/1)</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              {cancelOrderTxHash && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHash}`}
-                >
-                  {cancelOrderTxHash}
-                </ExternalLink>
-              )}
-            </div>
-          </BulletPointContent>
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>Transaction is pending...</BulletPointContent>
+          <BulletPointItem disabled>Listing canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -360,19 +338,8 @@ export function OrderFulfillPage() {
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem ping>Wait confirmation (1/1)</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              {cancelOrderTxHash && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHash}`}
-                >
-                  {cancelOrderTxHash}
-                </ExternalLink>
-              )}
-              <div>Processing the transaction...</div>
-            </div>
-          </BulletPointContent>
+          <BulletPointItem ping>Listing canceled</BulletPointItem>
+          <BulletPointContent>Deleting the listing...</BulletPointContent>
         </BulletPointList>,
       );
       return;
@@ -399,23 +366,10 @@ export function OrderFulfillPage() {
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem>Wait confirmation (1/1)</BulletPointItem>
+          <BulletPointItem>Listing canceled</BulletPointItem>
           <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              {cancelOrderTxHashRef.current && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelOrderTxHashRef.current}`}
-                >
-                  {cancelOrderTxHashRef.current}
-                </ExternalLink>
-              )}
-              <div className="flex gap-1 items-center">
-                Your listing have been canceled
-                <CheckIcon />
-              </div>
-              <div>
-                <ButtonLight onClick={() => setDialog(undefined)}>Ok</ButtonLight>
-              </div>
+            <div>
+              <ButtonLight onClick={() => setDialog(undefined)}>Ok</ButtonLight>
             </div>
           </BulletPointContent>
         </BulletPointList>,
