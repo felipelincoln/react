@@ -7,8 +7,6 @@ import {
   ButtonBlue,
   ButtonLight,
   CardNftSelectable,
-  CheckIcon,
-  ExternalLink,
   ListedNft,
   Tab,
 } from '.';
@@ -18,7 +16,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { useContext, useEffect, useRef, useState } from 'react';
 import { shortAddress } from '../../utils';
 import { DialogContext } from '../App';
-import { config } from '../../config';
 import { useCancelAllOrders } from '../../hooks';
 
 export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNavigate: () => void }) {

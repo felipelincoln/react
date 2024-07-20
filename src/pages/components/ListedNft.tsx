@@ -20,7 +20,7 @@ export function ListedNft({
 }) {
   return (
     <div
-      className={`flex gap-2 items-end ${!!onClick ? 'cursor-pointer' : ''}`}
+      className={`flex gap-2 items-end ${onClick ? 'cursor-pointer' : ''}`}
       onClick={() => onClick?.()}
     >
       <IconNftLarge src={src} />

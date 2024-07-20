@@ -11,7 +11,6 @@ import {
   CardNftSelectableSkeleton,
   Checkbox,
   Input,
-  ListedNft,
   OpenSeaButton,
   Paginator,
   PriceTag,
@@ -20,7 +19,7 @@ import {
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
-import { useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -75,9 +74,79 @@ export function OrderCreatePage() {
   const tokenIds = tokenIdsResponse.data?.tokens || [];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
-  const tokenImage = tokenImages[tokenId]; // TODO
   const fee = config.fee?.amount;
-  const royalty = verifiedCollections[contract]?.royalty?.amount;
+  const royalty = verifiedCollections[collection.contract]?.royalty?.amount;
+  const totalEthPrice =
+    parseEther(form.ethPrice || '0') + BigInt(fee || '0') + BigInt(royalty || '0');
+
+  const ListingDetails = useCallback(() => {
+    const selectedTokenIds = form.anyTokenId ? tokenIds : form.tokenIds;
+
+    return (
+      <div className="flex flex-col gap-4 pb-8">
+        <div className="flex gap-4">
+          <img
+            className="w-24 h-24 rounded"
+            title={tokenId.toString()}
+            src={tokenImages[tokenId]}
+          />
+          <div className="flex flex-col gap-2">
+            <div className="flex gap-1">
+              <span className="font-bold">Listing price:</span>
+              <PriceTag>{etherToString(totalEthPrice, false)}</PriceTag>
+              <PriceTag>
+                {form.tokenPrice} {collection.symbol}
+              </PriceTag>
+            </div>
+
+            <div className="text-xs text-zinc-400">
+              {form.ethPrice && (
+                <div>- Price: {etherToString(parseEther(form.ethPrice || '0'), false)}</div>
+              )}
+              {fee && <div>- Marketplace fee: {etherToString(BigInt(fee), false)}</div>}
+              {royalty && <div>- Creator fee: {etherToString(BigInt(royalty), false)}</div>}
+
+              {form.tokenPrice > 0 && (
+                <div>
+                  - Token price: {form.tokenPrice} {collection.symbol} (any from the selected items)
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="font-bold">Selected tokens:</div>
+        {selectedTokenIds.length > 0 && (
+          <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-auto">
+            {selectedTokenIds.map((t) => {
+              if (!tokenImages[t])
+                return (
+                  <div className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs">
+                    {t}
+                  </div>
+                );
+
+              return (
+                <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+
+    /* eslint-disable react-hooks/exhaustive-deps */
+  }, [
+    collection,
+    fee,
+    form,
+    royalty,
+    tokenId,
+    tokenIds.join('-'),
+    Object.keys(tokenImages).join('-'),
+    totalEthPrice,
+  ]);
+  /* eslint-enable react-hooks/exhaustive-deps */
 
   useEffect(() => {
     if (isError) {
@@ -88,56 +157,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <div className="flex flex-col gap-2 pb-8">
-            <ListedNft
-              tokenId={tokenId}
-              name={collection.name}
-              symbol={collection.symbol}
-              src={tokenImage}
-              key={tokenId}
-              tokenPrice={form.tokenPrice.toString()}
-              ethPrice={(
-                BigInt(form.ethPrice || '0') +
-                BigInt(fee || '0') +
-                BigInt(royalty || '0')
-              ).toString()}
-            />
-            <div className="grid grid-cols-2">
-              {form.tokenPrice > 0 && <div>Token Price:</div>}
-              {form.tokenPrice > 0 && (
-                <PriceTag>
-                  {form.tokenPrice} {collection.symbol}
-                </PriceTag>
-              )}
-
-              {form.ethPrice && <div>Price:</div>}
-              {form.ethPrice && (
-                <PriceTag>{etherToString(parseEther(form.ethPrice || '0'), false)}</PriceTag>
-              )}
-
-              {fee && <div>Marketplace fee:</div>}
-              {fee && <PriceTag>{etherToString(BigInt(fee), false)}</PriceTag>}
-
-              {royalty && <div>Creator fee:</div>}
-              {royalty && <PriceTag>{etherToString(BigInt(royalty), false)}</PriceTag>}
-            </div>
-            {form.tokenIds.length > 0 && (
-              <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-scroll">
-                {form.tokenIds.map((t) => {
-                  if (!tokenImages[t])
-                    return (
-                      <div className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs">
-                        {t}
-                      </div>
-                    );
-
-                  return (
-                    <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
-                  );
-                })}
-              </div>
-            )}
-          </div>
+          <ListingDetails />
           <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
             <div className="text-red-400">Wrong network</div>
@@ -157,6 +177,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -173,6 +194,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -192,6 +214,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -207,6 +230,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -223,6 +247,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -240,6 +265,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <ListingDetails />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -273,6 +299,7 @@ export function OrderCreatePage() {
     contract,
     navigate,
     setDialog,
+    ListingDetails,
   ]);
 
   function submit() {
