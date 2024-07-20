@@ -11,8 +11,10 @@ import {
   CardNftSelectableSkeleton,
   Checkbox,
   Input,
+  ListedNft,
   OpenSeaButton,
   Paginator,
+  PriceTag,
   TextBox,
   Tootltip,
 } from './components';
@@ -26,6 +28,8 @@ import { config } from '../config';
 import { useSubmitOrder } from '../hooks';
 import { DialogContext } from './App';
 import { NotFoundPage } from './fallback';
+import { verifiedCollections } from '../verifiedCollections';
+import { etherToString } from '../utils';
 
 interface FormData {
   ethPrice?: string;
@@ -71,7 +75,9 @@ export function OrderCreatePage() {
   const tokenIds = tokenIdsResponse.data?.tokens || [];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
-  // const tokenImage = tokenImages[tokenId]; // TODO
+  const tokenImage = tokenImages[tokenId]; // TODO
+  const fee = config.fee?.amount;
+  const royalty = verifiedCollections[contract]?.royalty?.amount;
 
   useEffect(() => {
     if (isError) {
@@ -82,6 +88,56 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
+          <div className="flex flex-col gap-2 pb-8">
+            <ListedNft
+              tokenId={tokenId}
+              name={collection.name}
+              symbol={collection.symbol}
+              src={tokenImage}
+              key={tokenId}
+              tokenPrice={form.tokenPrice.toString()}
+              ethPrice={(
+                BigInt(form.ethPrice || '0') +
+                BigInt(fee || '0') +
+                BigInt(royalty || '0')
+              ).toString()}
+            />
+            <div className="grid grid-cols-2">
+              {form.tokenPrice > 0 && <div>Token Price:</div>}
+              {form.tokenPrice > 0 && (
+                <PriceTag>
+                  {form.tokenPrice} {collection.symbol}
+                </PriceTag>
+              )}
+
+              {form.ethPrice && <div>Price:</div>}
+              {form.ethPrice && (
+                <PriceTag>{etherToString(parseEther(form.ethPrice || '0'), false)}</PriceTag>
+              )}
+
+              {fee && <div>Marketplace fee:</div>}
+              {fee && <PriceTag>{etherToString(BigInt(fee), false)}</PriceTag>}
+
+              {royalty && <div>Creator fee:</div>}
+              {royalty && <PriceTag>{etherToString(BigInt(royalty), false)}</PriceTag>}
+            </div>
+            {form.tokenIds.length > 0 && (
+              <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-scroll">
+                {form.tokenIds.map((t) => {
+                  if (!tokenImages[t])
+                    return (
+                      <div className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs">
+                        {t}
+                      </div>
+                    );
+
+                  return (
+                    <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
+                  );
+                })}
+              </div>
+            )}
+          </div>
           <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
             <div className="text-red-400">Wrong network</div>
@@ -171,9 +227,10 @@ export function OrderCreatePage() {
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem ping>Sign listing</BulletPointItem>
+          <BulletPointItem>Sign listing</BulletPointItem>
+          <BulletPointContent />
+          <BulletPointItem ping>Listing created</BulletPointItem>
           <BulletPointContent>Creating the listing...</BulletPointContent>
-          <BulletPointItem disabled>Listing created</BulletPointItem>
         </BulletPointList>,
       );
       return;

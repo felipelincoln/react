@@ -69,15 +69,14 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">Cancel all listings</div>
-          <BulletPointItem ping>Check network: Wrong network</BulletPointItem>
+          <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              <div>Continue in your wallet</div>
-            </div>
+            <div className="text-red-400">Wrong network</div>
+            <div>Continue in your wallet</div>
           </BulletPointContent>
           <BulletPointItem disabled>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+          <BulletPointItem disabled>Listings canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -99,7 +98,7 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
               </div>
             </div>
           </BulletPointContent>
-          <BulletPointItem disabled>Wait confirmation</BulletPointItem>
+          <BulletPointItem disabled>Listings canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -111,20 +110,9 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <div className="text-lg font-bold pb-8">Cancel all listings</div>
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem>Send transaction</BulletPointItem>
-          <BulletPointContent />
-          <BulletPointItem ping>Wait confirmation (0/1)</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              {cancelAllOrdersTxHash && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
-                >
-                  {cancelAllOrdersTxHash}
-                </ExternalLink>
-              )}
-            </div>
-          </BulletPointContent>
+          <BulletPointItem ping>Send transaction</BulletPointItem>
+          <BulletPointContent>Transaction is pending...</BulletPointContent>
+          <BulletPointItem disabled>Listings canceled</BulletPointItem>
         </BulletPointList>,
       );
       return;
@@ -138,19 +126,8 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem ping>Wait confirmation (1/1)</BulletPointItem>
-          <BulletPointContent>
-            <div className="flex flex-col text-zinc-400 text-sm">
-              {cancelAllOrdersTxHash && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHash}`}
-                >
-                  {cancelAllOrdersTxHash}
-                </ExternalLink>
-              )}
-              <div>Processing the transaction...</div>
-            </div>
-          </BulletPointContent>
+          <BulletPointItem ping>Listings canceled</BulletPointItem>
+          <BulletPointContent>Deleting all listings...</BulletPointContent>
         </BulletPointList>,
       );
       return;
@@ -164,30 +141,17 @@ export function AccountTab({ showTab, onNavigate }: { showTab: boolean; onNaviga
           <BulletPointContent />
           <BulletPointItem>Send transaction</BulletPointItem>
           <BulletPointContent />
-          <BulletPointItem>Wait confirmation (1/1)</BulletPointItem>
+          <BulletPointItem>Listings canceled</BulletPointItem>
           <BulletPointContent>
-            <div className="flex flex-col gap-2 text-sm text-zinc-400">
-              {cancelAllOrdersTxHashRef.current && (
-                <ExternalLink
-                  href={`${config.web3.chain.blockExplorers?.default.url}/tx/${cancelAllOrdersTxHashRef.current}`}
-                >
-                  {cancelAllOrdersTxHashRef.current}
-                </ExternalLink>
-              )}
-              <div className="flex gap-1 items-center">
-                All your listings have been canceled
-                <CheckIcon />
-              </div>
-              <div>
-                <ButtonLight
-                  onClick={() => {
-                    navigate(`/c/${contract}`);
-                    setDialog(undefined);
-                  }}
-                >
-                  Ok
-                </ButtonLight>
-              </div>
+            <div>
+              <ButtonLight
+                onClick={() => {
+                  setDialog(undefined);
+                  navigate(`/c/${contract}`);
+                }}
+              >
+                Ok
+              </ButtonLight>
             </div>
           </BulletPointContent>
         </BulletPointList>,
