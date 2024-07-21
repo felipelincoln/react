@@ -37,12 +37,12 @@ function seaportEip712Types() {
   return {
     OrderComponents: [
       { name: 'offerer', type: 'address' },
-      { name: 'zone', type: 'address' },
       { name: 'offer', type: 'OfferItem[]' },
       { name: 'consideration', type: 'ConsiderationItem[]' },
-      { name: 'orderType', type: 'uint8' },
       { name: 'startTime', type: 'uint256' },
       { name: 'endTime', type: 'uint256' },
+      { name: 'orderType', type: 'uint8' },
+      { name: 'zone', type: 'address' },
       { name: 'zoneHash', type: 'bytes32' },
       { name: 'salt', type: 'uint256' },
       { name: 'conduitKey', type: 'bytes32' },
@@ -103,7 +103,6 @@ export function seaportEip712Message(args: WithCounter<OrderFragment>) {
 
   return {
     offerer: args.offerer,
-    zone: seaport.zone,
     offer: [
       {
         itemType: '2',
@@ -114,9 +113,10 @@ export function seaportEip712Message(args: WithCounter<OrderFragment>) {
       },
     ],
     consideration: [...ethConsiderationList, ...feeConsiderationList, ...tokenConsiderationList],
-    orderType: '0',
     startTime: seaport.startTime,
     endTime: args.endTime,
+    orderType: '0',
+    zone: seaport.zone,
     zoneHash: seaport.zoneHash,
     salt: args.salt,
     conduitKey: seaport.conduitKey,
