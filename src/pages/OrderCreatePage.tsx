@@ -357,62 +357,70 @@ export function OrderCreatePage() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <div className="flex justify-between">
+      <div>
         <h1 className="pb-8">New listing</h1>
-        <div className="flex gap-4">
-          <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
-          <div>
-            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
-          </div>
-        </div>
       </div>
       <div className="flex gap-12">
         <OrderCreateForm form={form} setForm={(data) => setForm({ ...data, error: undefined })} />
         <div>
-          <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
-            <div>
-              {tokenImages[tokenId] ? (
-                <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
-              ) : (
-                <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
-              )}
-
-              <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+          <div className="w-80 pb-6 flex gap-2">
+            <div
+              className="group flex gap-2 items-center w-full cursor-pointer"
+              onClick={() => navigate(`/c/${contract}`)}
+            >
+              <img src={collection.image} className="w-8 h-8 rounded" />
+              <div className="text-lg font-medium overflow-hidden text-nowrap text-ellipsis group-hover:underline">
+                {collection.name}
+              </div>
             </div>
-            <div className="flex flex-col gap-4">
-              <div className="font-bold">You receive</div>
-              <TextBox>{form.ethPrice || 0} ETH</TextBox>
-
-              <TextBox>
-                <span className="flex justify-between">
-                  <span className="flex-grow">
-                    {form.tokenPrice} {collection.symbol}
-                  </span>
-                  {!!form.tokenPrice && (
-                    <span className="text-zinc-400">
-                      {form.anyTokenId ? 'any' : `${form.tokenIds.length} selected`}
-                    </span>
-                  )}
-                </span>
-              </TextBox>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="font-bold">Listing expires</div>
-              <TextBox>
-                {form.expireDays
-                  ? moment(now * 1000)
-                      .add(form.expireDays, 'days')
-                      .fromNow()
-                  : '-'}
-              </TextBox>
-            </div>
-            <div className="flex items-center">
-              <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
-            </div>
+            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
           </div>
-          {!!form.error && (
-            <div className="overflow-hidden text-ellipsis red pt-8 text-center">{form.error}</div>
-          )}
+          <div className="sticky top-32">
+            <div className="w-80 h-fit bg-zinc-800 p-8 rounded flex flex-col gap-8">
+              <div>
+                {tokenImages[tokenId] ? (
+                  <img className="rounded w-40 h-40 mx-auto" src={tokenImages[tokenId]} />
+                ) : (
+                  <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
+                )}
+
+                <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="font-bold">You receive</div>
+                <TextBox>{form.ethPrice || 0} ETH</TextBox>
+
+                <TextBox>
+                  <span className="flex justify-between">
+                    <span className="flex-grow">
+                      {form.tokenPrice} {collection.symbol}
+                    </span>
+                    {!!form.tokenPrice && (
+                      <span className="text-zinc-400">
+                        {form.anyTokenId ? 'any' : `${form.tokenIds.length} selected`}
+                      </span>
+                    )}
+                  </span>
+                </TextBox>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="font-bold">Listing expires</div>
+                <TextBox>
+                  {form.expireDays
+                    ? moment(now * 1000)
+                        .add(form.expireDays, 'days')
+                        .fromNow()
+                    : '-'}
+                </TextBox>
+              </div>
+              <div className="flex items-center">
+                <ButtonBlue onClick={submit}>Confirm</ButtonBlue>
+              </div>
+            </div>
+            {!!form.error && (
+              <div className="overflow-hidden text-ellipsis red pt-8 text-center">{form.error}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>

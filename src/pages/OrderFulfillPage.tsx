@@ -4,7 +4,6 @@ import {
   BulletPointContent,
   BulletPointItem,
   BulletPointList,
-  Button,
   ButtonBlue,
   ButtonLight,
   ButtonRed,
@@ -489,15 +488,8 @@ export function OrderFulfillPage() {
 
   return (
     <div className="max-w-screen-lg w-full mx-auto py-8">
-      <div className="flex justify-between">
+      <div>
         <h1 className="pb-8">Listing</h1>
-        <div className="flex gap-4">
-          <Button onClick={() => navigate(`/c/${contract}`)}>Back</Button>
-          {isOrderOwner && <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>}
-          <div>
-            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
-          </div>
-        </div>
       </div>
       <div className="flex gap-12">
         <div className="flex-grow flex flex-col gap-8">
@@ -550,52 +542,71 @@ export function OrderFulfillPage() {
           />
         </div>
         <div>
-          <div className="w-80 h-fit sticky top-32 flex-shrink-0 bg-zinc-800 p-8 rounded flex flex-col gap-8">
-            <div>
-              {tokenImage ? (
-                <img className="rounded w-40 h-40 mx-auto" src={tokenImage} />
-              ) : (
-                <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
-              )}
-
-              <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
-            </div>
-            <div className="flex flex-col gap-4">
-              <div className="font-bold">You pay</div>
-              {+order?.fulfillmentCriteria.token.amount > 0 && (
-                <TextBoxWithNfts
-                  value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
-                  tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
-                />
-              )}
-              <div>
-                {ethCost > 0 && (
-                  <TextBox>
-                    <div className="flex justify-between items-center">
-                      <div>{`${etherToString(ethCost, false)}`}</div>
-                      <div
-                        className="text-zinc-400 cursor-pointer"
-                        onClick={() => setDialog(priceDetailsDialog())}
-                      >
-                        details
-                      </div>
-                    </div>
-                  </TextBox>
-                )}
+          <div className="w-80 pb-6 flex gap-2">
+            <div
+              className="group flex gap-2 items-center w-full cursor-pointer"
+              onClick={() => navigate(`/c/${contract}`)}
+            >
+              <img src={collection.image} className="w-8 h-8 rounded" />
+              <div className="text-lg font-medium overflow-hidden text-nowrap text-ellipsis group-hover:underline">
+                {collection.name}
               </div>
             </div>
-            <div className="flex flex-col gap-4 items-center">
-              <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
-                Confirm
-              </ButtonBlue>
-              <div className="text-zinc-400 text-sm">
-                Expires {moment(order.endTime * 1000).fromNow()}
-              </div>
-            </div>
+            <OpenSeaButton contract={collection.contract} tokenId={tokenId} />
           </div>
-          {error && (
-            <div className="overflow-hidden text-ellipsis red pt-8 text-center">{error}</div>
-          )}
+          <div className="sticky top-32">
+            <div className="w-80 h-fit bg-zinc-800 p-8 rounded flex flex-col gap-8">
+              <div>
+                {tokenImage ? (
+                  <img className="rounded w-40 h-40 mx-auto" src={tokenImage} />
+                ) : (
+                  <div className="w-40 h-40 rounded bg-zinc-700 mx-auto"></div>
+                )}
+
+                <div className="text-center text-base leading-8">{`${collection.name} #${tokenId}`}</div>
+              </div>
+              <div className="flex flex-col gap-4">
+                <div className="font-bold">You pay</div>
+                {+order?.fulfillmentCriteria.token.amount > 0 && (
+                  <TextBoxWithNfts
+                    value={`${order?.fulfillmentCriteria.token.amount} ${collection.symbol}`}
+                    tokens={selectedTokenIds.map((t) => [Number(t), tokenImages[t]])}
+                  />
+                )}
+                <div>
+                  {ethCost > 0 && (
+                    <TextBox>
+                      <div className="flex justify-between items-center">
+                        <div>{`${etherToString(ethCost, false)}`}</div>
+                        <div
+                          className="text-zinc-400 cursor-pointer"
+                          onClick={() => setDialog(priceDetailsDialog())}
+                        >
+                          details
+                        </div>
+                      </div>
+                    </TextBox>
+                  )}
+                </div>
+              </div>
+              <div className="flex flex-col gap-4 items-center">
+                {isOrderOwner ? (
+                  <ButtonRed onClick={() => cancelOrder(order)}>Cancel listing</ButtonRed>
+                ) : (
+                  <ButtonBlue loading={!order || !userBalance} disabled={!address} onClick={submit}>
+                    Confirm
+                  </ButtonBlue>
+                )}
+
+                <div className="text-zinc-400 text-sm">
+                  Expires {moment(order.endTime * 1000).fromNow()}
+                </div>
+              </div>
+            </div>
+            {error && (
+              <div className="overflow-hidden text-ellipsis red pt-8 text-center">{error}</div>
+            )}
+          </div>
         </div>
       </div>
     </div>
