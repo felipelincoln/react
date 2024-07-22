@@ -19,7 +19,7 @@ import {
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
-import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useContext, useEffect, useMemo, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -47,7 +47,6 @@ export function OrderCreatePage() {
   const { address } = useAccount();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, {}));
-  const [cursor, setCursor] = useState(0);
   const [now] = useState(moment().unix());
   const [form, setForm] = useState<FormData>({
     tokenIds: [],
@@ -75,131 +74,12 @@ export function OrderCreatePage() {
   const tokenIds = useMemo(
     () => tokenIdsResponse.data?.tokens || [],
     [tokenIdsResponse.data?.tokens],
-  ); //tokenIdsResponse.data?.tokens || [];
-  const tokenImages = collectionResponse!.data!.tokenImages || {};
+  );
+  const tokenImages = useMemo(
+    () => collectionResponse!.data?.tokenImages || {},
+    [collectionResponse],
+  );
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
-  const fee = config.fee?.amount;
-  const royalty = verifiedCollections[collection.contract]?.royalty?.amount;
-  const totalEthPrice =
-    parseEther(form.ethPrice || '0') + BigInt(fee || '0') + BigInt(royalty || '0');
-
-  const ListingDetails = useCallback(() => {
-    console.log('rendering');
-    const selectedTokenIds = form.anyTokenId ? tokenIds : form.tokenIds;
-    const maxCursor = Math.ceil(selectedTokenIds.length / 30) - 1;
-
-    return (
-      <div className="flex flex-col gap-4 pb-8">
-        <div className="flex gap-4">
-          <img
-            className="w-24 h-24 rounded"
-            title={tokenId.toString()}
-            src={tokenImages[tokenId]}
-          />
-          <div className="flex flex-col gap-2">
-            <div className="flex gap-1">
-              <span className="font-bold">Listing price:</span>
-              {totalEthPrice > 0 && <PriceTag>{etherToString(totalEthPrice, false)}</PriceTag>}
-              {form.tokenPrice > 0 && (
-                <PriceTag>
-                  {form.tokenPrice} {collection.symbol}
-                </PriceTag>
-              )}
-            </div>
-
-            <div className="text-xs text-zinc-400">
-              <div>- Price: {etherToString(parseEther(form.ethPrice || '0'), false)}</div>
-              <div>- Marketplace fee: {etherToString(BigInt(fee || '0'), false)}</div>
-              <div>- Creator fee: {etherToString(BigInt(royalty || '0'), false)}</div>
-
-              {form.tokenPrice > 0 && (
-                <div>
-                  - Token price: {form.tokenPrice} {collection.symbol}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        {selectedTokenIds.length > 0 && form.tokenPrice > 0 && (
-          <div className="flex flex-col gap-2">
-            <div>
-              <span className="font-bold">Selected items:</span> {selectedTokenIds.length}
-            </div>
-            <div className="grid grid-cols-10 gap-1">
-              {selectedTokenIds.slice(cursor * 30, cursor * 30 + 30).map((t) => {
-                if (!tokenImages[t])
-                  return (
-                    <div
-                      key={t}
-                      className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs"
-                    >
-                      {t}
-                    </div>
-                  );
-
-                return (
-                  <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
-                );
-              })}
-            </div>
-            <div className="m-auto gap-4 flex justify-between text-zinc-400 select-none">
-              <svg
-                className="cursor-pointer"
-                onClick={() => setCursor(Math.max(cursor - 1, 0))}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                color="currentColor"
-                fill="none"
-              >
-                <path
-                  d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-              <span>
-                {1 + cursor * 30} - {Math.min(1 + cursor * 30 + 30, selectedTokenIds.length)}
-              </span>
-              <svg
-                className="cursor-pointer"
-                onClick={() => setCursor(Math.min(cursor + 1, maxCursor))}
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                width="24"
-                height="24"
-                color="currentColor"
-                fill="none"
-              >
-                <path
-                  d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
-                  stroke="currentColor"
-                  stroke-width="1.5"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </div>
-          </div>
-        )}
-      </div>
-    );
-  }, [
-    collection,
-    fee,
-    form,
-    royalty,
-    tokenId,
-    tokenIds,
-    tokenImages,
-    totalEthPrice,
-    setCursor,
-    cursor,
-  ]);
 
   useEffect(() => {
     if (isError) {
@@ -210,7 +90,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem ping>Check network</BulletPointItem>
           <BulletPointContent>
             <div className="text-red-400">Wrong network</div>
@@ -230,7 +110,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -247,7 +127,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -267,7 +147,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem ping>Check allowance</BulletPointItem>
@@ -283,7 +163,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -300,7 +180,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -318,7 +198,7 @@ export function OrderCreatePage() {
       setDialog(
         <BulletPointList>
           <div className="text-lg font-bold pb-8">List item</div>
-          <ListingDetails />
+          <OrderCreateDetails form={form} tokenId={tokenId} />
           <BulletPointItem>Check network</BulletPointItem>
           <BulletPointContent />
           <BulletPointItem>Check allowance</BulletPointItem>
@@ -352,7 +232,8 @@ export function OrderCreatePage() {
     contract,
     navigate,
     setDialog,
-    ListingDetails,
+    tokenId,
+    form,
   ]);
 
   function submit() {
@@ -672,6 +553,140 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
             setPage={setPage}
             itemsPerPage={30}
           />
+        </div>
+      )}
+    </div>
+  );
+}
+
+function OrderCreateDetails({ form, tokenId }: { form: FormData; tokenId: number }) {
+  const contract = useParams().contract!;
+  const { data: tokenIdsResponse } = useQuery(fetchTokenIds(contract, {}));
+  const { data: collectionResponse } = useQuery(fetchCollection(contract));
+  const [selectedTokenIdsPage, setSelectedTokenIdsPage] = useState(0);
+
+  const collection = collectionResponse!.data!.collection;
+  const fee = config.fee?.amount;
+  const royalty = verifiedCollections[collection.contract]?.royalty?.amount;
+  const totalEthPrice =
+    parseEther(form.ethPrice || '0') + BigInt(fee || '0') + BigInt(royalty || '0');
+
+  const tokenImages = useMemo(
+    () => collectionResponse?.data?.tokenImages || {},
+    [collectionResponse],
+  );
+
+  const selectedTokenIds = useMemo(() => {
+    const tokenIds = tokenIdsResponse?.data?.tokens || [];
+    return form.anyTokenId ? tokenIds : form.tokenIds;
+  }, [tokenIdsResponse, form.anyTokenId, form.tokenIds]);
+
+  const tokensPerPage = 30;
+  const maxSelectedTokenIdsPage = Math.ceil(selectedTokenIds.length / tokensPerPage) - 1;
+
+  return (
+    <div className="flex flex-col gap-4 pb-8">
+      <div className="flex gap-4">
+        <img className="w-24 h-24 rounded" title={tokenId.toString()} src={tokenImages[tokenId]} />
+        <div className="flex flex-col gap-2">
+          <div className="flex gap-1">
+            <span className="font-bold">Listing price:</span>
+            {totalEthPrice > 0 && <PriceTag>{etherToString(totalEthPrice, false)}</PriceTag>}
+            {form.tokenPrice > 0 && (
+              <PriceTag>
+                {form.tokenPrice} {collection.symbol}
+              </PriceTag>
+            )}
+          </div>
+
+          <div className="text-xs text-zinc-400">
+            <div>- Price: {etherToString(parseEther(form.ethPrice || '0'), false)}</div>
+            <div>- Marketplace fee: {etherToString(BigInt(fee || '0'), false)}</div>
+            <div>- Creator fee: {etherToString(BigInt(royalty || '0'), false)}</div>
+
+            {form.tokenPrice > 0 && (
+              <div>
+                - Token price: {form.tokenPrice} {collection.symbol}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {selectedTokenIds.length > 0 && form.tokenPrice > 0 && (
+        <div className="flex flex-col gap-2">
+          <div>
+            <span className="font-bold">Selected items:</span> {selectedTokenIds.length}
+          </div>
+          <div className="grid grid-cols-10 gap-1">
+            {selectedTokenIds
+              .slice(
+                selectedTokenIdsPage * tokensPerPage,
+                selectedTokenIdsPage * tokensPerPage + tokensPerPage,
+              )
+              .map((t) => {
+                if (!tokenImages[t])
+                  return (
+                    <div
+                      key={t}
+                      className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs"
+                    >
+                      {t}
+                    </div>
+                  );
+
+                return (
+                  <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
+                );
+              })}
+          </div>
+          <div className="m-auto gap-4 flex justify-between text-zinc-400 select-none">
+            <svg
+              className="cursor-pointer"
+              onClick={() => setSelectedTokenIdsPage(Math.max(selectedTokenIdsPage - 1, 0))}
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              color="currentColor"
+              fill="none"
+            >
+              <path
+                d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <span>
+              {1 + selectedTokenIdsPage * tokensPerPage} -{' '}
+              {Math.min(
+                1 + selectedTokenIdsPage * tokensPerPage + tokensPerPage,
+                selectedTokenIds.length,
+              )}
+            </span>
+            <svg
+              className="cursor-pointer"
+              onClick={() =>
+                setSelectedTokenIdsPage(Math.min(selectedTokenIdsPage + 1, maxSelectedTokenIdsPage))
+              }
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              width="24"
+              height="24"
+              color="currentColor"
+              fill="none"
+            >
+              <path
+                d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
+                stroke="currentColor"
+                stroke-width="1.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
         </div>
       )}
     </div>
