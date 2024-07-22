@@ -22,9 +22,7 @@ export function Paginator({
   useEffect(() => {
     const paginatedItems = items.slice(page * itemsPerPage, (page + 1) * itemsPerPage);
     setItems(paginatedItems);
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [items.join('-'), page, itemsPerPage, setItems]);
+  }, [items, page, itemsPerPage, setItems]);
 
   return (
     <div className="flex justify-between">

@@ -368,11 +368,14 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
   );
 
   const collection = collectionResponse!.data!.collection;
-  const tokenImages = collectionResponse!.data!.tokenImages || {};
-  const tokenIds = tokenIdsResponse?.data?.tokens || [];
+  const tokenImages = useMemo(
+    () => collectionResponse!.data!.tokenImages || {},
+    [collectionResponse],
+  );
+  const tokenIds = useMemo(() => tokenIdsResponse?.data?.tokens || [], [tokenIdsResponse]);
 
   return (
-    <div style={{ width: 656 }} className="flex-grow">
+    <div className="flex-grow w-[656px]">
       <div className="flex flex-col gap-4 *:flex *:flex-col *:gap-4 *:text-lg">
         <div className="w-52">
           <span className="text-lg font-medium">ETH price</span>
@@ -618,74 +621,86 @@ function OrderCreateDetails({ form, tokenId }: { form: FormData; tokenId: number
           <div>
             <span className="font-bold">Selected items:</span> {selectedTokenIds.length}
           </div>
-          <div className="grid grid-cols-10 gap-1">
-            {selectedTokenIds
-              .slice(
-                selectedTokenIdsPage * tokensPerPage,
-                selectedTokenIdsPage * tokensPerPage + tokensPerPage,
-              )
-              .map((t) => {
-                if (!tokenImages[t])
-                  return (
-                    <div
-                      key={t}
-                      className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs"
-                    >
-                      {t}
-                    </div>
-                  );
+          <div className="bg-zinc-900">
+            <div className="p-1 grid grid-cols-10 gap-1">
+              {selectedTokenIds
+                .slice(
+                  selectedTokenIdsPage * tokensPerPage,
+                  selectedTokenIdsPage * tokensPerPage + tokensPerPage,
+                )
+                .map((t) => {
+                  if (!tokenImages[t])
+                    return (
+                      <div
+                        key={t}
+                        className="w-10 h-10 bg-zinc-700 flex items-center justify-center text-xs"
+                      >
+                        {t}
+                      </div>
+                    );
 
-                return (
-                  <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
-                );
-              })}
-          </div>
-          <div className="m-auto gap-4 flex justify-between text-zinc-400 select-none">
-            <svg
-              className="cursor-pointer"
-              onClick={() => setSelectedTokenIdsPage(Math.max(selectedTokenIdsPage - 1, 0))}
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              color="currentColor"
-              fill="none"
-            >
-              <path
-                d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <span>
-              {1 + selectedTokenIdsPage * tokensPerPage} -{' '}
-              {Math.min(
-                1 + selectedTokenIdsPage * tokensPerPage + tokensPerPage,
-                selectedTokenIds.length,
-              )}
-            </span>
-            <svg
-              className="cursor-pointer"
-              onClick={() =>
-                setSelectedTokenIdsPage(Math.min(selectedTokenIdsPage + 1, maxSelectedTokenIdsPage))
-              }
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 24 24"
-              width="24"
-              height="24"
-              color="currentColor"
-              fill="none"
-            >
-              <path
-                d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
-                stroke="currentColor"
-                stroke-width="1.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+                  return (
+                    <img className="w-10 h-10" key={t} title={t.toString()} src={tokenImages[t]} />
+                  );
+                })}
+            </div>
+            {maxSelectedTokenIdsPage > 1 && (
+              <div className="flex justify-between items-center text-zinc-400 text-sm select-none">
+                <div
+                  className="cursor-pointer pr-4"
+                  onClick={() => setSelectedTokenIdsPage(Math.max(selectedTokenIdsPage - 1, 0))}
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    color="currentColor"
+                    fill="none"
+                  >
+                    <path
+                      d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+                <span>
+                  {1 + selectedTokenIdsPage * tokensPerPage} -{' '}
+                  {Math.min(
+                    1 + selectedTokenIdsPage * tokensPerPage + tokensPerPage,
+                    selectedTokenIds.length,
+                  )}
+                </span>
+                <div
+                  className="cursor-pointer pl-4"
+                  onClick={() =>
+                    setSelectedTokenIdsPage(
+                      Math.min(selectedTokenIdsPage + 1, maxSelectedTokenIdsPage),
+                    )
+                  }
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    width="20"
+                    height="20"
+                    color="currentColor"
+                    fill="none"
+                  >
+                    <path
+                      d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
+                      stroke="currentColor"
+                      stroke-width="1.5"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    />
+                  </svg>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

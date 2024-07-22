@@ -65,9 +65,7 @@ export function CollectionOrdersPage() {
     console.log('> [app] sorting feed');
 
     return ordersCopy;
-    /* eslint-disable react-hooks/exhaustive-deps */
-  }, [orders?.map((o) => o.tokenId).join('-'), userTokenIds?.join('-'), userBalance, address]);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  }, [orders, userTokenIds, userBalance, address]);
 
   return (
     <div className="flex-grow p-8">

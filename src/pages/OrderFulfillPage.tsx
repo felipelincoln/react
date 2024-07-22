@@ -68,7 +68,10 @@ export function OrderFulfillPage() {
   const collection = collectionResponse!.data!.collection;
   const verifiedCollection = verifiedCollections[collection.contract];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
-  const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
+  const userTokenIds = useMemo(
+    () => userTokenIdsResponse?.data?.tokenIds || [],
+    [userTokenIdsResponse],
+  );
   const tokenImage = tokenImages[tokenId];
   const order = orderResponse.data?.orders[0];
   const isOrderOwner = order?.offerer == (address || '').toLowerCase();
@@ -102,9 +105,7 @@ export function OrderFulfillPage() {
     console.log('> [app] sorting tokens');
 
     return orderTokenIdsCopy;
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [order, userTokenIds.join('-')]);
+  }, [order, userTokenIds]);
 
   const ListingDetails = useCallback(() => {
     return (
@@ -120,10 +121,7 @@ export function OrderFulfillPage() {
         />
       </div>
     );
-
-    /* eslint-disable react-hooks/exhaustive-deps */
-  }, []);
-  /* eslint-enable react-hooks/exhaustive-deps */
+  }, [tokenId, collection, tokenImage, orderRef]);
 
   // order fulfill dialog
   useEffect(() => {
