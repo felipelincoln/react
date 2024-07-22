@@ -19,7 +19,7 @@ import {
 } from './components';
 import { useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { fetchCollection, fetchTokenIds, fetchUserTokenIds } from '../api/query';
-import { useCallback, useContext, useEffect, useState } from 'react';
+import { useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import moment from 'moment';
 import { parseEther } from 'viem';
 import { useAccount } from 'wagmi';
@@ -47,6 +47,7 @@ export function OrderCreatePage() {
   const { address } = useAccount();
   const { data: collectionResponse } = useQuery(fetchCollection(contract));
   const { data: tokenIdsResponse } = useSuspenseQuery(fetchTokenIds(contract, {}));
+  const [cursor, setCursor] = useState(0);
   const [now] = useState(moment().unix());
   const [form, setForm] = useState<FormData>({
     tokenIds: [],
@@ -71,7 +72,10 @@ export function OrderCreatePage() {
 
   const isReady = collectionResponse!.data!.isReady;
   const collection = collectionResponse!.data!.collection;
-  const tokenIds = tokenIdsResponse.data?.tokens || [];
+  const tokenIds = useMemo(
+    () => tokenIdsResponse.data?.tokens || [],
+    [tokenIdsResponse.data?.tokens],
+  ); //tokenIdsResponse.data?.tokens || [];
   const tokenImages = collectionResponse!.data!.tokenImages || {};
   const userTokenIds = userTokenIdsResponse?.data?.tokenIds || [];
   const fee = config.fee?.amount;
@@ -80,7 +84,9 @@ export function OrderCreatePage() {
     parseEther(form.ethPrice || '0') + BigInt(fee || '0') + BigInt(royalty || '0');
 
   const ListingDetails = useCallback(() => {
+    console.log('rendering');
     const selectedTokenIds = form.anyTokenId ? tokenIds : form.tokenIds;
+    const maxCursor = Math.ceil(selectedTokenIds.length / 30) - 1;
 
     return (
       <div className="flex flex-col gap-4 pb-8">
@@ -120,8 +126,8 @@ export function OrderCreatePage() {
             <div>
               <span className="font-bold">Selected items:</span> {selectedTokenIds.length}
             </div>
-            <div className="max-h-32 grid grid-cols-10 gap-1 overflow-y-auto">
-              {selectedTokenIds.map((t) => {
+            <div className="grid grid-cols-10 gap-1">
+              {selectedTokenIds.slice(cursor * 30, cursor * 30 + 30).map((t) => {
                 if (!tokenImages[t])
                   return (
                     <div
@@ -137,23 +143,63 @@ export function OrderCreatePage() {
                 );
               })}
             </div>
+            <div className="m-auto gap-4 flex justify-between text-zinc-400 select-none">
+              <svg
+                className="cursor-pointer"
+                onClick={() => setCursor(Math.max(cursor - 1, 0))}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                color="currentColor"
+                fill="none"
+              >
+                <path
+                  d="M15 6C15 6 9.00001 10.4189 9 12C8.99999 13.5812 15 18 15 18"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <span>
+                {1 + cursor * 30} - {Math.min(1 + cursor * 30 + 30, selectedTokenIds.length)}
+              </span>
+              <svg
+                className="cursor-pointer"
+                onClick={() => setCursor(Math.min(cursor + 1, maxCursor))}
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                width="24"
+                height="24"
+                color="currentColor"
+                fill="none"
+              >
+                <path
+                  d="M9.00005 6C9.00005 6 15 10.4189 15 12C15 13.5812 9 18 9 18"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                />
+              </svg>
+            </div>
           </div>
         )}
       </div>
     );
-
-    /* eslint-disable react-hooks/exhaustive-deps */
   }, [
     collection,
     fee,
     form,
     royalty,
     tokenId,
-    tokenIds.join('-'),
-    Object.keys(tokenImages).join('-'),
+    tokenIds,
+    tokenImages,
     totalEthPrice,
+    setCursor,
+    cursor,
   ]);
-  /* eslint-enable react-hooks/exhaustive-deps */
 
   useEffect(() => {
     if (isError) {
