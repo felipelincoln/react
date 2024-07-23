@@ -1,4 +1,4 @@
-import { Footer, NavbarHome } from './components';
+import { CollectoorLogo, Footer, NavbarHome } from './components';
 
 export function AboutPage() {
   return (
@@ -23,7 +23,9 @@ export function AboutPage() {
                 </div>
                 <div className="flex-grow">
                   <div className="bg-zinc-900 rounded font-bold p-4 mb-1 flex items-center gap-2">
-                    <img className="w-7 h-7" draggable="false" src="/src/assets/logo.svg" />
+                    <div className="w-7">
+                      <CollectoorLogo />
+                    </div>
                     <span>Collectoor</span>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
