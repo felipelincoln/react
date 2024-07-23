@@ -38,7 +38,7 @@ export const config = {
       startTime: '0',
     },
   },
-  fee: undefined,
+  fee: undefined as { recipient: string; amount: string } | undefined,
   /*fee: {
     recipient: '0x88FE6ED81c6fb5620265B227574ea8e0C8d08E9c',
     amount: '1000000000000000', // 0.001 ETH
