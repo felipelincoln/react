@@ -253,7 +253,7 @@ export function OrderCreatePage() {
     if (parseEther(form.ethPrice || '') == 0n && form.tokenPrice == 0) {
       setForm({
         ...form,
-        error: `ETH price and ${collection.symbol} price can't be both 0`,
+        error: `ETH price and NFT price can't be both 0`,
       });
       return;
     }
@@ -394,7 +394,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
           />
         </div>
         <div className="w-52">
-          <span className="text-lg font-medium">{collection.symbol} price</span>
+          <span className="text-lg font-medium">NFT price</span>
           <Input
             type="text"
             value={form.tokenPrice ?? ''}
