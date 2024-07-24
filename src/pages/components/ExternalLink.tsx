@@ -1,4 +1,6 @@
-export function ExternalLink({ children, href }: { children: string; href: string }) {
+import { ReactNode } from 'react';
+
+export function ExternalLink({ children, href }: { children: ReactNode; href: string }) {
   return (
     <a
       href={href}

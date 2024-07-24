@@ -1,4 +1,5 @@
-import { CollectoorLogo, Footer, NavbarHome } from './components';
+import { config } from '../config';
+import { CollectoorLogo, ExternalLink, Footer, NavbarHome } from './components';
 
 export function AboutPage() {
   return (
@@ -8,25 +9,66 @@ export function AboutPage() {
         <div className="max-w-screen-lg w-full mx-auto flex-grow">
           <div className="p-8 flex flex-col gap-8">
             <h1 className="pb-8">About</h1>
-            <div className="flex flex-col gap-4">
+            <div>
               <h2 className="font-bold text-lg">How it works?</h2>
-              <p></p>
-              <div className="flex justify-between gap-1">
+              <p>
+                Collectoor was built on top of{' '}
+                <ExternalLink href="https://docs.opensea.io/docs/seaport">
+                  <span className="text-base">Seaport Protocol</span>
+                </ExternalLink>
+                , created by OpenSea.
+              </p>
+              <div className="my-4 w-fit text-zinc-400 p-4 grid grid-cols-4 bg-zinc-900 rounded">
+                <div>Seaport {config.web3.seaport.version}</div>
+                <div className="col-span-3">
+                  <ExternalLink
+                    href={`${config.web3.chain.blockExplorers?.default.url}/address/${config.web3.seaport.contract}`}
+                  >
+                    <span className="text-base font-mono">{config.web3.seaport.contract}</span>
+                  </ExternalLink>
+                </div>
+
+                <div>Conduit</div>
+                <div className="col-span-3">
+                  <ExternalLink
+                    href={`${config.web3.chain.blockExplorers?.default.url}/address/${config.web3.seaport.conduit}`}
+                  >
+                    <span className="text-base font-mono">{config.web3.seaport.conduit}</span>
+                  </ExternalLink>
+                </div>
+              </div>
+              <p>
+                The example below highlights the differente between the listing signature message
+                from OpenSea and Collectoor:
+              </p>
+              <div className="py-4 flex justify-between gap-1">
                 <div className="flex-grow">
-                  <div className="bg-zinc-900 rounded font-bold p-4 mb-1 flex items-center gap-2">
-                    <OpenSeaIcon />
-                    <span>Opensea</span>
+                  <div className="bg-zinc-900 rounded mb-1 p-4">
+                    <div className="font-bold flex items-center gap-2">
+                      <OpenSeaIcon />
+                      <span>Opensea</span>
+                    </div>
+                    <div className="pt-2">
+                      <div className="text-zinc-400 text-sm">Listing for 0.5 ETH</div>
+                    </div>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
                     <code>{openseaSignature}</code>
                   </pre>
                 </div>
                 <div className="flex-grow">
-                  <div className="bg-zinc-900 rounded font-bold p-4 mb-1 flex items-center gap-2">
-                    <div className="w-7">
-                      <CollectoorLogo />
+                  <div className="bg-zinc-900 rounded mb-1 p-4">
+                    <div className="font-bold flex items-center gap-2">
+                      <div className="w-7">
+                        <CollectoorLogo />
+                      </div>
+                      <span>Collectoor</span>
                     </div>
-                    <span>Collectoor</span>
+                    <div className="pt-2">
+                      <div className="text-zinc-400 text-sm">
+                        Listing for 0.5 ETH + 1 ERC721 (any token id from a collection)
+                      </div>
+                    </div>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
                     <code>
