@@ -1,3 +1,4 @@
+import { ReactNode } from 'react';
 import { config } from '../config';
 import { CollectoorLogo, ExternalLink, Footer, NavbarHome } from './components';
 
@@ -8,15 +9,22 @@ export function AboutPage() {
       <div className="flex flex-col h-full">
         <div className="max-w-screen-lg w-full mx-auto flex-grow">
           <div className="p-8 flex flex-col gap-8">
-            <h1 className="pb-8">About</h1>
+            <h1>About</h1>
             <div>
+              <h2 className="font-bold text-lg">Collectoor – The marketplace to swap NFTs</h2>
+              <p className="pb-4">
+                Create trait-based listings powered by the OpenSea smart contract.
+              </p>
               <h2 className="font-bold text-lg">How it works?</h2>
               <p>
                 Collectoor was built on top of{' '}
                 <ExternalLink href="https://docs.opensea.io/docs/seaport">
                   <span className="text-base">Seaport Protocol</span>
                 </ExternalLink>
-                , created by OpenSea.
+                , created by OpenSea. Using the contract <CodeFormat>Seaport 1.6</CodeFormat> to
+                create the signatures, fulfill and cancel listings and{' '}
+                <CodeFormat>Conduit</CodeFormat> (part of the Seaport protocol) to manage the user's
+                assets.
               </p>
               <div className="my-4 w-fit text-zinc-400 p-4 grid grid-cols-4 bg-zinc-900 rounded">
                 <div>Seaport {config.web3.seaport.version}</div>
@@ -38,8 +46,8 @@ export function AboutPage() {
                 </div>
               </div>
               <p>
-                The example below highlights the differente between the listing signature message
-                from OpenSea and Collectoor:
+                The example below compares a listing signature message highlighting the addition of
+                an ERC721 as the payment:
               </p>
               <div className="py-4 flex justify-between gap-1">
                 <div className="flex-grow">
@@ -65,9 +73,7 @@ export function AboutPage() {
                       <span>Collectoor</span>
                     </div>
                     <div className="pt-2">
-                      <div className="text-zinc-400 text-sm">
-                        Listing for 0.5 ETH + 1 ERC721 (any token id from a collection)
-                      </div>
+                      <div className="text-zinc-400 text-sm">Listing for 0.5 ETH + 1 ERC721</div>
                     </div>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
@@ -79,6 +85,12 @@ export function AboutPage() {
                   </pre>
                 </div>
               </div>
+              <p>
+                When creating a listing, the user can select all the token ids they would accept and
+                it will be encoded in the <CodeFormat>IdentifierOrCriteria</CodeFormat> field as the
+                merkle root of a merkle tree containing all the token ids. To fulfill this order, a
+                user will have to provide one of the selected tokens.
+              </p>
             </div>
           </div>
         </div>
@@ -86,6 +98,10 @@ export function AboutPage() {
       </div>
     </>
   );
+}
+
+function CodeFormat({ children }: { children: ReactNode }) {
+  return <span className="bg-zinc-800 p-1 rounded-md font-mono">{children}</span>;
 }
 
 const ourSignatureStart = `{
