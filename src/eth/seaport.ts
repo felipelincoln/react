@@ -160,7 +160,7 @@ export function seaportFulfillAdvancedOrderArgs(
     seaport.zoneHash,
     order.salt,
     seaport.conduitKey,
-    consideration.length - Number(!!verifiedCollection),
+    consideration.length - Number(!!verifiedCollection?.royalty),
   ];
 
   const advancedOrder = [orderParameters, 1, 1, order.signature, '0x'];
