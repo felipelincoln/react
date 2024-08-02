@@ -1,4 +1,4 @@
-import { Chain, base, mainnet, sepolia } from 'viem/chains';
+import { Chain, base, mainnet, polygon, sepolia } from 'viem/chains';
 
 const api = process.env.API_URL || 'http://localhost:3000';
 const chainStr = process.env.CHAIN || 'sepolia';
@@ -13,6 +13,9 @@ function getChain(chainStr: string): Chain {
 
     case 'base':
       return base;
+
+    case 'polygon':
+      return polygon;
 
     default:
       return mainnet;

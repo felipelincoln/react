@@ -1,5 +1,5 @@
 import moment from 'moment';
-import { etherToString } from '../utils';
+import { currency, etherToString } from '../utils';
 import {
   BulletPointContent,
   BulletPointItem,
@@ -434,7 +434,7 @@ export function OrderFulfillPage() {
     return (
       <div>
         <div className="flex justify-between">
-          <div className="text-lg font-bold">ETH payment details</div>
+          <div className="text-lg font-bold">{currency()} payment details</div>
           <div className="cursor-pointer" onClick={() => setDialog(undefined)}>
             <svg
               xmlns="http://www.w3.org/2000/svg"

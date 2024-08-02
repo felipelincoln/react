@@ -28,7 +28,7 @@ import { useSubmitOrder } from '../hooks';
 import { DialogContext } from './App';
 import { NotFoundPage } from './fallback';
 import { verifiedCollections } from '../verifiedCollections';
-import { etherToString } from '../utils';
+import { currency, etherToString } from '../utils';
 
 interface FormData {
   ethPrice?: string;
@@ -253,7 +253,7 @@ export function OrderCreatePage() {
     if (parseEther(form.ethPrice || '') == 0n && form.tokenPrice == 0) {
       setForm({
         ...form,
-        error: `ETH price and NFT price can't be both 0`,
+        error: `${currency()} price and NFT price can't be both 0`,
       });
       return;
     }
@@ -318,7 +318,9 @@ export function OrderCreatePage() {
               </div>
               <div className="flex flex-col gap-4">
                 <div className="font-bold">You receive</div>
-                <TextBox>{form.ethPrice || 0} ETH</TextBox>
+                <TextBox>
+                  {form.ethPrice || 0} {currency()}
+                </TextBox>
 
                 <TextBox>
                   <span className="flex justify-between">
@@ -378,7 +380,7 @@ function OrderCreateForm({ form, setForm }: { form: FormData; setForm: (data: Fo
     <div className="flex-grow w-[656px]">
       <div className="flex flex-col gap-4 *:flex *:flex-col *:gap-4 *:text-lg">
         <div className="w-52">
-          <span className="text-lg font-medium">ETH price</span>
+          <span className="text-lg font-medium">{currency()} price</span>
           <Input
             type="text"
             value={form.ethPrice || ''}

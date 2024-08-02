@@ -12,6 +12,10 @@ export function OpenSeaButton({ contract, tokenId }: { contract: string; tokenId
       chain = 'base';
       break;
     }
+    case 'polygon': {
+      chain = 'matic';
+      break;
+    }
     default: {
       return <></>;
     }

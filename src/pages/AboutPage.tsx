@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { config } from '../config';
 import { CollectoorLogo, ExternalLink, Footer, NavbarHome } from './components';
+import { currency } from '../utils';
 
 export function AboutPage() {
   return (
@@ -57,7 +58,7 @@ export function AboutPage() {
                       <span>Opensea</span>
                     </div>
                     <div className="pt-2">
-                      <div className="text-zinc-400 text-sm">Listing for 0.5 ETH</div>
+                      <div className="text-zinc-400 text-sm">Listing for 0.5 {currency()}</div>
                     </div>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
@@ -73,7 +74,9 @@ export function AboutPage() {
                       <span>Collectoor</span>
                     </div>
                     <div className="pt-2">
-                      <div className="text-zinc-400 text-sm">Listing for 0.5 ETH + 1 ERC721</div>
+                      <div className="text-zinc-400 text-sm">
+                        Listing for 0.5 {currency()} + 1 ERC721
+                      </div>
                     </div>
                   </div>
                   <pre className="p-4 bg-zinc-900 rounded text-zinc-400 text-sm">
