@@ -9,6 +9,7 @@ import { ActivityButton } from './ActivityButton';
 import { useEffect, useRef } from 'react';
 import { postViewUserNotifications } from '../../api/mutation';
 import { CollectoorLogo } from './CollectoorLogo';
+import { config } from '../../config';
 
 export function Navbar({
   activityTab,
@@ -39,6 +40,8 @@ export function Navbar({
     ...fetchUserNotifications(contract, address!),
   });
 
+  const userNotifications = userNotificationsResponse?.data?.notifications.length;
+
   const {
     mutate: viewUserNotifications,
     data,
@@ -51,13 +54,13 @@ export function Navbar({
 
   useEffect(() => {
     if (prevActivityTab.current && !activityTab) {
-      if (userNotificationsResponse?.data?.notifications.length) {
+      if (userNotifications) {
         viewUserNotifications();
       }
     }
 
     prevActivityTab.current = activityTab;
-  }, [activityTab, userNotificationsResponse?.data?.notifications.length, viewUserNotifications]);
+  }, [activityTab, userNotifications, viewUserNotifications]);
 
   useEffect(() => {
     if (data) {
@@ -68,20 +71,22 @@ export function Navbar({
     }
   }, [data, contract, address, queryClient, reset]);
 
+  const collection = collectionResponse!.data!.collection;
+
   useEffect(() => {
-    if (userNotificationsResponse?.data?.notifications.length) {
+    document.title = config.site.collectionTitle(collection.name, userNotifications);
+
+    if (userNotifications) {
       queryClient.invalidateQueries({
         predicate: (query) => {
           return query.queryKey[0] != fetchCollection(contract).queryKey[0];
         },
       });
     }
-  }, [userNotificationsResponse?.data?.notifications.length, contract, queryClient]);
+  }, [userNotifications, contract, queryClient, collection.name]);
 
-  const collection = collectionResponse!.data!.collection;
   const userTokenIdsAmount = userTokenIdsResponse?.data?.tokenIds.length;
   const userEthBalance = etherToString(userBalance?.value);
-  const userNotifications = userNotificationsResponse?.data?.notifications.length;
 
   return (
     <div className="fixed top-0 z-20 w-full bg-zinc-900">

@@ -4,6 +4,8 @@ import { fetchCollectionTrending } from '../api/query';
 import { useNavigate } from 'react-router-dom';
 import { verifiedCollections } from '../verifiedCollections';
 import { etherToString } from '../utils';
+import { useEffect } from 'react';
+import { config } from '../config';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -12,6 +14,10 @@ export function HomePage() {
     const isVerified = !!verifiedCollections[collection.collection.contract];
     return { ...collection, isVerified };
   });
+
+  useEffect(() => {
+    document.title = config.site.title;
+  }, []);
 
   return (
     <>
