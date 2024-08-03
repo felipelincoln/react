@@ -1,7 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { CollectoorLogo } from './CollectoorLogo';
 import { Button } from './Button';
-import ethereumLogo from '../../assets/eth-logo.png';
+import ethereumLogo from '../../assets/eth-logo.webp';
 import baseLogo from '../../assets/base-logo.webp';
 import polygonLogo from '../../assets/polygon-logo.svg';
 import { useState } from 'react';
