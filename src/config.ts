@@ -24,6 +24,7 @@ function getChain(chainStr: string): Chain {
 
 export const config = {
   site: {
+    domain: 'collectoor.com',
     title: 'Collectoor – Swap NFTs',
     collectionTitle: (name: string, notifications?: number) =>
       `${notifications ? `(${notifications}) ` : ''}${name} – Collectoor`,
