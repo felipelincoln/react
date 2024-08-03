@@ -47,8 +47,8 @@ export function AboutPage() {
                 </div>
               </div>
               <p>
-                The example below compares a listing signature message highlighting the addition of
-                an ERC721 as the payment:
+                The example below highlights how a simple addition to the OpenSea signature can
+                enable NFT swaps:
               </p>
               <div className="py-4 flex justify-between gap-1">
                 <div className="flex-grow">
@@ -88,11 +88,19 @@ export function AboutPage() {
                   </pre>
                 </div>
               </div>
-              <p>
+              <p className="pb-4">
                 When creating a listing, the user can select all the token ids they would accept and
                 it will be encoded in the <CodeFormat>IdentifierOrCriteria</CodeFormat> field as the
                 merkle root of a merkle tree containing all the token ids. To fulfill this order, a
                 user will have to provide one of the selected tokens.
+              </p>
+
+              <h2 className="font-bold text-lg">Token allowance</h2>
+              <p className="pb-4">
+                Collectoor uses the OpenSea's contract <CodeFormat>Conduit</CodeFormat> to manage
+                the user's assets. As a result, OpenSea users won't need to send a{' '}
+                <CodeFormat>SetApprovalForAll</CodeFormat> transaction to trade on Collectoor if
+                they have previously done that through OpenSea.
               </p>
             </div>
           </div>
