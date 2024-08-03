@@ -504,40 +504,43 @@ export function OrderFulfillPage() {
               No <PriceTag>{collection.symbol}</PriceTag> required to fulfill this listing.
             </div>
           )}
-          <div className="flex flex-wrap gap-4">
-            {order &&
-              paginatedTokenIds.map((tokenId) => (
-                <CardNftSelectable
-                  key={tokenId}
-                  tokenId={Number(tokenId)}
-                  src={tokenImages[tokenId]}
-                  onSelect={() => {
-                    let tokenIds = [...selectedTokenIds];
-                    if (tokenIds.includes(tokenId)) {
-                      tokenIds = tokenIds.filter((id) => id != tokenId);
-                    } else {
-                      if (tokenPrice == 1) {
-                        setSelectedTokenIds([tokenId]);
+          {order.fulfillmentCriteria.token.amount != '0' && (
+            <>
+              <div className="flex flex-wrap gap-4">
+                {paginatedTokenIds.map((tokenId) => (
+                  <CardNftSelectable
+                    key={tokenId}
+                    tokenId={Number(tokenId)}
+                    src={tokenImages[tokenId]}
+                    onSelect={() => {
+                      let tokenIds = [...selectedTokenIds];
+                      if (tokenIds.includes(tokenId)) {
+                        tokenIds = tokenIds.filter((id) => id != tokenId);
+                      } else {
+                        if (tokenPrice == 1) {
+                          setSelectedTokenIds([tokenId]);
+                        }
+                        if (selectedTokenIds.length >= tokenPrice) {
+                          return;
+                        }
+                        tokenIds.push(tokenId);
                       }
-                      if (selectedTokenIds.length >= tokenPrice) {
-                        return;
-                      }
-                      tokenIds.push(tokenId);
-                    }
-                    setSelectedTokenIds(tokenIds);
-                  }}
-                  selected={selectedTokenIds.includes(tokenId)}
-                  disabled={!userTokenIds.includes(Number(tokenId))}
-                />
-              ))}
-          </div>
-          <Paginator
-            items={orderTokenIdsSorted}
-            page={page}
-            setItems={setPaginatedTokenIds}
-            setPage={setPage}
-            itemsPerPage={30}
-          />
+                      setSelectedTokenIds(tokenIds);
+                    }}
+                    selected={selectedTokenIds.includes(tokenId)}
+                    disabled={!userTokenIds.includes(Number(tokenId))}
+                  />
+                ))}
+              </div>
+              <Paginator
+                items={orderTokenIdsSorted}
+                page={page}
+                setItems={setPaginatedTokenIds}
+                setPage={setPage}
+                itemsPerPage={30}
+              />
+            </>
+          )}
         </div>
         <div>
           <div className="w-80 pb-6 flex gap-2">

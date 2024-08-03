@@ -131,7 +131,13 @@ export function useSubmitOrder() {
   }, [isError, isSuccess]);
 
   function submitOrder(arg: OrderFragment) {
-    setOrderFragment(arg);
+    const order = arg;
+
+    if (arg.fulfillmentCriteria.token.amount === '0') {
+      order.fulfillmentCriteria.token.identifier = [];
+    }
+
+    setOrderFragment(order);
   }
 
   return {
