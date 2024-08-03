@@ -13,7 +13,7 @@ export function NavbarHome() {
 
   const NetworkButtons = [
     <EthereumButton
-      key="ethereum"
+      key="mainnet"
       onClick={() => {
         window.location.href = `https://${config.site.domain}`;
       }}
@@ -34,7 +34,7 @@ export function NavbarHome() {
 
   const CurrentNetworkButton = () => {
     switch (config.chain) {
-      case 'ethereum':
+      case 'mainnet':
         return <EthereumButton onClick={() => setShowNetworks(!showNetworks)} />;
       case 'base':
         return <BaseButton onClick={() => setShowNetworks(!showNetworks)} />;
