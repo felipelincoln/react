@@ -87,7 +87,7 @@ function EthereumButton({ onClick }: { onClick?: () => void }) {
         <div className="h-8 w-4 flex-shrink-0 flex justify-center py-2">
           <img src={ethereumLogo} />
         </div>
-        <div className="w-16 text-left">Ethereum</div>
+        <div>Ethereum</div>
       </div>
     </Button>
   );
@@ -100,7 +100,7 @@ function BaseButton({ onClick }: { onClick?: () => void }) {
         <div className="h-8 w-4 flex-shrink-0 flex justify-center py-2">
           <img src={baseLogo} />
         </div>
-        <div className="w-16 text-left">Base</div>
+        <div>Base</div>
       </div>
     </Button>
   );
@@ -113,7 +113,7 @@ function PolygonButton({ onClick }: { onClick?: () => void }) {
         <div className="h-8 w-4a flex-shrink-0 flex justify-center py-2">
           <img src={polygonLogo} />
         </div>
-        <div className="w-16 text-left">Polygon</div>
+        <div>Polygon</div>
       </div>
     </Button>
   );
