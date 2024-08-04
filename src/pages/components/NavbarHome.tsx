@@ -113,7 +113,7 @@ function PolygonButton({ onClick }: { onClick?: () => void }) {
         <div className="h-8 w-4a flex-shrink-0 flex justify-center py-2">
           <img src={polygonLogo} />
         </div>
-        <div>Polygon</div>
+        <div className="w-16 text-left">Polygon</div>
       </div>
     </Button>
   );
