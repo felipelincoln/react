@@ -16,8 +16,8 @@ export function CollectionLoadingPage() {
     <div className="flex-grow p-8">
       <div className="flex h-8 gap-4 items-center">
         <div className="flex items-center gap-2 *:leading-8">
-          <div className="animate-pulse inline-block w-8 h-6 rounded bg-zinc-800"></div>
-          <div>Results</div>
+          <div className="animate-pulse inline-block w-2 h-6 rounded bg-zinc-800"></div>
+          <div>{activityPage ? 'Results' : 'Listings'}</div>
         </div>
         <AttributeTags collection={collection} filter={filter} setFilter={setFilter} />
       </div>
